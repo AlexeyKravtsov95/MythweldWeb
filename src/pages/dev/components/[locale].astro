@@ -1,0 +1,405 @@
+---
+/**
+ * Component preview for review and PR screenshots: /dev/components/en/ and
+ * /dev/components/ru/ under `npm run dev` only. The production build gets no
+ * paths, so nothing here is published, linked or indexed (see build tests).
+ * Section labels are developer notes, not site copy, so they stay inline.
+ */
+import "../../../styles/global.css";
+import LogoMark from "../../../components/LogoMark.astro";
+import AssetPlaceholder from "../../../components/ui/AssetPlaceholder.astro";
+import ClassArtworkGrid from "../../../components/ui/ClassArtworkGrid.astro";
+import FigureWithCaption from "../../../components/ui/FigureWithCaption.astro";
+import MediaGrid from "../../../components/ui/MediaGrid.astro";
+import ProductAction from "../../../components/ui/ProductAction.astro";
+import ProductPlate from "../../../components/ui/ProductPlate.astro";
+import ReleaseStatus from "../../../components/ui/ReleaseStatus.astro";
+import StatusTag from "../../../components/ui/StatusTag.astro";
+import { RELEASE } from "../../../config/release";
+import { SITE } from "../../../config/site";
+import { LOCALES, getDictionary, type Locale } from "../../../i18n";
+import { pickMedia, type MediaGroup } from "../../../media/catalog";
+
+export function getStaticPaths() {
+  return import.meta.env.DEV
+    ? LOCALES.map((locale) => ({ params: { locale } }))
+    : [];
+}
+
+const locale = Astro.params.locale as Locale;
+const t = getDictionary(locale);
+const tf = RELEASE.talentforge;
+const products = t.home.products;
+const inline = (state: keyof typeof t.release.states) =>
+  t.release.states[state].toLocaleLowerCase(t.meta.htmlLang);
+
+function figure(group: MediaGroup) {
+  const asset = pickMedia(group, locale);
+  return asset && { asset, ...t.media.images[group] };
+}
+
+const editor = figure("tf-editor");
+const phoneShots = (["tf-class-picker", "tf-build-library"] as const).map(
+  figure,
+);
+const bookPages = (["bc-sample-cover", "bc-sample-chapter"] as const).map(
+  figure,
+);
+const appShots = (["bc-app-cover", "bc-app-chapter"] as const).map(figure);
+---
+
+<!doctype html>
+<html lang={t.meta.htmlLang} dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Component preview · {locale.toUpperCase()}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <main class="container preview">
+      <header class="intro">
+        <p class="mono">WEB-M0.2 · dev only · {locale.toUpperCase()}</p>
+        <h1>Mythweld v3.2 · components</h1>
+        <nav class="switch" aria-label={t.a11y.languageSwitcher}>
+          {LOCALES.map((other) => (
+            <a
+              href={`/dev/components/${other}/`}
+              aria-current={other === locale ? "page" : undefined}
+            >
+              {other.toUpperCase()}
+            </a>
+          ))}
+        </nav>
+      </header>
+
+      <section aria-labelledby="s-logo">
+        <h2 id="s-logo">
+          <span class="mono">01</span> Logo mark · 16 / 32 / 64
+        </h2>
+        <div class="row logos">
+          <LogoMark size={16} />
+          <LogoMark size={32} />
+          <LogoMark size={64} />
+          <span class="lockup">
+            <LogoMark size={30} /> Mythweld
+          </span>
+        </div>
+      </section>
+
+      <section aria-labelledby="s-type">
+        <h2 id="s-type">
+          <span class="mono">02</span> Type · Geologica + JetBrains Mono
+        </h2>
+        <p class="type-h1">
+          {products.talentforge.name} ·{" "}
+          {t.media.placeholders.addonScreenshot.title}
+        </p>
+        <p class="type-lead">{products.talentforge.summary}</p>
+        <p class="type-body">{t.footer.disclaimer}</p>
+        <p class="mono">01 · 02 · v{tf.dataVersion}</p>
+      </section>
+
+      <section aria-labelledby="s-actions">
+        <h2 id="s-actions">
+          <span class="mono">03</span> ProductAction
+        </h2>
+        <div class="row">
+          <ProductAction
+            variant="primary"
+            label={products.bookCreator.name}
+            href={SITE.links.bookCreator}
+            locale={locale}
+          />
+          <ProductAction
+            variant="talentforge"
+            label={t.release.channels.googlePlay}
+            href={tf.googlePlay}
+            locale={locale}
+            pendingReason={t.actions.linkPending}
+          />
+          <ProductAction
+            variant="forever-journey"
+            label={t.home.bookCreatorLinkLabel}
+            href={SITE.links.bookCreator}
+            locale={locale}
+          />
+          <ProductAction
+            variant="secondary"
+            label={products.foreverJourney.name}
+            href="#s-plates"
+            locale={locale}
+            forward
+          />
+          <ProductAction
+            variant="talentforge"
+            label={t.release.channels.appStore}
+            href={tf.appStore}
+            locale={locale}
+            pendingReason={t.actions.inPreparation}
+          />
+        </div>
+      </section>
+
+      <section aria-labelledby="s-status">
+        <h2 id="s-status">
+          <span class="mono">04</span> StatusTag · ReleaseStatus
+        </h2>
+        <div class="row">
+          <StatusTag state="available" label={t.release.states.available} />
+          <StatusTag state="testing" label={t.release.states.testing} />
+          <StatusTag state="prep" label={t.release.states.prep} />
+          <StatusTag state="pending" label={t.actions.linkPending} />
+        </div>
+        <div class="narrow">
+          <ReleaseStatus locale={locale} id="release-tf" headingLevel={3} />
+        </div>
+      </section>
+
+      <section aria-labelledby="s-plates">
+        <h2 id="s-plates">
+          <span class="mono">05</span> ProductPlate
+        </h2>
+        <div class="plates">
+          <ProductPlate
+            product="talentforge"
+            id="plate-tf"
+            name={products.talentforge.name}
+            kind={products.talentforge.kind}
+            headingLevel={3}
+          >
+            <Fragment slot="status">
+              <StatusTag
+                state={tf.android}
+                label={`${t.release.channels.android}: ${inline(tf.android)}`}
+              />
+              <StatusTag
+                state={tf.ios}
+                label={`${t.release.channels.ios}: ${inline(tf.ios)}`}
+              />
+            </Fragment>
+            <div class="tf-body">
+              <p class="muted">{products.talentforge.summary}</p>
+              {editor && (
+                <FigureWithCaption
+                  {...editor}
+                  sizes="(max-width: 600px) 100vw, 230px"
+                />
+              )}
+            </div>
+            <ClassArtworkGrid locale={locale} />
+          </ProductPlate>
+          <ProductPlate
+            product="forever-journey"
+            id="plate-fj"
+            name={products.foreverJourney.name}
+            kind={products.foreverJourney.kind}
+            headingLevel={3}
+          >
+            <AssetPlaceholder
+              locale={locale}
+              copy={t.media.placeholders.addonScreenshot}
+            />
+            <p class="muted">{products.foreverJourney.summary}</p>
+            <MediaGrid min="page">
+              {bookPages.map(
+                (page) =>
+                  page && (
+                    <FigureWithCaption
+                      {...page}
+                      sizes="(max-width: 600px) 50vw, 200px"
+                    />
+                  ),
+              )}
+            </MediaGrid>
+            <Fragment slot="actions">
+              <ProductAction
+                variant="forever-journey"
+                label={t.home.bookCreatorLinkLabel}
+                href={SITE.links.bookCreator}
+                locale={locale}
+              />
+            </Fragment>
+          </ProductPlate>
+        </div>
+      </section>
+
+      <section aria-labelledby="s-media">
+        <h2 id="s-media">
+          <span class="mono">06</span> FigureWithCaption · MediaGrid ·
+          placeholders
+        </h2>
+        <MediaGrid min="phone">
+          {editor && (
+            <FigureWithCaption
+              {...editor}
+              sizes="(max-width: 600px) 100vw, 300px"
+            />
+          )}
+          {phoneShots.map(
+            (shot) =>
+              shot && (
+                <FigureWithCaption
+                  {...shot}
+                  sizes="(max-width: 600px) 100vw, 300px"
+                />
+              ),
+          )}
+        </MediaGrid>
+        <div class="narrow">
+          <AssetPlaceholder
+            locale={locale}
+            copy={t.media.placeholders.editorLandscape}
+            ratio="16 / 9"
+          />
+        </div>
+        <MediaGrid min="wide">
+          {appShots.map((shot) =>
+            shot ? (
+              <FigureWithCaption
+                {...shot}
+                sizes="(max-width: 600px) 100vw, 600px"
+              />
+            ) : (
+              <AssetPlaceholder
+                locale={locale}
+                copy={t.media.placeholders.bookCreatorScreenshot}
+                ratio="16 / 9"
+              />
+            ),
+          )}
+        </MediaGrid>
+        <ClassArtworkGrid locale={locale} showNames />
+      </section>
+    </main>
+  </body>
+</html>
+
+<style>
+  .preview {
+    display: grid;
+    gap: var(--space-9);
+    padding-block: var(--space-8) var(--space-10);
+  }
+
+  .intro {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  h1 {
+    font-size: var(--font-size-h2);
+  }
+
+  section {
+    display: grid;
+    gap: var(--space-5);
+    min-width: 0;
+  }
+
+  h2 {
+    display: flex;
+    gap: var(--space-3);
+    align-items: baseline;
+    font-size: var(--font-size-plate-title);
+  }
+
+  .mono {
+    color: var(--color-brand-bronze);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-mono);
+    font-weight: 500;
+    letter-spacing: normal;
+  }
+
+  .switch {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .switch a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--size-target-min);
+    min-height: var(--size-target-min);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-subtle);
+    text-decoration: none;
+  }
+
+  .switch a[aria-current="page"] {
+    background: var(--color-brand-bronze);
+    color: var(--color-bg);
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .logos {
+    align-items: flex-end;
+    gap: var(--space-7);
+  }
+
+  .lockup {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: 1.3125rem;
+    font-weight: 760;
+    font-variation-settings: var(--font-heading-sharpness);
+    letter-spacing: var(--letter-spacing-heading);
+  }
+
+  .type-h1 {
+    font-size: var(--font-size-h1-home);
+    font-weight: var(--font-weight-heading);
+    font-variation-settings: var(--font-heading-sharpness);
+    letter-spacing: var(--letter-spacing-heading);
+    line-height: var(--line-height-heading);
+  }
+
+  .type-lead,
+  .muted {
+    color: var(--color-text-muted);
+  }
+
+  .type-lead {
+    font-size: var(--font-size-lead);
+  }
+
+  .narrow {
+    max-width: 36rem;
+  }
+
+  .plates {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: var(--space-5);
+    align-items: stretch;
+  }
+
+  .tf-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 14.375rem;
+    gap: var(--space-6);
+    align-items: start;
+  }
+
+  @media (max-width: 1100px) {
+    .plates {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .tf-body {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

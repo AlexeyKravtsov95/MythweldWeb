@@ -1,0 +1,98 @@
+---
+/**
+ * The nine original TalentForge class illustrations, never game talent
+ * icons. Without names: a 9-column strip (5 at ≤600) with alt = class name.
+ * With names: captioned tiles, so alt is empty (the name is already text).
+ */
+import { Image } from "astro:assets";
+import { getDictionary, type Locale } from "../../i18n";
+import { CLASS_ARTWORK, CLASS_IDS } from "../../media/catalog";
+import { imageFor } from "../../media/images";
+
+interface Props {
+  locale: Locale;
+  showNames?: boolean;
+}
+
+const { locale, showNames = false } = Astro.props;
+const t = getDictionary(locale);
+---
+
+<figure class="classes" data-names={showNames}>
+  <ul class="grid">
+    {CLASS_IDS.map((id) => {
+      const name = t.talentforge.classNames[id];
+      return (
+        <li class="tile" data-class={id}>
+          <Image
+            src={imageFor(CLASS_ARTWORK[id])}
+            alt={showNames ? "" : name.replace(/\u00ad/g, "")}
+            width={118}
+            height={118}
+            densities={[1]}
+            format="webp"
+            loading="lazy"
+            decoding="async"
+          />
+          {showNames && <span class="name">{name}</span>}
+        </li>
+      );
+    })}
+  </ul>
+  <figcaption class="caption">{t.talentforge.classArtworkCaption}</figcaption>
+</figure>
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  [data-names="true"] .grid {
+    /* Three columns even at 320 px; long RU names break at soft hyphens. */
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 5.25rem), 1fr));
+  }
+
+  .tile {
+    min-width: 0;
+  }
+
+  [data-names="true"] .tile {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    background: var(--color-surface);
+  }
+
+  .tile :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    /* 6 px from the board: tiles have no cut. */
+    border-radius: 6px;
+  }
+
+  .name {
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-label);
+    line-height: var(--line-height-caption);
+    hyphens: manual;
+  }
+
+  .caption {
+    margin-top: var(--space-2);
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+
+  @media (max-width: 600px) {
+    .grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+  }
+</style>

@@ -27,6 +27,13 @@ const alternates = LOCALES.map((alt) => ({
   href: new URL(localizePath(alt, path), site).href,
 }));
 const xDefault = new URL(localizePath(DEFAULT_LOCALE, path), site).href;
+// Text font for the page's script; see src/styles/fonts.css.
+const fontPreloads = [
+  "/fonts/geologica/geologica-latin-wght-shrp.woff2",
+  ...(locale === "ru"
+    ? ["/fonts/geologica/geologica-cyrillic-wght-shrp.woff2"]
+    : []),
+];
 ---
 
 <!doctype html>
@@ -38,6 +45,15 @@ const xDefault = new URL(localizePath(DEFAULT_LOCALE, path), site).href;
     <meta name="description" content={description} />
     <meta name="theme-color" content="#141210" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {fontPreloads.map((href) => (
+      <link
+        rel="preload"
+        href={href}
+        as="font"
+        type="font/woff2"
+        crossorigin="anonymous"
+      />
+    ))}
     <link rel="canonical" href={canonical} />
     {alternates.map((alt) => (
       <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />

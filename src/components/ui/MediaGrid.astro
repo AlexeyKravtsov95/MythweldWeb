@@ -1,0 +1,39 @@
+---
+/**
+ * Responsive row of figures: as many columns as fit at the minimum width,
+ * one column on narrow screens, never wider than its container.
+ * `phone` for portrait app screenshots, `page` for PDF pages, `wide` for
+ * landscape and web app screenshots.
+ */
+interface Props {
+  min?: "phone" | "page" | "wide";
+}
+
+const { min = "page" } = Astro.props;
+---
+
+<div class="media-grid" data-min={min}>
+  <slot />
+</div>
+
+<style>
+  .media-grid {
+    --media-min: 10rem;
+    display: grid;
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(100%, var(--media-min)), 1fr)
+    );
+    align-items: start;
+    gap: var(--space-4);
+    min-width: 0;
+  }
+
+  [data-min="phone"] {
+    --media-min: 12rem;
+  }
+
+  [data-min="wide"] {
+    --media-min: 20rem;
+  }
+</style>

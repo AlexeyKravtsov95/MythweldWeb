@@ -1,0 +1,76 @@
+---
+/**
+ * Curated image with a caption (v3.2 board, 09). Pixels are never changed:
+ * only resized derivatives in AVIF/WebP with the original format as fallback.
+ * App and web app screenshots get the 12 px radius on the screenshot ground;
+ * PDF pages have no radius. Alt describes the content and is required.
+ */
+import { Picture } from "astro:assets";
+import type { MediaAsset } from "../../media/catalog";
+import { imageFor } from "../../media/images";
+
+interface Props {
+  asset: MediaAsset;
+  alt: string;
+  /** "What it is · kind", e.g. "Talent editor · app screenshot, iPhone". */
+  caption: string;
+  /** Rendered width hint for responsive sources. */
+  sizes?: string;
+  loading?: "lazy" | "eager";
+}
+
+const {
+  asset,
+  alt,
+  caption,
+  sizes = "(max-width: 600px) 100vw, 50vw",
+  loading = "lazy",
+} = Astro.props;
+
+if (!alt.trim() || !caption.trim()) {
+  throw new Error(`FigureWithCaption needs alt and caption: ${asset.file}`);
+}
+
+const frame = asset.kind === "book-creator-sample" ? "page" : "screenshot";
+const widths = [
+  ...[400, 800, 1200, 1600].filter((width) => width < asset.width),
+  ...(asset.width <= 1600 ? [asset.width] : []),
+];
+---
+
+<figure class="figure" data-frame={frame} data-kind={asset.kind}>
+  <Picture
+    src={imageFor(asset)}
+    alt={alt}
+    widths={widths}
+    sizes={sizes}
+    formats={["avif", "webp"]}
+    loading={loading}
+    decoding="async"
+  />
+  <figcaption class="caption">{caption}</figcaption>
+</figure>
+
+<style>
+  .figure {
+    min-width: 0;
+  }
+
+  .figure :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  [data-frame="screenshot"] :global(img) {
+    border-radius: var(--radius-screenshot);
+    background: var(--color-screenshot-bg);
+  }
+
+  .caption {
+    margin-top: var(--space-2);
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+</style>

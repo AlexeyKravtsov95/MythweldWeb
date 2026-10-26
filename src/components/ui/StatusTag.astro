@@ -1,0 +1,69 @@
+---
+/**
+ * Status chip (v3.2 board, 08). Always a square dot plus text, so colour
+ * never carries the meaning alone. `pending` is the dashed "link pending"
+ * chip without a dot. `framed={false}` drops the border for table rows.
+ */
+import type { ReleaseState } from "../../config/release";
+
+interface Props {
+  state: ReleaseState | "pending";
+  label: string;
+  framed?: boolean;
+}
+
+const { state, label, framed = true } = Astro.props;
+---
+
+<span class="status-tag" data-state={state} data-framed={framed}>
+  {state !== "pending" && <span class="dot" aria-hidden="true" />}
+  {label}
+</span>
+
+<style>
+  .status-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+    white-space: nowrap;
+  }
+
+  .status-tag[data-framed="true"] {
+    /* 5 × 10 px from the board; no matching step in the spacing scale. */
+    padding: 0.3125rem 0.625rem;
+    border: 1px solid var(--color-border);
+  }
+
+  .status-tag[data-state="pending"] {
+    padding: 1px var(--space-2);
+    border: 1px dashed var(--color-status-prep);
+    color: var(--color-text-subtle);
+  }
+
+  .dot {
+    flex: 0 0 auto;
+    width: var(--space-2);
+    height: var(--space-2);
+  }
+
+  [data-state="available"] .dot {
+    background: var(--color-status-available);
+  }
+
+  [data-state="testing"] .dot {
+    background: var(--color-status-testing);
+  }
+
+  [data-state="prep"] .dot {
+    background: var(--color-status-prep);
+  }
+
+  @media (max-width: 360px) {
+    .status-tag {
+      white-space: normal;
+    }
+  }
+</style>

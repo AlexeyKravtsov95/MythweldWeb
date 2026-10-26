@@ -4,7 +4,12 @@ import type { Locale } from "./locales";
 import type { Dictionary } from "./types";
 
 export * from "./locales";
-export type { Dictionary, ProductCopy } from "./types";
+export type {
+  Dictionary,
+  MediaCopy,
+  PlaceholderCopy,
+  ProductCopy,
+} from "./types";
 
 const dictionaries: Record<Locale, Dictionary> = { en, ru };
 

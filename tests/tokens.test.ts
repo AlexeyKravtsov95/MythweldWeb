@@ -104,6 +104,22 @@ describe("v3.2 semantic tokens", () => {
     ).toBeGreaterThanOrEqual(4.5);
   });
 
+  it("TalentForge button text uses the page background and meets AA", () => {
+    expect(tokens.get("--color-tf-action-text")).toBe("var(--color-bg)");
+    expect(
+      contrast(V32_PALETTE["--color-bg"], V32_PALETTE["--color-tf-accent"]),
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("placeholder tag text meets AA on the amber tag", () => {
+    expect(
+      contrast(
+        V32_PALETTE["--color-bg"],
+        V32_PALETTE["--color-status-testing"],
+      ),
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+
   it("media queries use the documented breakpoints only", () => {
     const used = [...css.matchAll(/max-width:\s*(\d+)px/g)].map((m) =>
       Number(m[1]),

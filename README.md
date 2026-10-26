@@ -10,7 +10,9 @@ Official web portal for [Mythweld](https://mythweld.com/): an independent collec
 
 ## Project status
 
-**WEB-M0.1 — foundation.** The repository contains a static Astro + TypeScript skeleton with EN/RU routing, the v3.2 semantic design tokens, tests and CI. The pages at `/` and `/ru/` are honest placeholders, **not** the final homepage design. Real product assets and the precise v3.2 implementation follow in WEB-M0.2.
+**WEB-M0.2 — assets, fonts, components.** On top of the WEB-M0.1 skeleton (EN/RU routing, v3.2 tokens, tests, CI) the repository now has curated original product media with provenance (`docs/assets-manifest.md`), self-hosted Geologica and JetBrains Mono, and reusable v3.2 components in `src/components/ui/`. The pages at `/` and `/ru/` are still honest placeholders, **not** the final homepage: that is WEB-M0.3.
+
+Component preview (development only, never built or published): `npm run dev`, then <http://localhost:4321/dev/components/en/> and `/dev/components/ru/`.
 
 Design baseline: **Mythweld v3.2 — The Forge (Product First)**. Preserve real product imagery: no fabricated class icons, talent trees, app UI, addon screenshots or product features.
 
@@ -34,14 +36,21 @@ All user-facing copy lives in typed dictionaries (`src/i18n/dictionaries/en.ts`,
 
 ```text
 .github/workflows/ci.yml  CI: npm ci → format → check → build → test
-public/                   static files (robots.txt, favicon)
+docs/assets-manifest.md   provenance, kinds and usage rules of every image and font
+docs/screenshots/         component screenshots attached to PRs
+public/                   static files (robots.txt, favicon, fonts/ with OFL licences)
+src/assets/media/         curated original product images (see the manifest)
 src/components/           header, footer, language switcher, logo, placeholder
-src/config/site.ts        shared facts and links to existing services only
+src/components/ui/        v3.2 components: ProductPlate, ProductAction, StatusTag,
+                          ReleaseStatus, FigureWithCaption, AssetPlaceholder,
+                          ClassArtworkGrid, MediaGrid
+src/config/               site links and release facts (statuses, store links)
 src/i18n/                 locales, routing helpers, typed dictionaries
-src/layouts/              BaseLayout: <html lang>, meta, hreflang, skip link
-src/pages/                routes: / and /ru/
-src/styles/tokens.css     v3.2 semantic design tokens (single source)
-tests/                    i18n, token and built-site smoke tests
+src/layouts/              BaseLayout: <html lang>, meta, hreflang, skip link, font preload
+src/media/                typed media catalog and image lookup
+src/pages/                routes: / and /ru/ (+ dev-only /dev/components/{en,ru}/)
+src/styles/               tokens.css (v3.2 tokens), fonts.css, global.css
+tests/                    i18n, tokens, fonts, media, components, built-site smoke tests
 AGENTS.md                 working rules for AI agents (in Russian)
 ```
 
