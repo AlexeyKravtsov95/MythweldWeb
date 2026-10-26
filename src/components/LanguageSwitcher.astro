@@ -1,0 +1,66 @@
+---
+import { LOCALES, getDictionary, localizePath, type Locale } from "../i18n";
+
+interface Props {
+  locale: Locale;
+  /** Locale-neutral path of the current page, e.g. `"/"`. */
+  path: string;
+}
+
+const { locale, path } = Astro.props;
+const t = getDictionary(locale);
+---
+
+<nav class="lang" aria-label={t.a11y.languageSwitcher}>
+  <ul>
+    {LOCALES.map((target) => {
+      const isCurrent = target === locale;
+      const targetLang = getDictionary(target).meta.htmlLang;
+      return (
+        <li>
+          <a
+            href={localizePath(target, path)}
+            hreflang={targetLang}
+            lang={targetLang}
+            aria-current={isCurrent ? "page" : undefined}
+            data-locale={target}
+          >
+            <span aria-hidden="true">{target.toUpperCase()}</span>
+            <span class="visually-hidden">{t.languageNames[target]}</span>
+          </a>
+        </li>
+      );
+    })}
+  </ul>
+</nav>
+
+<style>
+  .lang ul {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid var(--color-border);
+  }
+
+  .lang a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--size-target-min);
+    min-height: var(--size-target-min);
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-label);
+    text-decoration: none;
+  }
+
+  .lang a:hover {
+    color: var(--color-text);
+  }
+
+  .lang a[aria-current="page"] {
+    background: var(--color-brand-bronze);
+    color: var(--color-bg);
+  }
+</style>

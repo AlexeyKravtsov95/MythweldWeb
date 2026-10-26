@@ -1,0 +1,24 @@
+---
+/**
+ * Mythweld mark from the v3.2 design system: bronze part (top-left) and
+ * steel part (bottom-right). Do not recolour, swap, rotate or add effects.
+ * Minimum size 16 px; pair with the wordmark only from 24 px.
+ */
+interface Props {
+  size?: number;
+}
+
+const { size = 30 } = Astro.props;
+---
+
+<svg
+  class="logo-mark"
+  width={size}
+  height={size}
+  viewBox="0 0 64 64"
+  aria-hidden="true"
+  focusable="false"
+>
+  <path d="M8 8h30v14H22v34H8z" fill="var(--color-brand-bronze)"></path>
+  <path d="M56 56H26V42h16V8h14z" fill="var(--color-brand-steel)"></path>
+</svg>

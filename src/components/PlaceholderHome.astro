@@ -1,0 +1,177 @@
+---
+/**
+ * Temporary, honest placeholder for the home page (WEB-M0.1).
+ * Not the v3.2 homepage design: that arrives with real assets in WEB-M0.2.
+ */
+import { SITE } from "../config/site";
+import { getDictionary, type Locale } from "../i18n";
+
+interface Props {
+  locale: Locale;
+}
+
+const t = getDictionary(Astro.props.locale);
+const { products } = t.home;
+const items = [
+  {
+    id: "talentforge",
+    copy: products.talentforge,
+    edge: "var(--color-tf-accent)",
+  },
+  {
+    id: "forever-journey",
+    copy: products.foreverJourney,
+    edge: "var(--color-fj-accent)",
+  },
+  {
+    id: "book-creator",
+    copy: products.bookCreator,
+    edge: "var(--color-fj-highlight)",
+  },
+] as const;
+---
+
+<div class="container placeholder">
+  <section class="intro" aria-labelledby="page-title">
+    <p class="eyebrow">{t.home.eyebrow}</p>
+    <h1 id="page-title">{t.home.heading}</h1>
+    <p class="lead">{t.home.lead}</p>
+  </section>
+
+  <section aria-labelledby="products-title">
+    <h2 id="products-title">{t.home.productsHeading}</h2>
+    <ul class="products">
+      {items.map((item) => (
+        <li
+          class="product"
+          data-product={item.id}
+          style={`--edge: ${item.edge}`}
+        >
+          <h3>{item.copy.name}</h3>
+          <p class="kind">{item.copy.kind}</p>
+          <p>{item.copy.summary}</p>
+          {item.id === "book-creator" && (
+            <a
+              class="action"
+              href={SITE.links.bookCreator}
+              target="_blank"
+              rel="noopener"
+            >
+              {t.home.bookCreatorLinkLabel}
+              <span aria-hidden="true">↗</span>
+              <span class="visually-hidden">({t.a11y.opensInNewTab})</span>
+            </a>
+          )}
+        </li>
+      ))}
+    </ul>
+    <p class="note">{t.home.statusNote}</p>
+  </section>
+</div>
+
+<style>
+  .placeholder {
+    display: grid;
+    gap: var(--space-section);
+    padding-block: var(--space-section);
+  }
+
+  .intro {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 44rem;
+  }
+
+  .eyebrow {
+    color: var(--color-brand-bronze);
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-label);
+  }
+
+  h1 {
+    font-size: var(--font-size-h1-home);
+  }
+
+  .lead {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lead);
+  }
+
+  h2 {
+    font-size: var(--font-size-h2);
+    margin-bottom: var(--space-6);
+  }
+
+  .products {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .product {
+    display: grid;
+    align-content: start;
+    gap: var(--space-2);
+    padding: var(--space-6);
+    background: var(--color-surface);
+    box-shadow: inset 0 var(--edge-product) 0 var(--edge);
+    color: var(--color-text-muted);
+  }
+
+  .product h3 {
+    color: var(--color-text);
+    font-size: 1.5rem;
+  }
+
+  .kind {
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-caption);
+  }
+
+  .action {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--size-button-height);
+    margin-top: var(--space-2);
+    padding-inline: var(--space-5);
+    background: var(--color-fj-action);
+    color: var(--color-fj-action-text);
+    font-size: var(--font-size-label);
+    font-weight: var(--font-weight-label);
+    text-decoration: none;
+    clip-path: polygon(
+      var(--cut-control) 0,
+      100% 0,
+      100% calc(100% - var(--cut-control)),
+      calc(100% - var(--cut-control)) 100%,
+      0 100%,
+      0 var(--cut-control)
+    );
+  }
+
+  .action:hover {
+    background: var(--color-fj-action-hover);
+  }
+
+  .action:focus-visible {
+    clip-path: none;
+  }
+
+  .note {
+    margin-top: var(--space-6);
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-caption);
+  }
+
+  @media (max-width: 600px) {
+    .action {
+      justify-self: stretch;
+      justify-content: center;
+    }
+  }
+</style>

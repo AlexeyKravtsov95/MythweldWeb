@@ -1,0 +1,86 @@
+---
+import "../styles/global.css";
+import SiteFooter from "../components/SiteFooter.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import {
+  DEFAULT_LOCALE,
+  LOCALES,
+  getDictionary,
+  localizePath,
+  type Locale,
+} from "../i18n";
+
+interface Props {
+  locale: Locale;
+  /** Locale-neutral path of the page; every page exists in every locale. */
+  path: string;
+  title: string;
+  description: string;
+}
+
+const { locale, path, title, description } = Astro.props;
+const t = getDictionary(locale);
+const site = Astro.site ?? new URL("https://mythweld.com");
+const canonical = new URL(localizePath(locale, path), site).href;
+const alternates = LOCALES.map((alt) => ({
+  hreflang: getDictionary(alt).meta.htmlLang,
+  href: new URL(localizePath(alt, path), site).href,
+}));
+const xDefault = new URL(localizePath(DEFAULT_LOCALE, path), site).href;
+---
+
+<!doctype html>
+<html lang={t.meta.htmlLang} dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#141210" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonical} />
+    {alternates.map((alt) => (
+      <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />
+    ))}
+    <link rel="alternate" hreflang="x-default" href={xDefault} />
+    <meta property="og:site_name" content={t.meta.siteName} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={t.meta.ogLocale} />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">
+      {t.a11y.skipToContent}
+    </a>
+    <SiteHeader locale={locale} path={path} />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <SiteFooter locale={locale} />
+  </body>
+</html>
+
+<style>
+  .skip-link {
+    position: absolute;
+    top: var(--space-2);
+    left: var(--space-2);
+    z-index: 10;
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-action-primary);
+    color: var(--color-action-primary-text);
+    font-weight: var(--font-weight-label);
+    text-decoration: none;
+    transform: translateY(-200%);
+  }
+
+  .skip-link:focus {
+    transform: none;
+  }
+
+  main:focus {
+    outline: none;
+  }
+</style>

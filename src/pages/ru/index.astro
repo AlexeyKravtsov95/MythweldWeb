@@ -1,0 +1,17 @@
+---
+import PlaceholderHome from "../../components/PlaceholderHome.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getDictionary } from "../../i18n";
+
+const locale = "ru";
+const t = getDictionary(locale);
+---
+
+<BaseLayout
+  locale={locale}
+  path="/"
+  title={t.meta.homeTitle}
+  description={t.meta.homeDescription}
+>
+  <PlaceholderHome locale={locale} />
+</BaseLayout>

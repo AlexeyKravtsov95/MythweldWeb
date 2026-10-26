@@ -1,0 +1,96 @@
+---
+import { SITE } from "../config/site";
+import { getDictionary, localeRoot, type Locale } from "../i18n";
+import LanguageSwitcher from "./LanguageSwitcher.astro";
+import LogoMark from "./LogoMark.astro";
+
+interface Props {
+  locale: Locale;
+  path: string;
+}
+
+const { locale, path } = Astro.props;
+const t = getDictionary(locale);
+---
+
+<header class="site-header">
+  <div class="container bar">
+    <a class="brand" href={localeRoot(locale)} aria-label={t.a11y.homeLink}>
+      <LogoMark size={30} />
+      <span class="wordmark" aria-hidden="true">
+        {t.meta.siteName}
+      </span>
+    </a>
+    <nav class="primary" aria-label={t.a11y.primaryNav}>
+      <ul>
+        <li>
+          <a href={SITE.links.bookCreator} target="_blank" rel="noopener">
+            {t.home.products.bookCreator.name}
+            <span aria-hidden="true">↗</span>
+            <span class="visually-hidden">({t.a11y.opensInNewTab})</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <LanguageSwitcher locale={locale} path={path} />
+  </div>
+</header>
+
+<style>
+  .site-header {
+    border-bottom: 1px solid var(--color-divider);
+  }
+
+  .bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-5);
+    min-height: 4rem;
+    padding-block: var(--space-2);
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--size-target-min);
+    text-decoration: none;
+  }
+
+  .wordmark {
+    font-size: 1.3125rem;
+    font-weight: 760;
+    font-variation-settings: var(--font-heading-sharpness);
+    letter-spacing: var(--letter-spacing-heading);
+  }
+
+  .primary {
+    margin-inline-start: auto;
+  }
+
+  .primary ul {
+    display: flex;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .primary a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: var(--size-target-min);
+    padding-inline: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: 0.9375rem;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .primary a:hover {
+    background: var(--color-surface);
+    color: var(--color-action-primary-hover);
+  }
+</style>
