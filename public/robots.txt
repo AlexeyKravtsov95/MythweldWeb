@@ -1,0 +1,5 @@
+# Mythweld main website — pre-release bootstrap (WEB-M0.1).
+# Only placeholder pages exist; indexing is disabled until the public launch
+# is reviewed separately. No sitemap is published yet.
+User-agent: *
+Disallow: /

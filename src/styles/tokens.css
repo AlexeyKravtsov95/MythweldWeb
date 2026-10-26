@@ -1,0 +1,138 @@
+/*
+ * Mythweld v3.2 — The Forge (Product First): semantic design tokens.
+ *
+ * Source of truth: the approved v3.2 "Design System & Components" board.
+ * Names describe purpose, not appearance; components must use these tokens
+ * instead of raw values. Contrast figures are against --color-bg (#141210).
+ *
+ * Breakpoints cannot be custom properties inside media queries; they are
+ * documented here and mirrored in src/styles/breakpoints.ts:
+ *   ≤1100 product plates stack · ≤900 menu button, gutter 20
+ *   ≤600 single column, full-width buttons · ≤360 gutter 16, smaller H1
+ */
+:root {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --color-bg: #141210; /* page background */
+  --color-bg-sunken: #0f0e0d; /* footer, Book Creator section */
+  --color-surface: #1e1b18; /* plates, cards, tiles */
+  --color-surface-raised: #28241f; /* secondary button, logo plate */
+  --color-border: #3a342d; /* chips, EN/RU, dividers inside plates (non-text, 1.5:1) */
+  --color-divider: #2a2622; /* header and section lines */
+
+  /* Text (all ≥ 4.5:1 on --color-bg) */
+  --color-text: #f2ece2; /* headings, body, primary button (15.9:1) */
+  --color-text-muted: #cfc7ba; /* descriptions, leads (11.2:1) */
+  --color-text-subtle: #9a9184; /* captions, product types, keys (6.0:1) */
+
+  /* Brand */
+  --color-brand-bronze: #c29a62; /* "you are here": current page, EN/RU, numbers */
+  --color-brand-steel: #9aa8ae; /* second part of the logo mark only */
+
+  /* Products */
+  --color-tf-accent: #e6715b; /* TalentForge plate edge and button */
+  --color-tf-accent-hover: #ee8571;
+  --color-tf-accent-2: #fbb86d; /* TalentForge secondary accent (from the app) */
+  --color-fj-accent: #c5a76a; /* Forever Journey plate edge */
+  --color-fj-action: #f1e3c0; /* Download Addon / Create Book button */
+  --color-fj-action-hover: #f7edd3;
+  --color-fj-action-text: #2b1d0e;
+  --color-fj-highlight: #e9cf94; /* lettering in the Book Creator section */
+
+  /* Status (always dot + text: colour never carries meaning alone) */
+  --color-status-available: #7cd591;
+  --color-status-testing: #fbb86d; /* also the "Required before release" tag */
+  --color-status-prep: #6f685e; /* dots and dashed "pending" borders only (3.4:1) */
+
+  /* Actions */
+  --color-action-primary: var(--color-text);
+  --color-action-primary-hover: #ffffff;
+  --color-action-primary-text: var(--color-bg);
+  --color-action-secondary: var(--color-surface-raised);
+  --color-action-secondary-hover: #353029;
+  --color-focus-ring: var(--color-text);
+
+  /* Media */
+  --color-screenshot-bg: #0b0d11; /* behind app screenshots */
+  --color-placeholder-border: #4a443c; /* dashed frame of missing-asset slots */
+  --color-placeholder-bg: #171513;
+
+  /* Typography */
+  --font-sans:
+    "Geologica", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono:
+    "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-weight-body: 400;
+  --font-weight-label: 650;
+  --font-weight-heading: 720;
+  --font-heading-sharpness: "SHRP" 100;
+  --letter-spacing-heading: -0.02em;
+  --line-height-body: 1.55;
+  --line-height-heading: 1.06;
+  --line-height-caption: 1.4;
+
+  --font-size-h1-product: 3.25rem; /* 52 → 38 ≤600 → 34 ≤360 */
+  --font-size-h1-home: 2.875rem; /* 46 → 32 ≤600 → 28 ≤360 */
+  --font-size-h2: 2.125rem; /* 34 → 28 */
+  --font-size-plate-title: 1.875rem; /* 30 → 26 */
+  --font-size-lead: 1.1875rem; /* 19 → 17 */
+  --font-size-body: 1.0625rem; /* 17 */
+  --font-size-label: 1rem; /* 16, buttons and labels */
+  --font-size-caption: 0.875rem; /* 14 */
+  --font-size-mono: 0.875rem; /* section numbers and version strings only */
+
+  /* Spacing scale: 4 · 8 · 12 · 16 · 20 · 24 · 28 · 40 · 56 · 72 */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 1.75rem;
+  --space-8: 2.5rem;
+  --space-9: 3.5rem;
+  --space-10: 4.5rem;
+  --space-section: var(--space-10); /* 72; 52 at ≤900 */
+
+  /* Layout */
+  --layout-container-max: 77.5rem; /* 1240 */
+  --layout-gutter: 2.5rem; /* 40; 20 at ≤900; 16 at ≤360 */
+
+  /* Shape: "cut" corners (clip-path), removed on focus */
+  --cut-plate: 16px; /* product plates, stat plate */
+  --cut-control: 8px; /* primary and product buttons, logo plate */
+  --radius-screenshot: 12px; /* app screenshots; PDF pages have no radius */
+  --edge-product: 4px; /* product colour edge on plates (inset shadow) */
+
+  /* Interaction */
+  --size-target-min: 44px;
+  --size-button-height: 48px;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 3px;
+}
+
+@media (max-width: 900px) {
+  :root {
+    --layout-gutter: 1.25rem;
+    --space-section: 3.25rem;
+  }
+}
+
+@media (max-width: 600px) {
+  :root {
+    --font-size-h1-product: 2.375rem;
+    --font-size-h1-home: 2rem;
+    --font-size-h2: 1.75rem;
+    --font-size-plate-title: 1.625rem;
+    --font-size-lead: 1.0625rem;
+  }
+}
+
+@media (max-width: 360px) {
+  :root {
+    --layout-gutter: 1rem;
+    --font-size-h1-product: 2.125rem;
+    --font-size-h1-home: 1.75rem;
+  }
+}
