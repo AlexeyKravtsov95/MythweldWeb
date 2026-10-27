@@ -1,0 +1,89 @@
+---
+/**
+ * Plan → Play → Remember: the order in which the tools are used. It names
+ * when each tool helps and claims no integration or sync between them.
+ * Three tiles in a row, stacked at ≤900; tiles have no cut (v3.2 board).
+ */
+import { getDictionary, type Locale } from "../../i18n";
+
+interface Props {
+  locale: Locale;
+}
+
+const t = getDictionary(Astro.props.locale);
+const { heading, steps } = t.home.flow;
+const items = [steps.plan, steps.play, steps.remember];
+---
+
+<section class="flow" aria-labelledby="flow-title">
+  <h2 id="flow-title" class="visually-hidden">
+    {heading}
+  </h2>
+  <ol>
+    {items.map((step, index) => (
+      <li>
+        <span class="number" aria-hidden="true">
+          {index + 1}
+        </span>
+        <span class="title">{step.title}</span>
+        <span class="text">{step.text}</span>
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  .flow {
+    margin-top: var(--space-9);
+  }
+
+  ol {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: baseline;
+    gap: var(--space-1) var(--space-3);
+    padding: var(--space-5) var(--space-6);
+    background: var(--color-surface);
+  }
+
+  .number {
+    grid-row: span 2;
+    color: var(--color-brand-bronze);
+    font-size: 0.9375rem;
+  }
+
+  .title {
+    font-weight: var(--font-weight-label);
+  }
+
+  .text {
+    grid-column: 2;
+    color: var(--color-text-muted);
+    font-size: 0.9375rem;
+  }
+
+  @media (max-width: 900px) {
+    .flow {
+      margin-top: var(--space-8);
+    }
+
+    ol {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 600px) {
+    li {
+      padding: var(--space-5);
+    }
+  }
+</style>

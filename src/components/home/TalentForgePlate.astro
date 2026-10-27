@@ -1,0 +1,158 @@
+---
+/**
+ * TalentForge plate of the home page: store statuses from the release
+ * config, the confirmed facts, the real editor screenshot and the nine
+ * class artworks. The product page does not exist yet (WEB-M0.4), so its
+ * action stays disabled instead of linking to a missing route.
+ * At ≤600 the screenshot moves under the statuses via grid areas (the DOM
+ * keeps reading order) and is cropped from the top by CSS only.
+ */
+import ClassArtworkGrid from "../ui/ClassArtworkGrid.astro";
+import FigureWithCaption from "../ui/FigureWithCaption.astro";
+import ProductAction from "../ui/ProductAction.astro";
+import ProductPlate from "../ui/ProductPlate.astro";
+import StatusTag from "../ui/StatusTag.astro";
+import { RELEASE } from "../../config/release";
+import { getDictionary, type Locale } from "../../i18n";
+import { pickMedia } from "../../media/catalog";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = getDictionary(locale);
+const tf = RELEASE.talentforge;
+const copy = t.home.products.talentforge;
+const features = t.home.talentforgeFeatures;
+const platforms = [
+  { channel: t.release.channels.android, state: tf.android },
+  { channel: t.release.channels.ios, state: tf.ios },
+] as const;
+const lower = (text: string) => text.toLocaleLowerCase(t.meta.htmlLang);
+const editor = pickMedia("tf-editor", locale);
+---
+
+<ProductPlate
+  product="talentforge"
+  name={copy.name}
+  kind={copy.kind}
+  id="talentforge"
+>
+  <Fragment slot="status">
+    {platforms.map(({ channel, state }) => (
+      <StatusTag
+        state={state}
+        label={`${channel}: ${lower(t.release.states[state])}`}
+      />
+    ))}
+  </Fragment>
+
+  <div class="body">
+    <div class="text">
+      <p class="summary">{copy.summary}</p>
+      <ul class="features">
+        <li>{features.autosave}</li>
+        <li>{features.offline}</li>
+        <li>{features.languages}</li>
+      </ul>
+      <ProductAction
+        variant="talentforge"
+        label={t.home.exploreTalentforge}
+        href={null}
+        pendingReason={t.home.pagePending}
+        locale={locale}
+      />
+    </div>
+    {editor && (
+      <div class="shot">
+        <FigureWithCaption
+          asset={editor}
+          {...t.media.images["tf-editor"]}
+          sizes="(max-width: 600px) calc(100vw - 4.5rem), 15rem"
+          loading="eager"
+        />
+      </div>
+    )}
+  </div>
+
+  <div class="classes">
+    <ClassArtworkGrid locale={locale} />
+  </div>
+</ProductPlate>
+
+<style>
+  .body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    grid-template-areas: "text shot";
+    align-items: start;
+    gap: var(--space-6) var(--space-7);
+  }
+
+  .text {
+    grid-area: text;
+    display: grid;
+    justify-items: start;
+    gap: var(--space-5);
+  }
+
+  .shot {
+    grid-area: shot;
+  }
+
+  .summary {
+    color: var(--color-text);
+    font-size: var(--font-size-body);
+  }
+
+  .features {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--color-text);
+  }
+
+  .features li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+  }
+
+  .features li::before {
+    content: "";
+    flex: 0 0 auto;
+    width: var(--space-2);
+    height: var(--space-2);
+    background: var(--color-tf-accent);
+    transform: translateY(-0.1em);
+  }
+
+  .classes {
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+  }
+
+  @media (max-width: 600px) {
+    .body {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "shot"
+        "text";
+      gap: var(--space-5);
+    }
+
+    .text {
+      justify-items: stretch;
+    }
+
+    /* Crop of the editor from the top, 786:1100 (v3.2 board, 09). */
+    .shot :global(img) {
+      aspect-ratio: 786 / 1100;
+      object-fit: cover;
+      object-position: top;
+    }
+  }
+</style>

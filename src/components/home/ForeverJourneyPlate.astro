@@ -1,0 +1,153 @@
+---
+/**
+ * Forever Journey plate of the home page. The addon has no verified in-game
+ * screenshot yet (blocker B1), so it shows the honest placeholder; Book
+ * Creator is presented as the related tool with pages of a sample PDF it
+ * produced, never as addon screenshots.
+ *
+ * The sample is the synthetic English demo book in every locale: the only
+ * Russian sample carries a name from a real character archive (blocker B4)
+ * and stays off promotional pages until the owner approves it.
+ */
+import { Picture } from "astro:assets";
+import AssetPlaceholder from "../ui/AssetPlaceholder.astro";
+import ProductAction from "../ui/ProductAction.astro";
+import ProductPlate from "../ui/ProductPlate.astro";
+import StatusTag from "../ui/StatusTag.astro";
+import { RELEASE } from "../../config/release";
+import { SITE } from "../../config/site";
+import { getDictionary, type Locale } from "../../i18n";
+import { pickMedia, type MediaAsset } from "../../media/catalog";
+import { imageFor } from "../../media/images";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = getDictionary(locale);
+const fj = t.home.products.foreverJourney;
+const bc = t.home.products.bookCreator;
+const curseforge = RELEASE.foreverJourney.curseforge;
+const sample = t.home.bookSample;
+const pages = [
+  { asset: pickMedia("bc-sample-cover", "en"), alt: sample.coverAlt },
+  { asset: pickMedia("bc-sample-chapter", "en"), alt: sample.chapterAlt },
+].filter((page): page is { asset: MediaAsset; alt: string } =>
+  Boolean(page.asset),
+);
+---
+
+<ProductPlate
+  product="forever-journey"
+  name={fj.name}
+  kind={fj.kind}
+  id="forever-journey"
+>
+  <StatusTag
+    slot="status"
+    state={curseforge}
+    label={t.home.curseforgeStates[curseforge]}
+  />
+
+  <AssetPlaceholder
+    locale={locale}
+    copy={{
+      title: t.media.placeholders.addonScreenshot.title,
+      note: t.home.addonPlaceholderNote,
+    }}
+  />
+  <p class="summary">{fj.summary}</p>
+
+  <section class="book" aria-labelledby="book-creator">
+    <div class="sheets">
+      {pages.map((page) => (
+        <Picture
+          src={imageFor(page.asset)}
+          alt={page.alt}
+          widths={[200, 400]}
+          sizes="(max-width: 600px) 42vw, 6rem"
+          formats={["avif", "webp"]}
+          loading="lazy"
+          decoding="async"
+        />
+      ))}
+    </div>
+    <div class="book-text">
+      <h3 id="book-creator">{bc.name}</h3>
+      <p>{bc.summary}</p>
+      <p class="sample-note">{sample.caption}</p>
+    </div>
+  </section>
+
+  <Fragment slot="actions">
+    <ProductAction
+      variant="forever-journey"
+      label={t.home.downloadAddon}
+      href={SITE.links.curseforge}
+      locale={locale}
+    />
+    <ProductAction
+      variant="secondary"
+      label={t.home.bookCreatorLinkLabel}
+      href={SITE.links.bookCreator}
+      locale={locale}
+    />
+  </Fragment>
+</ProductPlate>
+
+<style>
+  .summary {
+    color: var(--color-text);
+  }
+
+  .book {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-5);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .sheets {
+    display: grid;
+    grid-template-columns: repeat(2, 6rem);
+    gap: var(--space-3);
+  }
+
+  .sheets :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .sample-note {
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+
+  .book-text {
+    display: grid;
+    gap: var(--space-1);
+    color: var(--color-text-muted);
+  }
+
+  h3 {
+    color: var(--color-text);
+    font-size: 1.1875rem;
+    letter-spacing: normal;
+  }
+
+  @media (max-width: 600px) {
+    .book {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-4);
+    }
+
+    .sheets {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

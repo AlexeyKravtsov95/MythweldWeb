@@ -10,7 +10,7 @@ Official web portal for [Mythweld](https://mythweld.com/): an independent collec
 
 ## Project status
 
-**WEB-M0.2 — assets, fonts, components.** On top of the WEB-M0.1 skeleton (EN/RU routing, v3.2 tokens, tests, CI) the repository now has curated original product media with provenance (`docs/assets-manifest.md`), self-hosted Geologica and JetBrains Mono, and reusable v3.2 components in `src/components/ui/`. The pages at `/` and `/ru/` are still honest placeholders, **not** the final homepage: that is WEB-M0.3.
+**WEB-M0.3 — home page.** `/` and `/ru/` render the v3.2 home page (The Forge, Product First) from one component, `src/components/home/HomePage.astro`: hero, the TalentForge and Forever Journey plates with real product media, Book Creator as the related tool, Plan → Play → Remember and the footer. Release states come from `src/config/release.ts`, links from `src/config/site.ts`. Product pages (`/talentforge/`, `/forever-journey/`) are WEB-M0.4 and are not linked yet; open release blockers are listed in `docs/assets-manifest.md`. WEB-M0.2 added the curated media, self-hosted Geologica and JetBrains Mono and the components in `src/components/ui/`.
 
 Component preview (development only, never built or published): `npm run dev`, then <http://localhost:4321/dev/components/en/> and `/dev/components/ru/`.
 
@@ -40,7 +40,8 @@ docs/assets-manifest.md   provenance, kinds and usage rules of every image and f
 docs/screenshots/         component screenshots attached to PRs
 public/                   static files (robots.txt, favicon, fonts/ with OFL licences)
 src/assets/media/         curated original product images (see the manifest)
-src/components/           header, footer, language switcher, logo, placeholder
+src/components/           header (with mobile menu), footer, language switcher, logo
+src/components/home/      home page: HomePage and its plates and Plan → Play → Remember
 src/components/ui/        v3.2 components: ProductPlate, ProductAction, StatusTag,
                           ReleaseStatus, FigureWithCaption, AssetPlaceholder,
                           ClassArtworkGrid, MediaGrid

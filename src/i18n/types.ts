@@ -24,23 +24,58 @@ export interface Dictionary {
     languageSwitcher: string;
     homeLink: string;
     opensInNewTab: string;
+    /** Name of the mobile menu button; its state is in aria-expanded. */
+    menu: string;
+    footerNav: string;
   };
   languageNames: Record<Locale, string>;
   home: {
     eyebrow: string;
     heading: string;
     lead: string;
+    /** Accessible name of the product plates region. */
     productsHeading: string;
     products: {
       talentforge: ProductCopy;
       foreverJourney: ProductCopy;
       bookCreator: ProductCopy;
     };
+    /** Only facts confirmed by the TalentForge sources. */
+    talentforgeFeatures: {
+      autosave: string;
+      offline: string;
+      languages: string;
+    };
+    exploreTalentforge: string;
+    /** Second line of the disabled action until the product page exists. */
+    pagePending: string;
+    /** Forever Journey availability on CurseForge, by release state. */
+    curseforgeStates: Record<ReleaseState, string>;
+    addonPlaceholderNote: string;
+    downloadAddon: string;
     bookCreatorLinkLabel: string;
-    statusNote: string;
+    /** The synthetic English demo book, shown in every locale. */
+    bookSample: {
+      coverAlt: string;
+      chapterAlt: string;
+      caption: string;
+    };
+    flow: {
+      heading: string;
+      steps: Record<"plan" | "play" | "remember", FlowStep>;
+    };
   };
   footer: {
     disclaimer: string;
+    products: string;
+    getTools: string;
+    site: string;
+    /** Site pages without an address yet; shown with "link pending". */
+    pages: {
+      privacy: string;
+      terms: string;
+      contact: string;
+    };
   };
   release: {
     heading: string;
@@ -81,6 +116,11 @@ export interface ProductCopy {
   name: string;
   kind: string;
   summary: string;
+}
+
+export interface FlowStep {
+  title: string;
+  text: string;
 }
 
 export interface MediaCopy {

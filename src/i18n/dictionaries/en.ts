@@ -8,13 +8,15 @@ export const en = {
     siteName: "Mythweld",
     homeTitle: "Mythweld — independent tools for World of Warcraft: Forever",
     homeDescription:
-      "Mythweld is an independent collection of gaming tools: TalentForge, Forever Journey and Book Creator. The new website is under construction.",
+      "Independent tools for World of Warcraft: Forever. TalentForge plans talent builds on your phone; the Forever Journey addon keeps an in-game journal that Book Creator turns into a printable book.",
   },
   a11y: {
     skipToContent: "Skip to content",
     primaryNav: "Primary",
     languageSwitcher: "Language",
     homeLink: "Mythweld home",
+    menu: "Menu",
+    footerNav: "Footer",
     opensInNewTab: "opens in a new tab",
   },
   languageNames: {
@@ -22,34 +24,75 @@ export const en = {
     ru: "Русский",
   },
   home: {
-    eyebrow: "Website in progress",
-    heading: "Mythweld",
-    lead: "An independent collection of gaming tools for World of Warcraft: Forever. This page is a temporary placeholder while the new website is being built.",
+    eyebrow: "Tools for World of Warcraft: Forever",
+    heading: "Plan the build. Keep the story.",
+    lead: "A talent planner for your phone and an in-game journal that becomes a printable book.",
     productsHeading: "Products",
     products: {
       talentforge: {
         name: "TalentForge",
         kind: "Mobile app",
-        summary: "Talent-build planner for World of Warcraft: Forever.",
+        summary:
+          "Plan talent builds for all nine classes in the real specialization trees, then pick them up later.",
       },
       foreverJourney: {
         name: "Forever Journey",
-        kind: "Game addon",
-        summary: "In-game character journal addon.",
+        kind: "WoW addon",
+        summary:
+          "Records level-ups, zones, deaths, boss kills and your own notes while you play.",
       },
       bookCreator: {
         name: "Book Creator",
         kind: "Web tool",
-        summary: "Browser-based generator of printable PDF books.",
+        summary:
+          "Turns the journal into a printable PDF, right in your browser.",
       },
     },
-    bookCreatorLinkLabel: "Open Book Creator",
-    statusNote:
-      "Product pages, screenshots and download links will appear here once they are ready.",
+    talentforgeFeatures: {
+      autosave: "Saves as you edit",
+      offline: "Works offline",
+      languages: "English and Russian",
+    },
+    exploreTalentforge: "Explore TalentForge",
+    pagePending: "page in preparation",
+    curseforgeStates: {
+      available: "Available on CurseForge",
+      testing: "Testing on CurseForge",
+      prep: "Coming to CurseForge",
+    },
+    addonPlaceholderNote: "Not drawn or mocked up.",
+    downloadAddon: "Download Addon",
+    bookCreatorLinkLabel: "Create Adventure Book",
+    bookSample: {
+      coverAlt:
+        "Sample book cover: My Journey, Aelirien, Night Elf Druid, level 80",
+      chapterAlt:
+        "Sample book page: Chapter I, June 2026, with journal entries",
+      caption: "Sample book · demo character",
+    },
+    flow: {
+      heading: "Plan → Play → Remember",
+      steps: {
+        plan: { title: "Plan", text: "TalentForge, before you log in." },
+        play: { title: "Play", text: "Forever Journey, while you level." },
+        remember: {
+          title: "Remember",
+          text: "Book Creator, when the chapter ends.",
+        },
+      },
+    },
   },
   footer: {
     disclaimer:
       "Mythweld is an independent fan project. It is not affiliated with or endorsed by Blizzard Entertainment. World of Warcraft and related names and images are trademarks of Blizzard Entertainment, Inc.",
+    products: "Products",
+    getTools: "Get the tools",
+    site: "Site",
+    pages: {
+      privacy: "Privacy",
+      terms: "Terms",
+      contact: "Contact",
+    },
   },
   release: {
     heading: "Release status",

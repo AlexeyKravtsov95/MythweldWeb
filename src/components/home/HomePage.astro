@@ -1,0 +1,101 @@
+---
+/**
+ * Mythweld home page (v3.2 — The Forge, Product First), shared by `/` and
+ * `/ru/`: compact hero, the TalentForge and Forever Journey plates side by
+ * side (7:5, stacked at ≤1100) and the Plan → Play → Remember strip.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getDictionary, type Locale } from "../../i18n";
+import ForeverJourneyPlate from "./ForeverJourneyPlate.astro";
+import ProductFlow from "./ProductFlow.astro";
+import TalentForgePlate from "./TalentForgePlate.astro";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = getDictionary(locale);
+---
+
+<BaseLayout
+  locale={locale}
+  path="/"
+  title={t.meta.homeTitle}
+  description={t.meta.homeDescription}
+>
+  <div class="container home">
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow">{t.home.eyebrow}</p>
+      <h1 id="page-title">{t.home.heading}</h1>
+      <p class="lead">{t.home.lead}</p>
+    </section>
+
+    <section class="products" aria-label={t.home.productsHeading}>
+      <TalentForgePlate locale={locale} />
+      <ForeverJourneyPlate locale={locale} />
+    </section>
+
+    <ProductFlow locale={locale} />
+  </div>
+</BaseLayout>
+
+<style>
+  .home {
+    padding-block: var(--space-9) var(--space-10);
+  }
+
+  .hero {
+    display: grid;
+    gap: var(--space-3);
+    max-width: 46rem;
+  }
+
+  .eyebrow {
+    color: var(--color-text-subtle);
+    font-size: 0.9375rem;
+  }
+
+  h1 {
+    font-size: var(--font-size-h1-home);
+    /* Whole words only: the slogan must not break as "Со-храните". */
+    hyphens: manual;
+    text-wrap: balance;
+  }
+
+  .lead {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lead);
+    line-height: 1.45;
+  }
+
+  .products {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: var(--space-5);
+    margin-top: var(--space-8);
+  }
+
+  @media (max-width: 1100px) {
+    .products {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 900px) {
+    .home {
+      padding-block: var(--space-8) var(--space-9);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .home {
+      padding-top: var(--space-6);
+    }
+
+    .products {
+      margin-top: var(--space-6);
+      gap: var(--space-4);
+    }
+  }
+</style>

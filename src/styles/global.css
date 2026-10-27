@@ -49,6 +49,11 @@ a {
   color: inherit;
 }
 
+/* Anchor targets (product plates) keep the plate edge in view. */
+:target {
+  scroll-margin-top: var(--space-8);
+}
+
 :focus-visible {
   outline: var(--focus-ring-width) solid var(--color-focus-ring);
   outline-offset: var(--focus-ring-offset);

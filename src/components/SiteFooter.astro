@@ -1,27 +1,186 @@
 ---
-import { getDictionary, type Locale } from "../i18n";
+/**
+ * Site footer (v3.2 home): logo and the Blizzard fan disclaimer, then
+ * Products, Get the tools and Site columns. Only existing resources are
+ * links; a store or site page without an address shows "link pending".
+ */
+import { RELEASE } from "../config/release";
+import { SITE } from "../config/site";
+import { getDictionary, localeRoot, type Locale } from "../i18n";
+import LogoMark from "./LogoMark.astro";
+import StatusTag from "./ui/StatusTag.astro";
 
 interface Props {
   locale: Locale;
 }
 
-const t = getDictionary(Astro.props.locale);
+const { locale } = Astro.props;
+const t = getDictionary(locale);
+const { products } = t.home;
+const home = localeRoot(locale);
+const tf = RELEASE.talentforge;
+
+interface FooterLink {
+  label: string;
+  /** `null` while the address does not exist. */
+  href: string | null;
+}
+
+const columns: { title: string; links: FooterLink[] }[] = [
+  {
+    title: t.footer.products,
+    links: [
+      { label: products.talentforge.name, href: `${home}#talentforge` },
+      {
+        label: products.foreverJourney.name,
+        href: `${home}#forever-journey`,
+      },
+      { label: products.bookCreator.name, href: SITE.links.bookCreator },
+    ],
+  },
+  {
+    title: t.footer.getTools,
+    links: [
+      { label: "CurseForge", href: SITE.links.curseforge },
+      { label: t.release.channels.googlePlay, href: tf.googlePlay },
+      { label: t.release.channels.appStore, href: tf.appStore },
+    ],
+  },
+  {
+    title: t.footer.site,
+    links: [
+      { label: t.footer.pages.privacy, href: null },
+      { label: t.footer.pages.terms, href: null },
+      { label: t.footer.pages.contact, href: null },
+    ],
+  },
+];
+
+const isExternal = (href: string) => /^https?:\/\//.test(href);
 ---
 
 <footer class="site-footer">
-  <div class="container">
-    <p>{t.footer.disclaimer}</p>
+  <div class="container grid">
+    <div class="about">
+      <p class="brand">
+        <LogoMark size={26} />
+        <span>{t.meta.siteName}</span>
+      </p>
+      <p class="disclaimer">{t.footer.disclaimer}</p>
+    </div>
+    <nav class="columns" aria-label={t.a11y.footerNav}>
+      {columns.map((column) => (
+        <div class="column">
+          <p class="title">{column.title}</p>
+          <ul>
+            {column.links.map((link) => (
+              <li>
+                {link.href === null ? (
+                  <span class="pending">
+                    {link.label}{" "}
+                    <StatusTag state="pending" label={t.actions.linkPending} />
+                  </span>
+                ) : isExternal(link.href) ? (
+                  <a href={link.href} target="_blank" rel="noopener">
+                    {link.label}
+                    <span aria-hidden="true">↗</span>
+                    <span class="visually-hidden">
+                      ({t.a11y.opensInNewTab})
+                    </span>
+                  </a>
+                ) : (
+                  <a href={link.href}>{link.label}</a>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </nav>
   </div>
 </footer>
 
 <style>
   .site-footer {
     margin-top: auto;
-    padding-block: var(--space-8);
-    border-top: 1px solid var(--color-divider);
+    padding-block: var(--space-9) var(--space-10);
     background: var(--color-bg-sunken);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--space-8) var(--space-9);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: 1.25rem;
+    font-weight: 760;
+    font-variation-settings: var(--font-heading-sharpness);
+    letter-spacing: var(--letter-spacing-heading);
+  }
+
+  .disclaimer {
+    max-width: 30rem;
+    margin-top: var(--space-5);
     color: var(--color-text-subtle);
     font-size: var(--font-size-caption);
-    line-height: var(--line-height-caption);
+    line-height: 1.55;
+  }
+
+  .columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
+    gap: var(--space-6) var(--space-5);
+  }
+
+  .title {
+    margin-bottom: var(--space-2);
+    color: var(--color-brand-bronze);
+    font-size: 0.9375rem;
+    font-weight: var(--font-weight-label);
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  a,
+  .pending {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
+    min-height: var(--size-target-min);
+  }
+
+  a {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--color-action-primary-hover);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .pending {
+    color: var(--color-text-subtle);
+  }
+
+  @media (max-width: 900px) {
+    .site-footer {
+      padding-block: var(--space-8) var(--space-9);
+    }
+
+    .grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 </style>
