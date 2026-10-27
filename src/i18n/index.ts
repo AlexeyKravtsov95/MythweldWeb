@@ -7,9 +7,14 @@ export * from "./locales";
 export type {
   Dictionary,
   FlowStep,
+  ForeverJourneyPageCopy,
+  InfoItem,
   MediaCopy,
+  NextProductCopy,
+  PageMeta,
   PlaceholderCopy,
   ProductCopy,
+  TalentForgePageCopy,
 } from "./types";
 
 const dictionaries: Record<Locale, Dictionary> = { en, ru };

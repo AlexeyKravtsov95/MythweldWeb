@@ -6,7 +6,7 @@
  * so the script below only enhances an already usable header.
  */
 import { SITE } from "../config/site";
-import { getDictionary, localeRoot, type Locale } from "../i18n";
+import { getDictionary, localeRoot, localizePath, type Locale } from "../i18n";
 import LanguageSwitcher from "./LanguageSwitcher.astro";
 import LogoMark from "./LogoMark.astro";
 
@@ -19,10 +19,14 @@ const { locale, path } = Astro.props;
 const t = getDictionary(locale);
 const { products } = t.home;
 const home = localeRoot(locale);
-const sections = [
-  { href: `${home}#talentforge`, label: products.talentforge.name },
-  { href: `${home}#forever-journey`, label: products.foreverJourney.name },
-];
+const pages = [
+  { path: "/talentforge/", label: products.talentforge.name },
+  { path: "/forever-journey/", label: products.foreverJourney.name },
+].map((page) => ({
+  ...page,
+  href: localizePath(locale, page.path),
+  current: page.path === path,
+}));
 ---
 
 <header class="site-header" data-site-header>
@@ -60,9 +64,14 @@ const sections = [
     <div class="menu" id="site-menu">
       <nav class="primary" aria-label={t.a11y.primaryNav}>
         <ul>
-          {sections.map((link) => (
+          {pages.map((page) => (
             <li>
-              <a href={link.href}>{link.label}</a>
+              <a
+                href={page.href}
+                aria-current={page.current ? "page" : undefined}
+              >
+                {page.label}
+              </a>
             </li>
           ))}
           <li>
@@ -97,7 +106,7 @@ const sections = [
       setOpen(toggle.getAttribute("aria-expanded") !== "true");
     });
 
-    // Same-page anchors keep the page, so close the menu on navigation.
+    // Close the menu on navigation (also for links to the current page).
     menu.addEventListener("click", (event) => {
       if ((event.target as Element).closest("a")) setOpen(false);
     });
@@ -173,6 +182,12 @@ const sections = [
   .primary a:hover {
     background: var(--color-surface);
     color: var(--color-action-primary-hover);
+  }
+
+  /* Current product page: text colour plus a bronze underline (v3.2). */
+  .primary a[aria-current="page"] {
+    color: var(--color-text);
+    box-shadow: inset 0 -2px 0 var(--color-brand-bronze);
   }
 
   .menu-toggle {

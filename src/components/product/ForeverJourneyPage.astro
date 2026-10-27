@@ -1,0 +1,570 @@
+---
+/**
+ * Forever Journey product page (v3.2, pages 58–59), shared by
+ * `/forever-journey/` and `/ru/forever-journey/`: hero with both actions
+ * and the facts panel, 01 What the addon records with Install → Play → Make
+ * the book, 02 Book Creator and the strip to TalentForge.
+ *
+ * The in-game slot stays the honest placeholder until a real addon
+ * screenshot exists (blocker B1). Book Creator is shown only through pages
+ * of a PDF it produced, never as addon UI; the sample is the synthetic
+ * English demo book in every locale (blocker B4). How the journal gets to
+ * Book Creator follows ForeverJourneyWeb: the player exports it or picks the
+ * SavedVariables file, and the PDF is made locally in the browser.
+ */
+import { Picture } from "astro:assets";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import AssetPlaceholder from "../ui/AssetPlaceholder.astro";
+import ProductAction from "../ui/ProductAction.astro";
+import StatusTag from "../ui/StatusTag.astro";
+import ProductNext from "./ProductNext.astro";
+import SectionHeading from "./SectionHeading.astro";
+import { RELEASE } from "../../config/release";
+import { SITE } from "../../config/site";
+import { getDictionary, type Locale } from "../../i18n";
+import { pickMedia, type MediaAsset } from "../../media/catalog";
+import { imageFor } from "../../media/images";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = getDictionary(locale);
+const copy = t.foreverJourneyPage;
+const name = t.home.products.foreverJourney.name;
+const curseforge = RELEASE.foreverJourney.curseforge;
+const { facts, records, steps, book, journal } = copy;
+const recordItems = [
+  records.items.levelUps,
+  records.items.zones,
+  records.items.deaths,
+  records.items.bossKills,
+  records.items.notes,
+];
+const stepItems = [steps.items.install, steps.items.play, steps.items.book];
+const sample = t.home.bookSample;
+const pages = [
+  { asset: pickMedia("bc-sample-cover", "en"), alt: sample.coverAlt },
+  { asset: pickMedia("bc-sample-chapter", "en"), alt: sample.chapterAlt },
+].filter((page): page is { asset: MediaAsset; alt: string } =>
+  Boolean(page.asset),
+);
+const ways = [journal.exportCode, journal.savedVariables];
+---
+
+<BaseLayout
+  locale={locale}
+  path="/forever-journey/"
+  title={copy.meta.title}
+  description={copy.meta.description}
+>
+  <div class="container product" data-product-page="forever-journey">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="intro">
+        <p class="kind">{copy.kind}</p>
+        <h1 id="page-title">{name}</h1>
+        <p class="lead">{copy.lead}</p>
+      </div>
+      <div class="media">
+        <AssetPlaceholder
+          locale={locale}
+          copy={t.media.placeholders.addonScreenshot}
+        />
+      </div>
+      <div class="actions">
+        <ProductAction
+          variant="forever-journey"
+          label={t.home.downloadAddon}
+          href={SITE.links.curseforge}
+          locale={locale}
+        />
+        <ProductAction
+          variant="secondary"
+          label={t.home.bookCreatorLinkLabel}
+          href={SITE.links.bookCreator}
+          locale={locale}
+        />
+      </div>
+      <dl class="facts" aria-label={facts.label}>
+        <div>
+          <dt>CurseForge</dt>
+          <dd>
+            <StatusTag
+              state={curseforge}
+              label={t.release.states[curseforge]}
+              framed={false}
+            />
+          </dd>
+        </div>
+        <div>
+          <dt>{facts.bookCreator}</dt>
+          <dd>
+            <StatusTag
+              state="available"
+              label={facts.worksInBrowser}
+              framed={false}
+            />
+          </dd>
+        </div>
+        <div>
+          <dt>{facts.account}</dt>
+          <dd>{facts.notNeeded}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="section" aria-labelledby="records">
+      <SectionHeading
+        number="01"
+        id="records"
+        title={records.heading}
+        text={records.text}
+      />
+      <ul class="chips">
+        {recordItems.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
+      <div class="steps">
+        <h3 class="visually-hidden">{steps.heading}</h3>
+        <ol>
+          {stepItems.map((step, index) => (
+            <li>
+              <span class="step-number" aria-hidden="true">
+                {index + 1}
+              </span>
+              <span class="step-title">{step.title}</span>
+              <span class="step-text">{step.text}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  </div>
+
+  <section class="book" aria-labelledby="book-creator">
+    <div class="container book-inner">
+      <div class="book-grid">
+        <div class="book-text">
+          <p class="book-label">
+            <span class="number" aria-hidden="true">
+              02
+            </span>
+            {book.label}
+          </p>
+          <h2 id="book-creator">{book.heading}</h2>
+          <p class="book-lead">{book.text}</p>
+          <ul class="points">
+            <li>{book.points.browser}</li>
+            <li>{book.points.account}</li>
+            <li>{book.points.upload}</li>
+          </ul>
+          <ProductAction
+            variant="forever-journey"
+            label={t.home.bookCreatorLinkLabel}
+            href={SITE.links.bookCreator}
+            locale={locale}
+          />
+        </div>
+        <figure class="sheets" data-kind="book-creator-sample">
+          <div class="sheet-row">
+            {pages.map((page) => (
+              <Picture
+                src={imageFor(page.asset)}
+                alt={page.alt}
+                widths={[400, 892]}
+                sizes="(max-width: 600px) 44vw, (max-width: 1100px) 40vw, 19rem"
+                formats={["avif", "webp"]}
+                loading="lazy"
+                decoding="async"
+              />
+            ))}
+          </div>
+          <figcaption>{book.sampleCaption}</figcaption>
+        </figure>
+      </div>
+
+      <div class="journal">
+        <h3>{journal.heading}</h3>
+        <p class="journal-text">{journal.text}</p>
+        <div class="ways">
+          {ways.map((way) => (
+            <div class="way">
+              <h4>{way.title}</h4>
+              <ol>
+                {way.steps.map((step) => (
+                  <li>{step}</li>
+                ))}
+              </ol>
+            </div>
+          ))}
+        </div>
+        <p class="privacy">{journal.privacy}</p>
+        <p class="archive">{journal.archive}</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="container next-wrap">
+    <ProductNext locale={locale} target="talentforge" copy={copy.next} />
+  </div>
+</BaseLayout>
+
+<style>
+  .product {
+    display: grid;
+    gap: var(--space-section);
+    padding-block: var(--space-9) var(--space-section);
+  }
+
+  /* Hero: text, actions and facts on the left; the in-game slot right. */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    grid-template-areas:
+      "intro media"
+      "actions media"
+      "facts media";
+    grid-template-rows: auto auto 1fr;
+    align-items: start;
+    gap: var(--space-5) var(--space-8);
+  }
+
+  .intro {
+    grid-area: intro;
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .kind {
+    color: var(--color-text-subtle);
+    font-size: 0.9375rem;
+  }
+
+  h1 {
+    font-size: var(--font-size-h1-product);
+  }
+
+  .lead {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lead);
+    line-height: 1.45;
+  }
+
+  .media {
+    grid-area: media;
+  }
+
+  .actions {
+    grid-area: actions;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .facts {
+    grid-area: facts;
+    display: grid;
+    margin: 0;
+    padding: var(--space-2) var(--space-5) var(--space-3);
+    background: var(--color-surface);
+    box-shadow: inset 0 var(--edge-product) 0 var(--color-fj-accent);
+    clip-path: polygon(
+      0 0,
+      100% 0,
+      100% calc(100% - var(--cut-plate)),
+      calc(100% - var(--cut-plate)) 100%,
+      0 100%
+    );
+  }
+
+  .facts > div {
+    display: grid;
+    grid-template-columns: minmax(6rem, 2fr) minmax(0, 5fr);
+    align-items: center;
+    gap: var(--space-4);
+    min-height: var(--size-target-min);
+  }
+
+  .facts > div + div {
+    border-top: 1px solid var(--color-divider);
+  }
+
+  dt {
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-caption);
+  }
+
+  dd {
+    margin: 0;
+    font-size: var(--font-size-caption);
+  }
+
+  .section {
+    display: grid;
+    gap: var(--space-7);
+    padding-top: var(--space-section);
+    border-top: 1px solid var(--color-divider);
+  }
+
+  .chips {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+    gap: var(--space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .chips li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    background: var(--color-surface);
+    font-weight: var(--font-weight-label);
+  }
+
+  .chips li::before {
+    content: "";
+    flex: 0 0 auto;
+    width: var(--space-2);
+    height: var(--space-2);
+    background: var(--color-fj-accent);
+    transform: translateY(-0.1em);
+  }
+
+  .steps ol {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .steps li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-content: start;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-3);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .step-number,
+  .number {
+    color: var(--color-brand-bronze);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-mono);
+    font-weight: 500;
+  }
+
+  .step-title {
+    font-weight: var(--font-weight-label);
+  }
+
+  .step-text {
+    grid-column: 2;
+    color: var(--color-text-muted);
+    font-size: 0.9375rem;
+  }
+
+  /* 02 Book Creator: a sunken band across the page. */
+  .book {
+    padding-block: var(--space-section);
+    background: var(--color-bg-sunken);
+  }
+
+  .book-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-9);
+  }
+
+  .book-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: start;
+    gap: var(--space-8);
+  }
+
+  .book-text {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-4);
+  }
+
+  .book-label {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    color: var(--color-fj-highlight);
+    font-size: var(--font-size-caption);
+  }
+
+  .book h2 {
+    font-size: var(--font-size-h2);
+  }
+
+  .book-lead {
+    color: var(--color-text-muted);
+  }
+
+  .points {
+    align-self: stretch;
+    margin: 0 0 var(--space-2);
+    padding: 0;
+    list-style: none;
+  }
+
+  .points li {
+    display: flex;
+    align-items: center;
+    min-height: var(--size-target-min);
+    border-top: 1px solid var(--color-divider);
+    font-size: 0.9375rem;
+  }
+
+  .points li:last-child {
+    border-bottom: 1px solid var(--color-divider);
+  }
+
+  .sheet-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+
+  .sheets :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  figcaption {
+    margin-top: var(--space-2);
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+
+  .journal {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--color-divider);
+  }
+
+  .journal h3 {
+    font-size: var(--font-size-plate-title);
+    /* Whole words only: not "днев-ник" at 320 px. */
+    hyphens: manual;
+  }
+
+  .journal-text,
+  .privacy {
+    max-width: 46rem;
+    color: var(--color-text-muted);
+  }
+
+  .archive {
+    max-width: 46rem;
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+
+  .ways {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+
+  .way {
+    padding: var(--space-5);
+    background: var(--color-surface);
+  }
+
+  .way h4 {
+    margin: 0;
+    font-size: var(--font-size-label);
+    font-weight: var(--font-weight-label);
+    line-height: 1.3;
+  }
+
+  .way ol {
+    display: grid;
+    gap: var(--space-2);
+    margin: var(--space-3) 0 0;
+    padding-inline-start: 1.25rem;
+    color: var(--color-text-muted);
+    font-size: 0.9375rem;
+    /* The SavedVariables path has no spaces: let it break at 320 px. */
+    overflow-wrap: anywhere;
+  }
+
+  .way li::marker {
+    color: var(--color-brand-bronze);
+  }
+
+  .next-wrap {
+    padding-block: var(--space-section) var(--space-10);
+  }
+
+  @media (max-width: 1100px) {
+    .book-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 900px) {
+    .product {
+      padding-top: var(--space-8);
+    }
+
+    .hero {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "intro"
+        "media"
+        "actions"
+        "facts";
+      grid-template-rows: none;
+    }
+
+    .steps ol,
+    .ways {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .steps ol {
+      gap: var(--space-4);
+    }
+
+    .next-wrap {
+      padding-bottom: var(--space-9);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .product {
+      padding-top: var(--space-6);
+    }
+
+    .chips {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .sheet-row {
+      gap: var(--space-3);
+    }
+
+    .way {
+      padding: var(--space-4);
+    }
+  }
+</style>

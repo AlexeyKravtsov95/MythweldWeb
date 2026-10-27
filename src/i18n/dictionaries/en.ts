@@ -54,7 +54,7 @@ export const en = {
       languages: "English and Russian",
     },
     exploreTalentforge: "Explore TalentForge",
-    pagePending: "page in preparation",
+    exploreForeverJourney: "About Forever Journey",
     curseforgeStates: {
       available: "Available on CurseForge",
       testing: "Testing on CurseForge",
@@ -113,6 +113,172 @@ export const en = {
   actions: {
     linkPending: "link pending",
     inPreparation: "in preparation",
+  },
+  product: {
+    flowLabel: "Plan → Play → Remember",
+  },
+  talentforgePage: {
+    meta: {
+      title: "TalentForge — talent build planner for WoW: Forever · Mythweld",
+      description:
+        "TalentForge is a mobile app for planning World of Warcraft: Forever talent builds for all nine classes in the real specialization trees. Builds stay on your phone and planning works offline.",
+    },
+    kind: "Mobile app · Android and iOS",
+    lead: "Plan talent builds for all nine classes of World of Warcraft: Forever in the real specialization trees. Builds stay on your phone.",
+    dataVersionNote:
+      "Talent data is the version of the World of Warcraft: Forever talent data the app plans on, not the app version.",
+    classes: {
+      heading: "Nine classes",
+      text: "Pick a class and start a build. Every class has its own artwork, drawn for TalentForge.",
+      artwork: {
+        title: "Class artwork",
+        text: "Drawn for TalentForge. Used for class choice and saved builds. These are not game icons.",
+      },
+      icons: {
+        title: "Talent icons",
+        text: "From the game. They appear only inside the trees, as in this fragment of the editor.",
+      },
+      iconsCropAlt:
+        "Fragment of the TalentForge talent editor: rows of game talent icons with their rank counters",
+      iconsCropCaption:
+        "Fragment of the talent editor · app screenshot, iPhone",
+    },
+    trees: {
+      heading: "The real trees",
+      text: "Every class has its three specialization trees, built from World of Warcraft: Forever client data.",
+      points: {
+        tabs: {
+          title: "Three trees, one tap apart",
+          text: "Switch between the specialization trees with the tabs above the tree. Each tab shows the points spent in it.",
+        },
+        rules: {
+          title: "The game's rules",
+          text: "Tier requirements and prerequisites are checked with every point you spend. Undo and redo are always there.",
+        },
+        details: {
+          title: "Talent details",
+          text: "Tap a talent to read its description for the current and the next rank.",
+        },
+        landscape: {
+          title: "Turn the phone",
+          text: "In landscape, talent details open in a side panel next to the tree.",
+        },
+      },
+    },
+    features: {
+      heading: "What it does",
+      items: {
+        autosave: {
+          title: "Saves as you edit",
+          text: "Every change is kept at once. There is no Save button: close the app and the build is still there.",
+        },
+        offline: {
+          title: "Works offline",
+          text: "Trees, icons and builds live on the phone. Planning needs no connection.",
+        },
+        languages: {
+          title: "English and Russian",
+          text: "The app follows your phone's language. In Russian, talent names and most descriptions come from the game's own Russian text; the rest is shown in English.",
+        },
+        share: {
+          title: "Import and share builds",
+          text: "Send a build as a short text code through any messenger, or import a code you were given.",
+        },
+        dataVersions: {
+          title: "Builds keep their data",
+          text: "A saved build always opens on the talent data version it was made with.",
+        },
+      },
+      notShown: "Not shown in the screenshots on this page.",
+    },
+    next: {
+      text: "Then play it. Forever Journey records the run.",
+      action: "Forever Journey",
+    },
+  },
+  foreverJourneyPage: {
+    meta: {
+      title: "Forever Journey — journal addon for WoW: Forever · Mythweld",
+      description:
+        "Forever Journey is a World of Warcraft: Forever addon that keeps a journal of your character: level-ups, zones, deaths, boss kills and your notes. Book Creator turns it into a printable PDF in your browser.",
+    },
+    kind: "World of Warcraft addon",
+    lead: "Keeps a journal of your character while you play: level-ups, zones, deaths, boss kills and your own notes. When a chapter ends, Book Creator turns it into a printable book.",
+    facts: {
+      label: "At a glance",
+      bookCreator: "Book Creator",
+      worksInBrowser: "Works in the browser",
+      account: "Account",
+      notNeeded: "Not needed",
+    },
+    records: {
+      heading: "What the addon records",
+      text: "It writes as you play. You add notes when you want to.",
+      items: {
+        levelUps: "Level-ups",
+        zones: "Zones",
+        deaths: "Deaths",
+        bossKills: "Boss kills",
+        notes: "Your notes",
+      },
+    },
+    steps: {
+      heading: "Install → Play → Make the book",
+      items: {
+        install: {
+          title: "Install",
+          text: "Download the addon from CurseForge.",
+        },
+        play: {
+          title: "Play",
+          text: "The journal fills in on its own.",
+        },
+        book: {
+          title: "Make the book",
+          text: "Export the journal from the addon, open Book Creator and download a PDF.",
+        },
+      },
+    },
+    book: {
+      label: "Book Creator",
+      heading: "From journal to book.",
+      text: "Book Creator lays out the journal as chapters and pages and saves a PDF you can print.",
+      points: {
+        browser: "Runs in your browser, on your computer",
+        account: "No account",
+        upload: "Nothing is uploaded",
+      },
+      sampleCaption:
+        "Pages from a sample PDF made by Book Creator · demo character",
+    },
+    journal: {
+      heading: "Bring the journal to Book Creator",
+      text: "The addon does not send the journal anywhere by itself. Pick one of two ways.",
+      exportCode: {
+        title: "Export code",
+        steps: [
+          "In game, open the Forever Journey journal with /fj.",
+          "Press Export Book: the addon shows code blocks that start with FJBOOK1:.",
+          "Copy every block and paste them into Book Creator.",
+        ],
+      },
+      savedVariables: {
+        title: "SavedVariables file",
+        steps: [
+          "In game, type /reload so the addon writes its data to disk.",
+          "In Book Creator, pick WTF/Account/<ACCOUNT>/SavedVariables/ForeverJourney.lua from your World of Warcraft folder.",
+          "Choose a character: journals of different characters are never merged.",
+        ],
+      },
+      privacy:
+        "Either way, the journal is read and the PDF is made in your browser. Nothing is uploaded to a server.",
+      archive:
+        "A book from the SavedVariables file adds a Character Archive. Its values are a historical snapshot and may not match your character today.",
+    },
+    next: {
+      text: "Plan the build before you log in.",
+      action: "TalentForge",
+    },
   },
   talentforge: {
     classNames: {

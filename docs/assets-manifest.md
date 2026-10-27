@@ -119,6 +119,16 @@ Upstream: Google Fonts (`google/fonts`), Geologica v5, JetBrains Mono v24. Fallb
 - Forever Journey: вместо скриншота аддона — placeholder «In-game addon screenshot» (B1). Страницы `bc-sample-*` подписаны как пример книги Book Creator, не как скриншоты аддона.
 - На **обеих** локалях показан EN-образец (`bc-sample-cover/chapter`, `en`, синтетический персонаж Aelirien); на RU — с подписью «Пример книги на английском · демо-персонаж». RU-образец со «Straider» на главную не выводится до решения по B4 (проверяется тестом `tests/home.test.ts`).
 
+## Использование на продуктовых страницах (WEB-M0.4)
+
+Новых файлов нет: страницы используют только записи этого реестра через `pickMedia(group, locale)`.
+
+- **TalentForge** (`/talentforge/`, `/ru/talentforge/`): `tf-editor` языка страницы (первый экран, `loading="eager"`), `tf-class-picker`, `tf-build-library`, девять иллюстраций классов с названиями (`alt=""`) и одна иллюстрация воина в пояснении «Class artwork». Игровые иконки талантов показаны только как **CSS-фрагмент** `tf-editor` (`object-fit`/`object-position`, пиксели не меняются) с подписью «Fragment of the talent editor · app screenshot, iPhone» / «Фрагмент редактора талантов · …».
+- Блок «The real trees» — **без изображения**: горизонтального снимка нет (B2), а рендер из макета (стр. 26) отклонён. Фраза макета «All three specialization trees on one screen when you turn the phone» не используется: по `TalentForge/docs/mobile-architecture.md` (M5.UX.2b.1) в горизонтальном режиме дерево остаётся одно, а описание таланта открывается боковой панелью 300 dp — это и написано на странице.
+- Пункт макета «Data updates over the air» не используется: удалённая доставка данных реализована, но выключена во всех сборках (`TalentForge/docs/ota/README.md`, M5.OTA.PROD.1). Вместо него — «Builds keep their data» (сохранённый билд открывается на своей версии данных, M5.DATA).
+- **Forever Journey** (`/forever-journey/`, `/ru/forever-journey/`): placeholder «In-game addon screenshot» (B1) на первом экране; в разделе Book Creator — EN-образец `bc-sample-cover/chapter` на обеих локалях, на RU с подписью «… пример на английском» (B4). Скриншоты интерфейса Book Creator (`bc-app-*`) не показаны: EN-снимка нет (B3), а RU-снимок не подменяет EN.
+- Путь «журнал → книга» описан по `ForeverJourneyWeb/src/i18n.ts` и `README.md`: код `FJBOOK1` (`/fj` → Export Book) или файл `ForeverJourney.lua` из SavedVariables; книга собирается в браузере, на сервер ничего не загружается. Архив персонажа подписан как исторический снимок.
+
 ## Блокеры
 
 | ID  | Что нужно                                                                            | Сейчас                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |

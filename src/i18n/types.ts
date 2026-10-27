@@ -47,8 +47,7 @@ export interface Dictionary {
       languages: string;
     };
     exploreTalentforge: string;
-    /** Second line of the disabled action until the product page exists. */
-    pagePending: string;
+    exploreForeverJourney: string;
     /** Forever Journey availability on CurseForge, by release state. */
     curseforgeStates: Record<ReleaseState, string>;
     addonPlaceholderNote: string;
@@ -95,6 +94,13 @@ export interface Dictionary {
     linkPending: string;
     inPreparation: string;
   };
+  /** Shared parts of the product pages. */
+  product: {
+    /** Label of the strip that links to the other product page. */
+    flowLabel: string;
+  };
+  talentforgePage: TalentForgePageCopy;
+  foreverJourneyPage: ForeverJourneyPageCopy;
   talentforge: {
     /** Soft hyphens (U+00AD) allowed for long names in narrow tiles. */
     classNames: Record<ClassId, string>;
@@ -131,4 +137,106 @@ export interface MediaCopy {
 export interface PlaceholderCopy {
   title: string;
   note: string;
+}
+
+export interface PageMeta {
+  title: string;
+  description: string;
+}
+
+export interface InfoItem {
+  title: string;
+  text: string;
+}
+
+/** Link to the other product page at the end of a product page. */
+export interface NextProductCopy {
+  text: string;
+  action: string;
+}
+
+/**
+ * TalentForge page (v3.2, pages 25–27). Only facts confirmed by the
+ * TalentForge sources: no device sync, no game client or API, no OTA claim
+ * while remote data delivery is disabled in the app.
+ */
+export interface TalentForgePageCopy {
+  meta: PageMeta;
+  /** "Mobile app · Android and iOS". */
+  kind: string;
+  lead: string;
+  /** Says that the talent data version is not the app version. */
+  dataVersionNote: string;
+  classes: {
+    heading: string;
+    text: string;
+    artwork: InfoItem;
+    icons: InfoItem;
+    /** Alt and caption of the CSS crop of the editor screenshot. */
+    iconsCropAlt: string;
+    iconsCropCaption: string;
+  };
+  trees: {
+    heading: string;
+    text: string;
+    points: Record<"tabs" | "rules" | "details" | "landscape", InfoItem>;
+  };
+  features: {
+    heading: string;
+    items: Record<
+      "autosave" | "offline" | "languages" | "share" | "dataVersions",
+      InfoItem
+    >;
+    /** Marks a feature that no screenshot on the page shows. */
+    notShown: string;
+  };
+  next: NextProductCopy;
+}
+
+/**
+ * Forever Journey page (v3.2, pages 58–59). The addon never sends the
+ * journal anywhere: the player exports it and Book Creator builds the PDF
+ * locally in the browser.
+ */
+export interface ForeverJourneyPageCopy {
+  meta: PageMeta;
+  kind: string;
+  lead: string;
+  facts: {
+    /** Accessible name of the facts panel. */
+    label: string;
+    bookCreator: string;
+    worksInBrowser: string;
+    account: string;
+    notNeeded: string;
+  };
+  records: {
+    heading: string;
+    text: string;
+    items: Record<
+      "levelUps" | "zones" | "deaths" | "bossKills" | "notes",
+      string
+    >;
+  };
+  steps: {
+    heading: string;
+    items: Record<"install" | "play" | "book", InfoItem>;
+  };
+  book: {
+    label: string;
+    heading: string;
+    text: string;
+    points: Record<"browser" | "account" | "upload", string>;
+    sampleCaption: string;
+  };
+  journal: {
+    heading: string;
+    text: string;
+    exportCode: { title: string; steps: readonly string[] };
+    savedVariables: { title: string; steps: readonly string[] };
+    privacy: string;
+    /** SavedVariables snapshots are history, not current character stats. */
+    archive: string;
+  };
+  next: NextProductCopy;
 }

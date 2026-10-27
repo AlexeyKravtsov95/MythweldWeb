@@ -3,7 +3,8 @@
  * Forever Journey plate of the home page. The addon has no verified in-game
  * screenshot yet (blocker B1), so it shows the honest placeholder; Book
  * Creator is presented as the related tool with pages of a sample PDF it
- * produced, never as addon screenshots.
+ * produced, never as addon screenshots. A text link leads to the product
+ * page; the CurseForge download stays the plate's main action.
  *
  * The sample is the synthetic English demo book in every locale: the only
  * Russian sample carries a name from a real character archive (blocker B4)
@@ -16,7 +17,7 @@ import ProductPlate from "../ui/ProductPlate.astro";
 import StatusTag from "../ui/StatusTag.astro";
 import { RELEASE } from "../../config/release";
 import { SITE } from "../../config/site";
-import { getDictionary, type Locale } from "../../i18n";
+import { getDictionary, localizePath, type Locale } from "../../i18n";
 import { pickMedia, type MediaAsset } from "../../media/catalog";
 import { imageFor } from "../../media/images";
 
@@ -58,6 +59,10 @@ const pages = [
     }}
   />
   <p class="summary">{fj.summary}</p>
+  <a class="more" href={localizePath(locale, "/forever-journey/")}>
+    {t.home.exploreForeverJourney}
+    <span aria-hidden="true">→</span>
+  </a>
 
   <section class="book" aria-labelledby="book-creator">
     <div class="sheets">
@@ -99,6 +104,24 @@ const pages = [
 <style>
   .summary {
     color: var(--color-text);
+  }
+
+  .more {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: var(--space-2);
+    min-height: var(--size-target-min);
+    margin-top: calc(-1 * var(--space-2));
+    color: var(--color-fj-highlight);
+    font-weight: var(--font-weight-label);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+  }
+
+  .more:hover {
+    color: var(--color-fj-action-hover);
   }
 
   .book {
