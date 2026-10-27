@@ -1,0 +1,193 @@
+---
+/**
+ * TalentForge release panel (v3.2 TalentForge page): store statuses, store
+ * buttons and talent data version, all read from `src/config/release.ts`.
+ * A store without a link shows the "link pending" chip and a disabled button.
+ * A link alone never means "available": it may lead to a closed test track,
+ * so the store row always shows the platform's own release state.
+ */
+import { RELEASE, type Release } from "../../config/release";
+import { getDictionary, type Locale } from "../../i18n";
+import ProductAction from "./ProductAction.astro";
+import StatusTag from "./StatusTag.astro";
+
+interface Props {
+  locale: Locale;
+  /** Unique id: the panel is labelled by its heading. */
+  id: string;
+  headingLevel?: 2 | 3;
+  /** Release facts; defaults to the config. Overridden only in tests. */
+  talentforge?: Release["talentforge"];
+}
+
+const {
+  locale,
+  id,
+  headingLevel = 2,
+  talentforge: tf = RELEASE.talentforge,
+} = Astro.props;
+const t = getDictionary(locale);
+const Heading = headingLevel === 3 ? "h3" : "h2";
+const checked = new Intl.DateTimeFormat(t.meta.dateLocale, {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+}).format(new Date(`${RELEASE.checked}T00:00:00Z`));
+
+const stores = [
+  {
+    name: t.release.channels.googlePlay,
+    href: tf.googlePlay,
+    state: tf.android,
+  },
+  { name: t.release.channels.appStore, href: tf.appStore, state: tf.ios },
+] as const;
+---
+
+<section class="release" aria-labelledby={id}>
+  <div class="head">
+    <Heading id={id} class="title">
+      {t.release.heading}
+    </Heading>
+    <p class="updated">
+      {t.release.updated} <time datetime={RELEASE.checked}>{checked}</time>
+    </p>
+  </div>
+  <dl class="rows">
+    <div>
+      <dt>{t.release.channels.android}</dt>
+      <dd>
+        <StatusTag
+          state={tf.android}
+          label={t.release.states[tf.android]}
+          framed={false}
+        />
+      </dd>
+    </div>
+    <div>
+      <dt>{t.release.channels.ios}</dt>
+      <dd>
+        <StatusTag
+          state={tf.ios}
+          label={t.release.states[tf.ios]}
+          framed={false}
+        />
+      </dd>
+    </div>
+    {stores.map((store) => (
+      <div>
+        <dt>{store.name}</dt>
+        <dd>
+          {store.href === null ? (
+            <StatusTag state="pending" label={t.actions.linkPending} />
+          ) : (
+            <StatusTag
+              state={store.state}
+              label={t.release.states[store.state]}
+              framed={false}
+            />
+          )}
+        </dd>
+      </div>
+    ))}
+    <div>
+      <dt>{t.release.channels.talentData}</dt>
+      <dd class="version">v{tf.dataVersion}</dd>
+    </div>
+  </dl>
+  <div class="stores">
+    {stores.map((store) => (
+      <ProductAction
+        variant="talentforge"
+        label={store.name}
+        href={store.href}
+        locale={locale}
+        pendingReason={
+          store.state === "prep"
+            ? t.actions.inPreparation
+            : t.actions.linkPending
+        }
+      />
+    ))}
+  </div>
+</section>
+
+<style>
+  .release {
+    display: grid;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    background: var(--color-surface);
+    box-shadow: inset 0 var(--edge-product) 0 var(--color-tf-accent);
+    clip-path: polygon(
+      0 0,
+      100% 0,
+      100% calc(100% - var(--cut-plate)),
+      calc(100% - var(--cut-plate)) 100%,
+      0 100%
+    );
+  }
+
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-4);
+  }
+
+  .title {
+    font-size: var(--font-size-label);
+    font-weight: var(--font-weight-label);
+    font-variation-settings: normal;
+    letter-spacing: normal;
+  }
+
+  .updated {
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-caption);
+  }
+
+  .rows {
+    display: grid;
+    margin: 0;
+  }
+
+  .rows > div {
+    display: grid;
+    grid-template-columns: minmax(6rem, 2fr) minmax(0, 5fr);
+    align-items: center;
+    gap: var(--space-4);
+    min-height: var(--size-target-min);
+    border-top: 1px solid var(--color-divider);
+  }
+
+  dt {
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-caption);
+  }
+
+  dd {
+    margin: 0;
+  }
+
+  .version {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-mono);
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  .stores {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  @media (max-width: 600px) {
+    .release {
+      padding: var(--space-5);
+    }
+  }
+</style>

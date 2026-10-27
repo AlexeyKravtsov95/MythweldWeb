@@ -33,6 +33,7 @@
   /* Products */
   --color-tf-accent: #e6715b; /* TalentForge plate edge and button */
   --color-tf-accent-hover: #ee8571;
+  --color-tf-action-text: var(--color-bg); /* on TalentForge buttons (6.1:1) */
   --color-tf-accent-2: #fbb86d; /* TalentForge secondary accent (from the app) */
   --color-fj-accent: #c5a76a; /* Forever Journey plate edge */
   --color-fj-action: #f1e3c0; /* Download Addon / Create Book button */

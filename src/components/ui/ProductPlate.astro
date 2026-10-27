@@ -1,0 +1,103 @@
+---
+/**
+ * Product plate (v3.2 board, 06): surface, 16 px cut, 4 px top edge in the
+ * product colour. Anatomy: title + product type, statuses, content (real
+ * product images), one main action. Slots: `status`, default, `actions`.
+ */
+interface Props {
+  product: "talentforge" | "forever-journey";
+  name: string;
+  /** Product type, e.g. "Mobile app". */
+  kind: string;
+  /** Unique id: the plate is labelled by its title. */
+  id: string;
+  headingLevel?: 2 | 3;
+}
+
+const { product, name, kind, id, headingLevel = 2 } = Astro.props;
+const Heading = headingLevel === 3 ? "h3" : "h2";
+---
+
+<article class="plate" data-product={product} aria-labelledby={id}>
+  <div class="head">
+    <Heading id={id} class="name">
+      {name}
+    </Heading>
+    <span class="kind">{kind}</span>
+  </div>
+  {Astro.slots.has("status") && (
+    <div class="status">
+      <slot name="status" />
+    </div>
+  )}
+  <slot />
+  {Astro.slots.has("actions") && (
+    <div class="actions">
+      <slot name="actions" />
+    </div>
+  )}
+</article>
+
+<style>
+  .plate {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-width: 0;
+    /* 26 px from the board; 18 px at ≤600 (no matching scale step). */
+    padding: 1.625rem;
+    background: var(--color-surface);
+    box-shadow: inset 0 var(--edge-product) 0 var(--plate-edge);
+    clip-path: polygon(
+      var(--cut-plate) 0,
+      100% 0,
+      100% calc(100% - var(--cut-plate)),
+      calc(100% - var(--cut-plate)) 100%,
+      0 100%,
+      0 var(--cut-plate)
+    );
+  }
+
+  [data-product="talentforge"] {
+    --plate-edge: var(--color-tf-accent);
+  }
+
+  [data-product="forever-journey"] {
+    --plate-edge: var(--color-fj-accent);
+  }
+
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-4);
+  }
+
+  .name {
+    font-size: var(--font-size-plate-title);
+  }
+
+  .kind {
+    color: var(--color-text-subtle);
+    font-size: 0.9375rem;
+  }
+
+  .status,
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .actions {
+    margin-top: auto;
+    gap: var(--space-3);
+  }
+
+  @media (max-width: 600px) {
+    .plate {
+      padding: 1.125rem;
+      gap: var(--space-3);
+    }
+  }
+</style>

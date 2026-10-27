@@ -1,0 +1,89 @@
+---
+/**
+ * Honest slot for a missing original (v3.2 board, 09): dashed frame and the
+ * amber "Required before release" tag. Nothing inside imitates product UI.
+ * Exposed as one image with a label, so screen readers hear the whole note.
+ */
+import { getDictionary, type Locale, type PlaceholderCopy } from "../../i18n";
+
+interface Props {
+  locale: Locale;
+  copy: PlaceholderCopy;
+  /** Aspect ratio of the image that will replace the slot. */
+  ratio?: "16 / 10" | "16 / 9" | "9 / 19.5";
+}
+
+const { locale, copy, ratio = "16 / 10" } = Astro.props;
+const t = getDictionary(locale);
+const label = `${copy.title}. ${t.media.requiredBeforeRelease}. ${copy.note}`;
+---
+
+<div
+  class="placeholder"
+  role="img"
+  aria-label={label}
+  style={`--placeholder-ratio: ${ratio}`}
+>
+  <span class="tag">{t.media.requiredBeforeRelease}</span>
+  <svg
+    width="26"
+    height="26"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.6"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <rect x="3" y="5" width="18" height="14" rx="1"></rect>
+    <path d="M3 15l5-4 4 3 3-2 6 4"></path>
+  </svg>
+  <p class="title">{copy.title}</p>
+  <p class="note">{copy.note}</p>
+</div>
+
+<style>
+  .placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    aspect-ratio: var(--placeholder-ratio);
+    min-width: 0;
+    padding: var(--space-5);
+    border: 2px dashed var(--color-placeholder-border);
+    background: var(--color-placeholder-bg);
+    color: var(--color-text-subtle);
+    text-align: center;
+  }
+
+  .tag {
+    padding: 1px var(--space-2);
+    background: var(--color-status-testing);
+    color: var(--color-bg);
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-label);
+    line-height: var(--line-height-caption);
+  }
+
+  .title {
+    color: var(--color-text);
+    font-size: var(--font-size-label);
+    font-weight: var(--font-weight-label);
+  }
+
+  .note {
+    max-width: 32em;
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+
+  @media (max-width: 600px) {
+    .placeholder {
+      aspect-ratio: auto;
+      min-height: 12rem;
+    }
+  }
+</style>

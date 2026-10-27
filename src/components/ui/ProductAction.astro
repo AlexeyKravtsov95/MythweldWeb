@@ -1,0 +1,162 @@
+---
+/**
+ * Button-styled link (v3.2 board, 05). Primary and product variants have the
+ * 8 px cut; secondary has none. The cut is removed on focus so the outline
+ * is not clipped. Without `href` the action renders as a disabled span with
+ * aria-disabled and the reason on a second line: never an `<a>` without href.
+ * External links get ↗, a new tab and rel="noopener".
+ */
+import { getDictionary, type Locale } from "../../i18n";
+
+interface Props {
+  variant: "primary" | "talentforge" | "forever-journey" | "secondary";
+  label: string;
+  /** `null` while the target does not exist yet (e.g. a store listing). */
+  href: string | null;
+  locale: Locale;
+  /** Second line of the disabled state; required when `href` is null. */
+  pendingReason?: string;
+  /** Adds → for internal "go to" actions. */
+  forward?: boolean;
+}
+
+const {
+  variant,
+  label,
+  href,
+  locale,
+  pendingReason,
+  forward = false,
+} = Astro.props;
+const t = getDictionary(locale);
+const external = href !== null && /^https?:\/\//.test(href);
+
+if (href === null && !pendingReason) {
+  throw new Error(`ProductAction "${label}" has no href and no pendingReason.`);
+}
+---
+
+{href === null ? (
+  <span class="action" data-variant="disabled" aria-disabled="true">
+    {label}
+    <small>{pendingReason}</small>
+  </span>
+) : (
+  <a
+    class="action"
+    data-variant={variant}
+    href={href}
+    target={external ? "_blank" : undefined}
+    rel={external ? "noopener" : undefined}
+  >
+    {label}
+    {external && (
+      <>
+        <span aria-hidden="true">↗</span>
+        <span class="visually-hidden">({t.a11y.opensInNewTab})</span>
+      </>
+    )}
+    {!external && forward && <span aria-hidden="true">→</span>}
+  </a>
+)}
+
+<style>
+  .action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: var(--size-button-height);
+    /* 22 px from the board; 14 px at ≤360 (no matching scale step). */
+    padding-inline: 1.375rem;
+    font-size: var(--font-size-label);
+    font-weight: var(--font-weight-label);
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.12s;
+  }
+
+  [data-variant="primary"],
+  [data-variant="talentforge"],
+  [data-variant="forever-journey"] {
+    clip-path: polygon(
+      var(--cut-control) 0,
+      100% 0,
+      100% calc(100% - var(--cut-control)),
+      calc(100% - var(--cut-control)) 100%,
+      0 100%,
+      0 var(--cut-control)
+    );
+  }
+
+  .action:focus-visible {
+    clip-path: none;
+  }
+
+  [data-variant="primary"] {
+    background: var(--color-action-primary);
+    color: var(--color-action-primary-text);
+  }
+
+  [data-variant="primary"]:hover {
+    background: var(--color-action-primary-hover);
+  }
+
+  [data-variant="talentforge"] {
+    background: var(--color-tf-accent);
+    color: var(--color-tf-action-text);
+  }
+
+  [data-variant="talentforge"]:hover {
+    background: var(--color-tf-accent-hover);
+  }
+
+  [data-variant="forever-journey"] {
+    background: var(--color-fj-action);
+    color: var(--color-fj-action-text);
+  }
+
+  [data-variant="forever-journey"]:hover {
+    background: var(--color-fj-action-hover);
+  }
+
+  [data-variant="secondary"] {
+    background: var(--color-action-secondary);
+    color: var(--color-text);
+  }
+
+  [data-variant="secondary"]:hover {
+    background: var(--color-action-secondary-hover);
+    color: var(--color-action-primary-hover);
+  }
+
+  [data-variant="disabled"] {
+    flex-direction: column;
+    gap: 0;
+    /* Two lines: 56 px instead of 48. */
+    min-height: calc(var(--size-button-height) + var(--space-2));
+    padding-block: var(--space-1);
+    border: 1px dashed var(--color-status-prep);
+    color: var(--color-text-subtle);
+    cursor: not-allowed;
+  }
+
+  small {
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-body);
+    line-height: var(--line-height-caption);
+  }
+
+  @media (max-width: 600px) {
+    .action {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .action {
+      padding-inline: 0.875rem;
+    }
+  }
+</style>

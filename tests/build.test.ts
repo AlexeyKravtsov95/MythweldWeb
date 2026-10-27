@@ -114,6 +114,25 @@ describe.each(LOCALES)("built page for %s", (locale) => {
     }
   });
 
+  it("preloads only self-hosted fonts that exist", () => {
+    const preloads = doc.querySelectorAll('link[rel="preload"][as="font"]');
+    expect(preloads.length).toBeGreaterThan(0);
+    for (const link of preloads) {
+      const href = link.getAttribute("href") ?? "";
+      expect(href).toMatch(/^\/fonts\//);
+      expect(existsSync(`${dist}${href.slice(1)}`), href).toBe(true);
+    }
+    const cyrillic = preloads.some((l) =>
+      l.getAttribute("href")?.includes("cyrillic"),
+    );
+    expect(cyrillic).toBe(locale === "ru");
+  });
+
+  it("shows the Blizzard fan disclaimer", () => {
+    expect(doc.querySelector("footer")?.text).toContain(t.footer.disclaimer);
+    expect(t.footer.disclaimer).toMatch(/Blizzard Entertainment, Inc\./);
+  });
+
   it("loads no third-party scripts, frames or forms", () => {
     for (const script of doc.querySelectorAll("script[src]")) {
       expect(script.getAttribute("src")).toMatch(/^\//);
@@ -128,6 +147,44 @@ describe("site output", () => {
       .filter((file) => file.endsWith(".html"))
       .sort();
     expect(pages).toEqual(["index.html", "ru/index.html"]);
+  });
+
+  it("does not publish the dev component preview", () => {
+    expect(existsSync(`${dist}dev`)).toBe(false);
+  });
+
+  it("ships self-hosted fonts with their licences and no font CDN", () => {
+    for (const file of [
+      "fonts/geologica/geologica-latin-wght-shrp.woff2",
+      "fonts/geologica/geologica-cyrillic-wght-shrp.woff2",
+      "fonts/geologica/OFL.txt",
+      "fonts/jetbrains-mono/jetbrains-mono-latin-500.woff2",
+      "fonts/jetbrains-mono/OFL.txt",
+    ]) {
+      expect(existsSync(`${dist}${file}`), file).toBe(true);
+    }
+    const text = listFiles(dist)
+      .filter((file) => /\.(html|css|js)$/.test(file))
+      .map((file) => readFileSync(`${dist}${file}`, "utf8"))
+      .join("\n");
+    expect(text).toMatch(/@font-face/);
+    expect(text).not.toMatch(
+      /fonts\.googleapis|fonts\.gstatic|use\.typekit|fonts\.bunny/,
+    );
+  });
+
+  it("uses the v3.2 logo mark geometry in the favicon and LogoMark", () => {
+    const paths = ["M8 8h30v14H22v34H8z", "M56 56H26V42h16V8h14z"];
+    const favicon = readFileSync(`${dist}favicon.svg`, "utf8");
+    const logo = readFileSync(
+      new URL("../src/components/LogoMark.astro", import.meta.url),
+      "utf8",
+    );
+    for (const d of paths) {
+      expect(favicon).toContain(`d="${d}"`);
+      expect(logo).toContain(`d="${d}"`);
+    }
+    expect(favicon).toContain('viewBox="0 0 64 64"');
   });
 
   it("does not publish an /en/ duplicate of the default locale", () => {
