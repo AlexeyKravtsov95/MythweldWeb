@@ -144,6 +144,51 @@ describe.each(LOCALES)("ReleaseStatus (%s)", (locale) => {
       stores.filter((href) => href !== null).length,
     );
   });
+
+  it("a store link on a closed test track is not shown as available", async () => {
+    const doc = await render(ReleaseStatus, {
+      locale,
+      id: "release",
+      talentforge: {
+        ...RELEASE.talentforge,
+        android: "testing",
+        googlePlay: "https://play.google.com/store/apps/details?id=example",
+      },
+    });
+    const row = doc
+      .querySelectorAll(".rows > div")
+      .find(
+        (div) =>
+          div.querySelector("dt")?.text === t.release.channels.googlePlay,
+      );
+    const tag = row?.querySelector(".status-tag");
+    expect(tag?.getAttribute("data-state")).toBe("testing");
+    expect(tag?.text.trim()).toBe(t.release.states.testing);
+    expect(row?.text).not.toContain(t.release.states.available);
+    expect(doc.querySelector("a")?.getAttribute("href")).toBe(
+      "https://play.google.com/store/apps/details?id=example",
+    );
+  });
+
+  it("a store row shows available only when the platform is released", async () => {
+    const doc = await render(ReleaseStatus, {
+      locale,
+      id: "release",
+      talentforge: {
+        ...RELEASE.talentforge,
+        ios: "available",
+        appStore: "https://apps.apple.com/app/id0000000000",
+      },
+    });
+    const row = doc
+      .querySelectorAll(".rows > div")
+      .find(
+        (div) => div.querySelector("dt")?.text === t.release.channels.appStore,
+      );
+    expect(row?.querySelector(".status-tag")?.getAttribute("data-state")).toBe(
+      "available",
+    );
+  });
 });
 
 describe("ProductPlate", () => {

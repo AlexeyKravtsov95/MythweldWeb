@@ -3,8 +3,10 @@
  * TalentForge release panel (v3.2 TalentForge page): store statuses, store
  * buttons and talent data version, all read from `src/config/release.ts`.
  * A store without a link shows the "link pending" chip and a disabled button.
+ * A link alone never means "available": it may lead to a closed test track,
+ * so the store row always shows the platform's own release state.
  */
-import { RELEASE } from "../../config/release";
+import { RELEASE, type Release } from "../../config/release";
 import { getDictionary, type Locale } from "../../i18n";
 import ProductAction from "./ProductAction.astro";
 import StatusTag from "./StatusTag.astro";
@@ -14,11 +16,17 @@ interface Props {
   /** Unique id: the panel is labelled by its heading. */
   id: string;
   headingLevel?: 2 | 3;
+  /** Release facts; defaults to the config. Overridden only in tests. */
+  talentforge?: Release["talentforge"];
 }
 
-const { locale, id, headingLevel = 2 } = Astro.props;
+const {
+  locale,
+  id,
+  headingLevel = 2,
+  talentforge: tf = RELEASE.talentforge,
+} = Astro.props;
 const t = getDictionary(locale);
-const tf = RELEASE.talentforge;
 const Heading = headingLevel === 3 ? "h3" : "h2";
 const checked = new Intl.DateTimeFormat(t.meta.dateLocale, {
   day: "numeric",
@@ -75,8 +83,8 @@ const stores = [
             <StatusTag state="pending" label={t.actions.linkPending} />
           ) : (
             <StatusTag
-              state="available"
-              label={t.release.states.available}
+              state={store.state}
+              label={t.release.states[store.state]}
               framed={false}
             />
           )}
