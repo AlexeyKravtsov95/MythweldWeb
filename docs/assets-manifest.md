@@ -1,4 +1,4 @@
-# Assets manifest — WEB-M0.2
+# Assets manifest — WEB-M0.2 … WEB-M0.5
 
 Реестр всех изображений и шрифтов сайта: откуда взят файл, что это, на каком языке и где его можно показывать. Машиночитаемая версия — `src/media/catalog.ts`; тест `tests/media.test.ts` сверяет каталог, файлы (SHA-256, размеры) и этот документ.
 
@@ -8,7 +8,7 @@
 
 1. Показываем только файлы из этого реестра. Пиксели не меняем: без перерисовки, ретуши, наложений, рамок-телефонов, теней и наклона. Допустимы только уменьшенные производные AVIF/WebP, которые `astro:assets` строит при сборке (`FigureWithCaption`, `ClassArtworkGrid`).
 2. Кадрирование — только CSS и всегда с подписью о том, что это фрагмент.
-3. Язык изображения следует языку страницы: `pickMedia(group, locale)`. Если файла для языка нет — `AssetPlaceholder`, а не изображение на другом языке.
+3. Язык изображения следует языку страницы: `pickMedia(group, locale)`. Если файла для языка нет — `AssetPlaceholder`, а не изображение на другом языке. Исключения прямо подписаны языком изображения: EN-образец книги на RU-страницах (B4) и снимки аддона с английским интерфейсом на RU-страницах (B1).
 4. У каждого изображения есть alt, описывающий содержимое, и подпись «что это · тип» (`media.images.*` в словарях). Плитки классов с видимым названием — `alt=""`.
 5. Типы не подменяют друг друга:
    - **class artwork** — оригинальные иллюстрации классов TalentForge (118×118). Только они используются для плиток классов.
@@ -16,7 +16,7 @@
    - **app screenshot** — снимки приложения TalentForge. Все текущие — **iOS (iPhone 17 Pro, симулятор)**; называть их Android-скриншотами нельзя.
    - **Book Creator sample** — страницы PDF, созданного Book Creator. Это не интерфейс аддона.
    - **Book Creator screenshot** — снимки веб-приложения Book Creator. Это не игровые скриншоты.
-   - **addon screenshot** — скриншот аддона Forever Journey в игре. **Пока отсутствует** — только placeholder.
+   - **addon screenshot** — скриншот аддона Forever Journey в игре (Overview, Chronicle). Не Book Creator и не книга.
 6. Рядом с игровыми изображениями на страницах сайта должен быть fan-disclaimer (подвал, `footer.disclaimer`): «not affiliated with or endorsed by Blizzard Entertainment… World of Warcraft and related names and images are trademarks of Blizzard Entertainment, Inc.»
 
 ## Источники
@@ -27,6 +27,8 @@
 | `AlexeyKravtsov95/ForeverJourneyWeb` | main  | `ceea82d456d7f04aeee4164b3ef088947e743349` |
 
 Оба репозитория только читались; в них ничего не менялось.
+
+Опубликованные владельцем файлы (WEB-M0.5): галерея аддона на CurseForge, https://www.curseforge.com/wow/addons/forever-journey/gallery — копии байт-в-байт, без hotlink.
 
 ## Изображения
 
@@ -88,6 +90,24 @@ SHA-256 исходных PDF: `client-demo-book.pdf` — `d6243615b0bc23806d49f0
 
 На EN-страницах вместо них — placeholder «Book Creator screenshot in English» (`MEDIA_GAPS`, блокер B3).
 
+### Forever Journey · in-game addon screenshots (только EN-интерфейс)
+
+Копии байт-в-байт оригиналов из галереи аддона на CurseForge; скачаны и сверены с галереей **2026-10-27**. Разрешение на повторное использование на mythweld.com дал владелец в комментарии к Issue #9 (решение по B1 от 2026-10-27). Тип в каталоге — `addon-screenshot`, платформа `game`, `ADDON_SCREENSHOTS` в `src/media/catalog.ts`.
+
+| ID          | Файл                                                      | Оригинал (CurseForge)                                             | Размер   | SHA-256                                                            | Содержимое                                                                                                                    |
+| ----------- | --------------------------------------------------------- | ----------------------------------------------------------------- | -------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `overview`  | `src/assets/media/forever-journey/addon/en/overview.png`  | https://media.forgecdn.net/attachments/1990/233/overview-png.png  | 1073×730 | `4f81a8f6a4d5a00dca72e0fc25a16f87cb564f524d20794680044cc342844ae2` | вкладка Overview: персонаж Straider, Undead Paladin, 20 ур., статистика, Recent Journey; даты в кадре 25–26.09.2026           |
+| `chronicle` | `src/assets/media/forever-journey/addon/en/chronicle.png` | https://media.forgecdn.net/attachments/2037/694/timeline2-png.png | 1074×729 | `3a085be70d2c6717f0cceaaa4232adb7b0ac0a58973124e5cee3b65fdcc97334` | вкладка Timeline («Journey Chronicle»): открытия зон, Level 26, личная заметка и избранное; имени персонажа и дат в кадре нет |
+
+Проверка содержимого: интерфейс аддона на **английском**; чата, других персонажей, имени аккаунта и иных личных данных в кадре нет. Имя персонажа Straider на Overview владелец разрешил. В alt имя не повторяется.
+
+Ограничения (подписаны на сайте строкой «Из галереи аддона на CurseForge. Текущая версия может выглядеть иначе.»):
+
+- **Актуальность не подтверждена.** Overview снят около 26.09.2026, до первого публичного файла 0.1.0-beta.1 (29.09.2026); текущий релиз на CurseForge — 0.7.0, файл от 23.10.2026. Исходников аддона в доступных репозиториях нет, поэтому совпадение с текущим UI не проверить. Снимки не названы «текущим интерфейсом».
+- **Разрешение ниже желаемого** (≈1074 px против ≥1600 px). Не апскейлились: `FigureWithCaption` отдаёт 400, 800 и исходные 1073/1074 px.
+- **Только английский интерфейс**, хотя аддон заявляет EN и RU локализацию. На RU-страницах подпись «английский интерфейс».
+- Остальные 6 снимков галереи (History, Timeline, statistics, backup, Memory, Personal Note) не импортированы: владелец назвал кандидатами Overview и Chronicle.
+
 ### Не импортировано (намеренно)
 
 - `data/visuals/forever` и любые отдельные иконки талантов — запрещено задачей.
@@ -129,14 +149,19 @@ Upstream: Google Fonts (`google/fonts`), Geologica v5, JetBrains Mono v24. Fallb
 - **Forever Journey** (`/forever-journey/`, `/ru/forever-journey/`): placeholder «In-game addon screenshot» (B1) на первом экране; в разделе Book Creator — EN-образец `bc-sample-cover/chapter` на обеих локалях, на RU с подписью «… пример на английском» (B4). Скриншоты интерфейса Book Creator (`bc-app-*`) не показаны: EN-снимка нет (B3), а RU-снимок не подменяет EN.
 - Путь «журнал → книга» описан по `ForeverJourneyWeb/src/i18n.ts` и `README.md`: код `FJBOOK1` (`/fj` → Export Book) или файл `ForeverJourney.lua` из SavedVariables; книга собирается в браузере, на сервер ничего не загружается. Архив персонажа подписан как исторический снимок.
 
+## Использование на страницах (WEB-M0.5)
+
+- **Главная** и **Forever Journey**: placeholder «In-game addon screenshot» убран. На главной — `overview`; на странице Forever Journey — `overview` на первом экране (`loading="eager"`) и `chronicle` рядом со списком «Что записывает аддон». Подпись «Вкладка … · скриншот аддона в игре» и строка о галерее CurseForge.
+- RU-образец книги со «Straider» (`bc-sample-*`, `ru`) исключён из glob в `src/media/images.ts`: раньше его исходники попадали в `dist/_astro/` как файлы без ссылок. Тест `tests/release.test.ts` сверяет SHA-256 всех изображений `dist/` с этими файлами. Файлы остаются в репозитории и в истории Git; история не переписывалась.
+
 ## Блокеры
 
 | ID  | Что нужно                                                                            | Сейчас                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | --- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| B1  | Скриншот аддона Forever Journey в игре (PNG без обработки, ≥1600 px, EN и RU клиент) | Placeholder `media.placeholders.addonScreenshot`. Изображения со страницы CurseForge не импортированы: их подлинность, актуальность относительно текущего UI и право использования нельзя проверить из репозиториев; нужна передача оригиналов владельцем.                                                                                                                                                                                                                          |
+| B1  | Скриншот аддона Forever Journey в игре (PNG без обработки, ≥1600 px, EN и RU клиент) | **Закрыт для релиза** (WEB-M0.5): `ADDON_SCREENSHOTS.overview/chronicle` из галереи CurseForge с разрешения владельца. Остаётся улучшение: свежие снимки текущей версии ≥1600 px и снимок RU-интерфейса.                                                                                                                                                                                                                                                                            |
 | B2  | Проверенный горизонтальный скриншот редактора TalentForge (EN и RU)                  | Placeholder `media.placeholders.editorLandscape`. Кандидаты отклонены: `ipad-13/01-editor.png` — портретный iPad, не горизонтальная сцена; `docs/screenshots/m5-ux2b1/m5ux2b1-915x412-3-tree2-selected.png` (использован в макете v3.2) — рендер Compose Desktop из теста с заглушками «Tree 1/2/3», не снимок устройства; `docs/release/rc3-evidence/screenshots/14-editor-landscape-ru.png` — Android-эмулятор Pixel 9a, только RU, помечен как test evidence с временным ключом. |
 | B3  | Скриншот веб-приложения Book Creator с английским интерфейсом                        | Есть только RU (`book-cover.png`, `book-chapter.png`); на EN — placeholder `media.placeholders.bookCreatorScreenshot`.                                                                                                                                                                                                                                                                                                                                                              |
-| B4  | Подтвердить RU-образец книги или дать RU-PDF демо-журнала                            | RU-страницы из `client-localization-ru.pdf` содержат имя «Straider» из санитизированного архива реального персонажа. Нужно подтверждение владельца или RU-версия `client-demo-book.pdf`.                                                                                                                                                                                                                                                                                            |
+| B4  | Подтвердить RU-образец книги или дать RU-PDF демо-журнала                            | RU-страницы из `client-localization-ru.pdf` содержат имя «Straider» из санитизированного архива реального персонажа. Нужно подтверждение владельца или RU-версия `client-demo-book.pdf`. С WEB-M0.5 эти файлы исключены из сборки (`src/media/images.ts`) и не публикуются даже без ссылок.                                                                                                                                                                                         |
 | B5  | Android-скриншоты TalentForge для подписей «Android»                                 | Все импортированные скриншоты — iOS и подписаны «iPhone».                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| B6  | Ссылки Google Play / App Store                                                       | `RELEASE.talentforge.googlePlay/appStore = null` → чип «link pending» и disabled-кнопки.                                                                                                                                                                                                                                                                                                                                                                                            |
-| B7  | Адреса и тексты Privacy / Terms / Contact для сайта Mythweld                         | В подвале главной — названия с чипом «link pending», без ссылок. `legal.mythweld.com` относится к приложению TalentForge, поэтому не подставлен без решения владельца.                                                                                                                                                                                                                                                                                                              |
+| B6  | Ссылки Google Play / App Store                                                       | `RELEASE.talentforge.googlePlay/appStore = null` → на странице TalentForge чип «link pending» и disabled-кнопки; в подвале — статус платформы («Закрытое тестирование» / «В подготовке»), а не ссылка.                                                                                                                                                                                                                                                                              |
+| B7  | Адреса и тексты Privacy / Terms / Contact для сайта Mythweld                         | `src/config/legal.ts` — все `null`; подвал показывает одну строку «готовятся», без ссылок. Черновики EN/RU — `docs/legal-drafts/` (не публикуются). `legal.mythweld.com/privacy.html` и `terms.html` относятся к Android-приложению TalentForge и не подставлены. Нужно решение владельца.                                                                                                                                                                                          |

@@ -239,13 +239,35 @@ describe.each(LOCALES)("media components (%s)", (locale) => {
   });
 
   it("FigureWithCaption gives PDF pages no screenshot frame", async () => {
+    // The English sample in every locale: the Russian one is kept out of
+    // the build (blocker B4).
     const doc = await render(FigureWithCaption, {
-      asset: MEDIA["bc-sample-cover"][locale],
+      asset: MEDIA["bc-sample-cover"].en,
       ...t.media.images["bc-sample-cover"],
     });
     expect(doc.querySelector("figure")?.getAttribute("data-frame")).toBe(
       "page",
     );
+  });
+
+  it("refuses to render the Russian sample book (blocker B4)", async () => {
+    await expect(
+      render(FigureWithCaption, {
+        asset: MEDIA["bc-sample-cover"].ru,
+        ...t.media.images["bc-sample-cover"],
+      }),
+    ).rejects.toThrow(/Missing media file/);
+  });
+
+  it("FigureWithCaption adds an optional note line to the caption", async () => {
+    const doc = await render(FigureWithCaption, {
+      asset: MEDIA["tf-editor"][locale],
+      ...t.media.images["tf-editor"],
+      note: t.media.addonNote,
+    });
+    const caption = doc.querySelector("figcaption");
+    expect(caption?.text).toContain(t.media.images["tf-editor"].caption);
+    expect(caption?.querySelector(".note")?.text).toBe(t.media.addonNote);
   });
 
   it("FigureWithCaption refuses an empty alt", async () => {

@@ -60,7 +60,6 @@ export const ru = {
       testing: "Тестируется на CurseForge",
       prep: "Готовится к выходу на CurseForge",
     },
-    addonPlaceholderNote: "Не рисуем и не имитируем.",
     downloadAddon: "Скачать аддон",
     bookCreatorLinkLabel: "Создать книгу приключений",
     bookSample: {
@@ -93,6 +92,8 @@ export const ru = {
       terms: "Условия",
       contact: "Контакты",
     },
+    legalPending:
+      "Политика конфиденциальности, условия использования и контакты готовятся.",
   },
   release: {
     heading: "Статус выпуска",
@@ -257,7 +258,7 @@ export const ru = {
       exportCode: {
         title: "Код экспорта",
         steps: [
-          "В игре откройте журнал Forever Journey командой /fj.",
+          "В игре откройте журнал Forever Journey: введите /fj open или нажмите на значок у миникарты.",
           "Нажмите «Export Book»: аддон покажет блоки кода, которые начинаются с FJBOOK1:.",
           "Скопируйте все блоки и вставьте их в Book Creator.",
         ],
@@ -325,6 +326,20 @@ export const ru = {
         caption: "Book Creator · скриншот веб-приложения",
       },
     },
+    addon: {
+      overview: {
+        alt: "Forever Journey в World of Warcraft: Forever, вкладка Overview: паладин-нежить 20-го уровня, статистика путешествия и последние записанные открытия и гибель",
+        caption:
+          "Вкладка Overview · скриншот аддона в игре, английский интерфейс",
+      },
+      chronicle: {
+        alt: "Хроника Forever Journey в World of Warcraft: Forever: лента открытых зон и нового уровня, с личной заметкой и отметкой «избранное»",
+        caption:
+          "Вкладка Chronicle · скриншот аддона в игре, английский интерфейс",
+      },
+    },
+    addonNote:
+      "Из галереи аддона на CurseForge. Текущая версия может выглядеть иначе.",
     requiredBeforeRelease: "Обязательно до релиза",
     placeholders: {
       addonScreenshot: {

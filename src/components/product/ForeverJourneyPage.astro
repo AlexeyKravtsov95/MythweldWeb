@@ -5,8 +5,10 @@
  * and the facts panel, 01 What the addon records with Install → Play → Make
  * the book, 02 Book Creator and the strip to TalentForge.
  *
- * The in-game slot stays the honest placeholder until a real addon
- * screenshot exists (blocker B1). Book Creator is shown only through pages
+ * The addon is shown in game by its Overview and Chronicle tabs: captures
+ * from the CurseForge gallery, reused with the owner's permission (blocker
+ * B1), captioned as gallery images in the English interface. They are not
+ * presented as the current version. Book Creator is shown only through pages
  * of a PDF it produced, never as addon UI; the sample is the synthetic
  * English demo book in every locale (blocker B4). How the journal gets to
  * Book Creator follows ForeverJourneyWeb: the player exports it or picks the
@@ -14,7 +16,7 @@
  */
 import { Picture } from "astro:assets";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import AssetPlaceholder from "../ui/AssetPlaceholder.astro";
+import FigureWithCaption from "../ui/FigureWithCaption.astro";
 import ProductAction from "../ui/ProductAction.astro";
 import StatusTag from "../ui/StatusTag.astro";
 import ProductNext from "./ProductNext.astro";
@@ -22,7 +24,11 @@ import SectionHeading from "./SectionHeading.astro";
 import { RELEASE } from "../../config/release";
 import { SITE } from "../../config/site";
 import { getDictionary, type Locale } from "../../i18n";
-import { pickMedia, type MediaAsset } from "../../media/catalog";
+import {
+  ADDON_SCREENSHOTS,
+  pickMedia,
+  type MediaAsset,
+} from "../../media/catalog";
 import { imageFor } from "../../media/images";
 
 interface Props {
@@ -67,9 +73,12 @@ const ways = [journal.exportCode, journal.savedVariables];
         <p class="lead">{copy.lead}</p>
       </div>
       <div class="media">
-        <AssetPlaceholder
-          locale={locale}
-          copy={t.media.placeholders.addonScreenshot}
+        <FigureWithCaption
+          asset={ADDON_SCREENSHOTS.overview}
+          {...t.media.addon.overview}
+          note={t.media.addonNote}
+          sizes="(max-width: 900px) calc(100vw - 2rem), 42rem"
+          loading="eager"
         />
       </div>
       <div class="actions">
@@ -121,11 +130,19 @@ const ways = [journal.exportCode, journal.savedVariables];
         title={records.heading}
         text={records.text}
       />
-      <ul class="chips">
-        {recordItems.map((item) => (
-          <li>{item}</li>
-        ))}
-      </ul>
+      <div class="records">
+        <ul class="chips">
+          {recordItems.map((item) => (
+            <li>{item}</li>
+          ))}
+        </ul>
+        <FigureWithCaption
+          asset={ADDON_SCREENSHOTS.chronicle}
+          {...t.media.addon.chronicle}
+          note={t.media.addonNote}
+          sizes="(max-width: 900px) calc(100vw - 2rem), 42rem"
+        />
+      </div>
       <div class="steps">
         <h3 class="visually-hidden">{steps.heading}</h3>
         <ol>
@@ -308,9 +325,17 @@ const ways = [journal.exportCode, journal.savedVariables];
     border-top: 1px solid var(--color-divider);
   }
 
+  /* What it records: the list beside the Chronicle tab in game. */
+  .records {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+    align-items: start;
+    gap: var(--space-8);
+  }
+
   .chips {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-1);
     margin: 0;
     padding: 0;
@@ -536,9 +561,18 @@ const ways = [journal.exportCode, journal.savedVariables];
       grid-template-rows: none;
     }
 
+    .records,
     .steps ol,
     .ways {
       grid-template-columns: minmax(0, 1fr);
+    }
+
+    .records {
+      gap: var(--space-6);
+    }
+
+    .chips {
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
     }
 
     .steps ol {

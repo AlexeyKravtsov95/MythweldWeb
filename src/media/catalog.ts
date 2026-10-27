@@ -17,9 +17,11 @@ export type MediaKind =
   /** Page of a PDF produced by Book Creator, rendered without edits. */
   | "book-creator-sample"
   /** Unedited capture of the Book Creator web app. */
-  | "book-creator-screenshot";
+  | "book-creator-screenshot"
+  /** Unedited capture of the Forever Journey addon in the game client. */
+  | "addon-screenshot";
 
-export type MediaPlatform = "ios" | "web" | "pdf";
+export type MediaPlatform = "ios" | "web" | "pdf" | "game";
 
 /** Canonical class order, as in the TalentForge class picker. */
 export const CLASS_IDS = [
@@ -36,6 +38,11 @@ export const CLASS_IDS = [
 
 export type ClassId = (typeof CLASS_IDS)[number];
 
+/** Forever Journey addon captures published in the CurseForge gallery. */
+export const ADDON_SHOT_IDS = ["overview", "chronicle"] as const;
+
+export type AddonShotId = (typeof ADDON_SHOT_IDS)[number];
+
 /** Localised images: one file per locale, picked by the page language. */
 export type MediaGroup =
   | "tf-editor"
@@ -46,7 +53,8 @@ export type MediaGroup =
   | "bc-app-cover"
   | "bc-app-chapter";
 
-export interface MediaSource {
+/** A file from a product repository, pinned to a commit. */
+export interface RepoSource {
   repo: "AlexeyKravtsov95/TalentForge" | "AlexeyKravtsov95/ForeverJourneyWeb";
   /** Commit of `main` the file was taken from. */
   commit: string;
@@ -56,9 +64,21 @@ export interface MediaSource {
   page?: number;
 }
 
+/** A file the owner already published, copied byte for byte. */
+export interface PublishedSource {
+  /** Direct URL of the original file. */
+  url: string;
+  /** Public page that shows the file. */
+  gallery: string;
+  /** ISO date the file was downloaded and compared with the gallery. */
+  retrieved: string;
+}
+
+export type MediaSource = RepoSource | PublishedSource;
+
 export interface MediaAsset {
   kind: MediaKind;
-  product: "talentforge" | "book-creator";
+  product: "talentforge" | "book-creator" | "forever-journey";
   /** `null` for language-neutral artwork. */
   locale: Locale | null;
   platform: MediaPlatform | null;
@@ -286,6 +306,53 @@ export const MEDIA: Record<MediaGroup, Partial<Record<Locale, MediaAsset>>> = {
   },
 };
 
+const CURSEFORGE_GALLERY =
+  "https://www.curseforge.com/wow/addons/forever-journey/gallery";
+
+function addonShot(
+  id: AddonShotId,
+  url: string,
+  width: number,
+  height: number,
+  sha256: string,
+): MediaAsset {
+  return {
+    kind: "addon-screenshot",
+    product: "forever-journey",
+    locale: "en",
+    platform: "game",
+    file: `src/assets/media/forever-journey/addon/en/${id}.png`,
+    width,
+    height,
+    sha256,
+    source: { url, gallery: CURSEFORGE_GALLERY, retrieved: "2026-10-27" },
+    containsGameTalentIcons: false,
+  };
+}
+
+/**
+ * In-game captures of the addon (blocker B1), reused with the owner's
+ * permission. Only English-interface captures are published, so pages in
+ * every locale show these and say so in the caption. They are gallery
+ * images, not proof of the current addon version.
+ */
+export const ADDON_SCREENSHOTS: Record<AddonShotId, MediaAsset> = {
+  overview: addonShot(
+    "overview",
+    "https://media.forgecdn.net/attachments/1990/233/overview-png.png",
+    1073,
+    730,
+    "4f81a8f6a4d5a00dca72e0fc25a16f87cb564f524d20794680044cc342844ae2",
+  ),
+  chronicle: addonShot(
+    "chronicle",
+    "https://media.forgecdn.net/attachments/2037/694/timeline2-png.png",
+    1074,
+    729,
+    "3a085be70d2c6717f0cceaaa4232adb7b0ac0a58973124e5cee3b65fdcc97334",
+  ),
+};
+
 /**
  * Localised groups that are knowingly missing a locale. Each gap is an open
  * blocker in `docs/assets-manifest.md`; pages show a placeholder instead.
@@ -307,6 +374,7 @@ export function pickMedia(
 export function allMedia(): MediaAsset[] {
   return [
     ...Object.values(CLASS_ARTWORK),
+    ...Object.values(ADDON_SCREENSHOTS),
     ...Object.values(MEDIA).flatMap((byLocale) => Object.values(byLocale)),
   ];
 }

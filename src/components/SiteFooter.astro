@@ -2,9 +2,13 @@
 /**
  * Site footer (v3.2 home): logo and the Blizzard fan disclaimer, then
  * Products, Get the tools and Site columns. Only existing resources are
- * links; a store or site page without an address shows "link pending".
+ * links. A store without a public listing shows its release state, so the
+ * footer never suggests a closed track is public. Legal pages appear one by
+ * one as the owner approves them (`src/config/legal.ts`); until then the
+ * Site column is one plain note, not a list of dead links.
  */
-import { RELEASE } from "../config/release";
+import { LEGAL } from "../config/legal";
+import { RELEASE, type ReleaseState } from "../config/release";
 import { SITE } from "../config/site";
 import { getDictionary, localizePath, type Locale } from "../i18n";
 import LogoMark from "./LogoMark.astro";
@@ -23,9 +27,17 @@ interface FooterLink {
   label: string;
   /** `null` while the address does not exist. */
   href: string | null;
+  /** Shown instead of a link while `href` is `null`. */
+  state?: ReleaseState;
 }
 
-const columns: { title: string; links: FooterLink[] }[] = [
+const legal: FooterLink[] = [
+  { label: t.footer.pages.privacy, href: LEGAL.privacy },
+  { label: t.footer.pages.terms, href: LEGAL.terms },
+  { label: t.footer.pages.contact, href: LEGAL.contact },
+].filter((link) => link.href !== null);
+
+const columns: { title: string; links: FooterLink[]; note?: string }[] = [
   {
     title: t.footer.products,
     links: [
@@ -44,17 +56,22 @@ const columns: { title: string; links: FooterLink[] }[] = [
     title: t.footer.getTools,
     links: [
       { label: "CurseForge", href: SITE.links.curseforge },
-      { label: t.release.channels.googlePlay, href: tf.googlePlay },
-      { label: t.release.channels.appStore, href: tf.appStore },
+      {
+        label: t.release.channels.googlePlay,
+        href: tf.googlePlay,
+        state: tf.android,
+      },
+      {
+        label: t.release.channels.appStore,
+        href: tf.appStore,
+        state: tf.ios,
+      },
     ],
   },
   {
     title: t.footer.site,
-    links: [
-      { label: t.footer.pages.privacy, href: null },
-      { label: t.footer.pages.terms, href: null },
-      { label: t.footer.pages.contact, href: null },
-    ],
+    links: legal,
+    ...(legal.length === 0 && { note: t.footer.legalPending }),
   },
 ];
 
@@ -74,13 +91,25 @@ const isExternal = (href: string) => /^https?:\/\//.test(href);
       {columns.map((column) => (
         <div class="column">
           <p class="title">{column.title}</p>
+          {column.note && <p class="note">{column.note}</p>}
           <ul>
             {column.links.map((link) => (
               <li>
                 {link.href === null ? (
                   <span class="pending">
                     {link.label}{" "}
-                    <StatusTag state="pending" label={t.actions.linkPending} />
+                    {link.state ? (
+                      <StatusTag
+                        state={link.state}
+                        label={t.release.states[link.state]}
+                        framed={false}
+                      />
+                    ) : (
+                      <StatusTag
+                        state="pending"
+                        label={t.actions.linkPending}
+                      />
+                    )}
                   </span>
                 ) : isExternal(link.href) ? (
                   <a href={link.href} target="_blank" rel="noopener">
@@ -144,6 +173,17 @@ const isExternal = (href: string) => /^https?:\/\//.test(href);
     color: var(--color-brand-bronze);
     font-size: 0.9375rem;
     font-weight: var(--font-weight-label);
+  }
+
+  .note {
+    max-width: 16rem;
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+
+  ul:empty {
+    display: none;
   }
 
   ul {

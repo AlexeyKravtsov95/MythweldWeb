@@ -1,9 +1,10 @@
 ---
 /**
- * Forever Journey plate of the home page. The addon has no verified in-game
- * screenshot yet (blocker B1), so it shows the honest placeholder; Book
- * Creator is presented as the related tool with pages of a sample PDF it
- * produced, never as addon screenshots. A text link leads to the product
+ * Forever Journey plate of the home page. The addon is shown by its
+ * Overview tab in game, a capture from the CurseForge gallery reused with
+ * the owner's permission (blocker B1) and captioned as such; Book Creator
+ * is presented as the related tool with pages of a sample PDF it produced,
+ * never as addon screenshots. A text link leads to the product
  * page; the CurseForge download stays the plate's main action.
  *
  * The sample is the synthetic English demo book in every locale: the only
@@ -11,14 +12,18 @@
  * and stays off promotional pages until the owner approves it.
  */
 import { Picture } from "astro:assets";
-import AssetPlaceholder from "../ui/AssetPlaceholder.astro";
+import FigureWithCaption from "../ui/FigureWithCaption.astro";
 import ProductAction from "../ui/ProductAction.astro";
 import ProductPlate from "../ui/ProductPlate.astro";
 import StatusTag from "../ui/StatusTag.astro";
 import { RELEASE } from "../../config/release";
 import { SITE } from "../../config/site";
 import { getDictionary, localizePath, type Locale } from "../../i18n";
-import { pickMedia, type MediaAsset } from "../../media/catalog";
+import {
+  ADDON_SCREENSHOTS,
+  pickMedia,
+  type MediaAsset,
+} from "../../media/catalog";
 import { imageFor } from "../../media/images";
 
 interface Props {
@@ -51,12 +56,11 @@ const pages = [
     label={t.home.curseforgeStates[curseforge]}
   />
 
-  <AssetPlaceholder
-    locale={locale}
-    copy={{
-      title: t.media.placeholders.addonScreenshot.title,
-      note: t.home.addonPlaceholderNote,
-    }}
+  <FigureWithCaption
+    asset={ADDON_SCREENSHOTS.overview}
+    {...t.media.addon.overview}
+    note={t.media.addonNote}
+    sizes="(max-width: 900px) calc(100vw - 2rem), 36rem"
   />
   <p class="summary">{fj.summary}</p>
   <a class="more" href={localizePath(locale, "/forever-journey/")}>

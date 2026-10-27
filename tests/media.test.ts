@@ -7,13 +7,17 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { LOCALES, getDictionary } from "../src/i18n";
 import {
+  ADDON_SCREENSHOTS,
+  ADDON_SHOT_IDS,
   CLASS_ARTWORK,
   CLASS_IDS,
   MEDIA,
   MEDIA_GAPS,
   allMedia,
   pickMedia,
+  type MediaAsset,
   type MediaGroup,
+  type RepoSource,
 } from "../src/media/catalog";
 
 const root = new URL("../", import.meta.url);
@@ -24,6 +28,17 @@ const groups = Object.keys(MEDIA) as MediaGroup[];
 function read(file: string): Buffer {
   return readFileSync(new URL(file, root));
 }
+
+/** The repository source of a file copied from a product repository. */
+function repoSource(asset: MediaAsset): RepoSource {
+  if (!("repo" in asset.source)) {
+    throw new Error(`${asset.file} has no repository source`);
+  }
+  return asset.source;
+}
+
+const repoMedia = allMedia().filter((asset) => "repo" in asset.source);
+const publishedMedia = allMedia().filter((asset) => "url" in asset.source);
 
 /** Width and height from the PNG IHDR chunk. */
 function pngSize(data: Buffer): [number, number] {
@@ -61,7 +76,9 @@ describe("media files", () => {
 
   it("stay small: no bulk media in the repository", () => {
     const bytes = committed.reduce((sum, file) => sum + read(file).length, 0);
-    expect(bytes).toBeLessThan(8 * 1024 * 1024);
+    // 6.8 MB of app media plus 1.2 MB of the two addon captures (WEB-M0.5),
+    // kept byte for byte: re-encoding them would break the SHA-256 check.
+    expect(bytes).toBeLessThan(9 * 1024 * 1024);
   });
 });
 
@@ -72,7 +89,7 @@ describe("media catalog", () => {
       const asset = CLASS_ARTWORK[id];
       expect(asset.kind).toBe("class-artwork");
       expect(asset.locale).toBeNull();
-      expect(asset.source.path).toBe(
+      expect(repoSource(asset).path).toBe(
         `mobile/composeApp/src/commonMain/composeResources/drawable/class_${id}.png`,
       );
     }
@@ -90,13 +107,14 @@ describe("media catalog", () => {
   it("labels platforms by where the capture came from", () => {
     for (const asset of allMedia()) {
       if (asset.platform === "ios") {
-        expect(asset.source.path).toMatch(/apple-appstore\/.*\/iphone-/);
+        expect(repoSource(asset).path).toMatch(/apple-appstore\/.*\/iphone-/);
       }
       if (asset.kind === "book-creator-sample") {
         expect(asset.platform).toBe("pdf");
-        expect(asset.source.path).toMatch(/\.pdf$/);
-        expect(asset.source.page).toBeGreaterThan(0);
+        expect(repoSource(asset).path).toMatch(/\.pdf$/);
+        expect(repoSource(asset).page).toBeGreaterThan(0);
       }
+      expect(asset.platform === "game").toBe(asset.kind === "addon-screenshot");
     }
   });
 
@@ -113,9 +131,38 @@ describe("media catalog", () => {
     }
   });
 
-  it("pins every source to a full commit SHA", () => {
-    for (const asset of allMedia()) {
-      expect(asset.source.commit).toMatch(/^[0-9a-f]{40}$/);
+  it("pins every repository source to a full commit SHA", () => {
+    for (const asset of repoMedia) {
+      expect(repoSource(asset).commit).toMatch(/^[0-9a-f]{40}$/);
+    }
+  });
+
+  it("copies published originals only from the addon's CurseForge gallery", () => {
+    expect(publishedMedia.map((asset) => asset.file).sort()).toEqual(
+      Object.values(ADDON_SCREENSHOTS)
+        .map((asset) => asset.file)
+        .sort(),
+    );
+    for (const asset of publishedMedia) {
+      const { source } = asset;
+      if (!("url" in source)) throw new Error(asset.file);
+      expect(source.url).toMatch(
+        /^https:\/\/media\.forgecdn\.net\/attachments\//,
+      );
+      expect(source.gallery).toBe(
+        "https://www.curseforge.com/wow/addons/forever-journey/gallery",
+      );
+      expect(source.retrieved).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+  });
+
+  it("marks the addon captures as in-game addon screenshots in English", () => {
+    expect(Object.keys(ADDON_SCREENSHOTS)).toEqual([...ADDON_SHOT_IDS]);
+    for (const asset of Object.values(ADDON_SCREENSHOTS)) {
+      expect(asset.kind).toBe("addon-screenshot");
+      expect(asset.product).toBe("forever-journey");
+      expect(asset.locale).toBe("en");
+      expect(asset.containsGameTalentIcons).toBe(false);
     }
   });
 });
@@ -126,8 +173,13 @@ describe("assets manifest", () => {
     (file, asset) => {
       expect(manifest).toContain(`\`${file}\``);
       expect(manifest).toContain(asset.sha256);
-      expect(manifest).toContain(asset.source.path);
-      expect(manifest).toContain(asset.source.commit);
+      if ("repo" in asset.source) {
+        expect(manifest).toContain(asset.source.path);
+        expect(manifest).toContain(asset.source.commit);
+      } else {
+        expect(manifest).toContain(asset.source.url);
+        expect(manifest).toContain(asset.source.retrieved);
+      }
     },
   );
 
@@ -155,6 +207,23 @@ describe.each(LOCALES)("media copy (%s)", (locale) => {
       expect(caption).toContain("iPhone");
       expect(caption).not.toMatch(/android/i);
     }
+  });
+
+  it("captions the addon captures as in-game, never as Book Creator", () => {
+    for (const id of ADDON_SHOT_IDS) {
+      const { alt, caption } = t.media.addon[id];
+      expect(alt.length).toBeGreaterThan(20);
+      expect(caption).toMatch(/·/);
+      expect(`${alt} ${caption}`).not.toMatch(/Book Creator/);
+      // Character names stay out of the text (see blocker B4).
+      expect(alt).not.toMatch(/Straider/);
+    }
+    if (locale === "ru") {
+      for (const id of ADDON_SHOT_IDS) {
+        expect(t.media.addon[id].caption).toMatch(/английский интерфейс/);
+      }
+    }
+    expect(t.media.addonNote).toMatch(/CurseForge/);
   });
 
   it("names every class", () => {

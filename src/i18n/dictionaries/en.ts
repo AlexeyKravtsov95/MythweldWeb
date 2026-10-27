@@ -60,7 +60,6 @@ export const en = {
       testing: "Testing on CurseForge",
       prep: "Coming to CurseForge",
     },
-    addonPlaceholderNote: "Not drawn or mocked up.",
     downloadAddon: "Download Addon",
     bookCreatorLinkLabel: "Create Adventure Book",
     bookSample: {
@@ -93,6 +92,8 @@ export const en = {
       terms: "Terms",
       contact: "Contact",
     },
+    legalPending:
+      "Privacy policy, terms and contact details are in preparation.",
   },
   release: {
     heading: "Release status",
@@ -257,7 +258,7 @@ export const en = {
       exportCode: {
         title: "Export code",
         steps: [
-          "In game, open the Forever Journey journal with /fj.",
+          "In game, open the Forever Journey journal: type /fj open or click the minimap icon.",
           "Press Export Book: the addon shows code blocks that start with FJBOOK1:.",
           "Copy every block and paste them into Book Creator.",
         ],
@@ -325,6 +326,18 @@ export const en = {
         caption: "Book Creator · web app screenshot, Russian interface",
       },
     },
+    addon: {
+      overview: {
+        alt: "Forever Journey open in World of Warcraft: Forever on the Overview tab: a level 20 Undead Paladin, journey statistics and the latest recorded discoveries and a death",
+        caption: "Overview tab · in-game addon screenshot",
+      },
+      chronicle: {
+        alt: "Forever Journey Chronicle in World of Warcraft: Forever: a timeline of zone discoveries and a level-up, with a personal note and a favourite mark",
+        caption: "Chronicle tab · in-game addon screenshot",
+      },
+    },
+    addonNote:
+      "From the addon’s CurseForge gallery. The current version may look different.",
     requiredBeforeRelease: "Required before release",
     placeholders: {
       addonScreenshot: {

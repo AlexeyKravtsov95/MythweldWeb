@@ -350,15 +350,26 @@ describe.each(LOCALES)("Forever Journey page for %s", (locale) => {
     expect(text(facts)).toContain(copy.facts.notNeeded);
   });
 
-  it("keeps the in-game addon slot an honest placeholder (B1)", () => {
-    const slot = main.querySelector(".hero [role='img']");
-    expect(slot?.getAttribute("aria-label")).toContain(
-      t.media.requiredBeforeRelease,
+  it("shows the addon in game, captioned as gallery captures (B1)", () => {
+    expect(main.querySelector("[role='img']")).toBeNull();
+    expect(text(main)).not.toContain(t.media.requiredBeforeRelease);
+    const shots = [
+      [main.querySelector(".hero figure"), t.media.addon.overview],
+      [main.querySelector(".records figure"), t.media.addon.chronicle],
+    ] as const;
+    for (const [figure, copy] of shots) {
+      expect(figure?.getAttribute("data-kind")).toBe("addon-screenshot");
+      expect(figure?.querySelector("img")?.getAttribute("alt")).toBe(copy.alt);
+      const caption = text(figure?.querySelector("figcaption"));
+      expect(caption).toContain(copy.caption);
+      expect(caption).toContain(t.media.addonNote);
+    }
+    // The first screen loads its image eagerly; the Chronicle waits.
+    const [hero, records] = shots.map(([figure]) =>
+      figure?.querySelector("img")?.getAttribute("loading"),
     );
-    expect(slot?.getAttribute("aria-label")).toContain(
-      t.media.placeholders.addonScreenshot.title,
-    );
-    expect(slot?.querySelector("img")).toBeNull();
+    expect(hero).not.toBe("lazy");
+    expect(records).toBe("lazy");
   });
 
   it("lists what the addon records and the Install → Play → Book path", () => {
