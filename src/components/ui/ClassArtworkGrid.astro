@@ -12,13 +12,15 @@ import { imageFor } from "../../media/images";
 interface Props {
   locale: Locale;
   showNames?: boolean;
+  /** Named tiles only: `3` keeps the 3 × 3 board of the TalentForge page. */
+  columns?: "auto" | 3;
 }
 
-const { locale, showNames = false } = Astro.props;
+const { locale, showNames = false, columns = "auto" } = Astro.props;
 const t = getDictionary(locale);
 ---
 
-<figure class="classes" data-names={showNames}>
+<figure class="classes" data-names={showNames} data-columns={columns}>
   <ul class="grid">
     {CLASS_IDS.map((id) => {
       const name = t.talentforge.classNames[id];
@@ -55,6 +57,10 @@ const t = getDictionary(locale);
   [data-names="true"] .grid {
     /* Three columns even at 320 px; long RU names break at soft hyphens. */
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 5.25rem), 1fr));
+  }
+
+  [data-names="true"][data-columns="3"] .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .tile {

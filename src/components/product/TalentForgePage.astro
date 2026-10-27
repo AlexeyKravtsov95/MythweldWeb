@@ -1,0 +1,458 @@
+---
+/**
+ * TalentForge product page (v3.2, pages 25–27), shared by `/talentforge/`
+ * and `/ru/talentforge/`: hero with the release panel and the real editor
+ * screenshot, 01 Nine classes, 02 The real trees, 03 What it does and the
+ * strip to Forever Journey.
+ *
+ * Deviations from the PDF, on purpose:
+ * - 02 has no landscape image: the board used a Compose Desktop test render
+ *   with "Tree 1/2/3" stubs (blocker B2), and its line "All three trees on
+ *   one screen" is not what the app does. The text follows the TalentForge
+ *   sources: tabs per tree, a side panel for details in landscape.
+ * - "Data updates over the air" is left out: remote data delivery is built
+ *   but disabled in every app build. Builds keeping their data version is
+ *   shown instead.
+ */
+import { Image, Picture } from "astro:assets";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ClassArtworkGrid from "../ui/ClassArtworkGrid.astro";
+import FigureWithCaption from "../ui/FigureWithCaption.astro";
+import ReleaseStatus from "../ui/ReleaseStatus.astro";
+import ProductNext from "./ProductNext.astro";
+import SectionHeading from "./SectionHeading.astro";
+import { getDictionary, type Locale } from "../../i18n";
+import { CLASS_ARTWORK, pickMedia } from "../../media/catalog";
+import { imageFor } from "../../media/images";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = getDictionary(locale);
+const copy = t.talentforgePage;
+const name = t.home.products.talentforge.name;
+const editor = pickMedia("tf-editor", locale);
+const picker = pickMedia("tf-class-picker", locale);
+const library = pickMedia("tf-build-library", locale);
+const { classes, trees, features } = copy;
+const treePoints = [
+  trees.points.tabs,
+  trees.points.rules,
+  trees.points.details,
+  trees.points.landscape,
+];
+const featureItems = [
+  { ...features.items.autosave, notShown: false },
+  { ...features.items.offline, notShown: false },
+  { ...features.items.languages, notShown: false },
+  { ...features.items.share, notShown: true },
+  { ...features.items.dataVersions, notShown: false },
+];
+---
+
+<BaseLayout
+  locale={locale}
+  path="/talentforge/"
+  title={copy.meta.title}
+  description={copy.meta.description}
+>
+  <div class="container product" data-product-page="talentforge">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="intro">
+        <p class="kind">{copy.kind}</p>
+        <h1 id="page-title">{name}</h1>
+        <p class="lead">{copy.lead}</p>
+      </div>
+      {editor && (
+        <div class="hero-shot">
+          <FigureWithCaption
+            asset={editor}
+            {...t.media.images["tf-editor"]}
+            sizes="(max-width: 900px) 18rem, 17rem"
+            loading="eager"
+          />
+        </div>
+      )}
+      <div class="release">
+        <ReleaseStatus locale={locale} id="release-status" />
+        <p class="note">{copy.dataVersionNote}</p>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="classes">
+      <SectionHeading
+        number="01"
+        id="classes"
+        title={classes.heading}
+        text={classes.text}
+      />
+      <div class="classes-body">
+        <div class="class-grid">
+          <ClassArtworkGrid locale={locale} showNames columns={3} />
+        </div>
+        <div class="notes">
+          <div class="note-card">
+            <Image
+              src={imageFor(CLASS_ARTWORK.warrior)}
+              alt=""
+              width={64}
+              height={64}
+              densities={[1, 2]}
+              format="webp"
+              loading="lazy"
+              decoding="async"
+            />
+            <div>
+              <h3>{classes.artwork.title}</h3>
+              <p>{classes.artwork.text}</p>
+            </div>
+          </div>
+          <div class="note-card icons">
+            <div>
+              <h3>{classes.icons.title}</h3>
+              <p>{classes.icons.text}</p>
+            </div>
+            {editor && (
+              <figure class="crop" data-crop="editor-icons">
+                <Picture
+                  src={imageFor(editor)}
+                  alt={classes.iconsCropAlt}
+                  widths={[400, 800]}
+                  sizes="(max-width: 600px) calc(100vw - 4rem), 20rem"
+                  formats={["avif", "webp"]}
+                  loading="lazy"
+                  decoding="async"
+                />
+                <figcaption>{classes.iconsCropCaption}</figcaption>
+              </figure>
+            )}
+          </div>
+        </div>
+        {picker && (
+          <div class="picker">
+            <FigureWithCaption
+              asset={picker}
+              {...t.media.images["tf-class-picker"]}
+              sizes="(max-width: 600px) 18rem, 14rem"
+            />
+          </div>
+        )}
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="trees">
+      <SectionHeading
+        number="02"
+        id="trees"
+        title={trees.heading}
+        text={trees.text}
+      />
+      <ul class="cards two">
+        {treePoints.map((point) => (
+          <li class="card">
+            <h3>{point.title}</h3>
+            <p>{point.text}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="section" aria-labelledby="features">
+      <SectionHeading number="03" id="features" title={features.heading} />
+      <div class="features-body">
+        <ul class="cards two features">
+          {featureItems.map((item) => (
+            <li class="card">
+              <h3>{item.title}</h3>
+              <p>{item.text}</p>
+              {item.notShown && <p class="not-shown">{features.notShown}</p>}
+            </li>
+          ))}
+        </ul>
+        {library && (
+          <div class="library">
+            <FigureWithCaption
+              asset={library}
+              {...t.media.images["tf-build-library"]}
+              sizes="(max-width: 600px) 18rem, 15rem"
+            />
+          </div>
+        )}
+      </div>
+    </section>
+
+    <ProductNext locale={locale} target="forever-journey" copy={copy.next} />
+  </div>
+</BaseLayout>
+
+<style>
+  .product {
+    display: grid;
+    gap: var(--space-section);
+    padding-block: var(--space-9) var(--space-10);
+  }
+
+  /* Hero: text and release panel on the left, the phone on the right. */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
+    grid-template-areas:
+      "intro shot"
+      "release shot";
+    align-items: start;
+    gap: var(--space-8) var(--space-9);
+  }
+
+  .intro {
+    grid-area: intro;
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .kind {
+    color: var(--color-text-subtle);
+    font-size: 0.9375rem;
+  }
+
+  h1 {
+    font-size: var(--font-size-h1-product);
+  }
+
+  .lead {
+    max-width: 38rem;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lead);
+    line-height: 1.45;
+  }
+
+  .hero-shot {
+    grid-area: shot;
+    justify-self: end;
+    width: 100%;
+    max-width: 17rem;
+  }
+
+  .release {
+    grid-area: release;
+    display: grid;
+    gap: var(--space-3);
+    max-width: 34rem;
+  }
+
+  .note {
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+
+  .section {
+    display: grid;
+    gap: var(--space-7);
+    padding-top: var(--space-section);
+    border-top: 1px solid var(--color-divider);
+  }
+
+  /* 01: class board, two notes, the class picker. */
+  .classes-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 0.7fr);
+    align-items: start;
+    gap: var(--space-6);
+  }
+
+  .notes {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .note-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+  }
+
+  .note-card :global(img) {
+    border-radius: 6px;
+  }
+
+  .note-card.icons {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .note-card h3,
+  .card h3 {
+    font-size: var(--font-size-label);
+    font-weight: var(--font-weight-label);
+    font-variation-settings: normal;
+    letter-spacing: normal;
+    line-height: 1.3;
+  }
+
+  .note-card p,
+  .card p {
+    margin-top: var(--space-1);
+    color: var(--color-text-muted);
+    font-size: 0.9375rem;
+  }
+
+  /* CSS-only crop of the editor screenshot; the pixels stay untouched. */
+  .crop :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 920 / 560;
+    object-fit: cover;
+    object-position: 50% 28.5%;
+    border-radius: var(--radius-screenshot);
+    background: var(--color-screenshot-bg);
+  }
+
+  .crop figcaption {
+    margin-top: var(--space-2);
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+
+  .picker {
+    justify-self: end;
+    width: 100%;
+    max-width: 14rem;
+  }
+
+  /* 02 and 03: cards on the surface, a square marker in the product colour. */
+  .cards {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cards.two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .card {
+    padding: var(--space-5);
+    background: var(--color-surface);
+  }
+
+  .card h3 {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+  }
+
+  .card h3::before {
+    content: "";
+    flex: 0 0 auto;
+    width: var(--space-2);
+    height: var(--space-2);
+    background: var(--color-tf-accent);
+    transform: translateY(-0.1em);
+  }
+
+  .features .card:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .card .not-shown {
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-caption);
+  }
+
+  .features-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 15rem);
+    align-items: start;
+    gap: var(--space-7);
+  }
+
+  @media (max-width: 1100px) {
+    .classes-body {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 14rem);
+      grid-template-areas:
+        "grid picker"
+        "notes notes";
+    }
+
+    .class-grid {
+      grid-area: grid;
+    }
+
+    .picker {
+      grid-area: picker;
+    }
+
+    .notes {
+      grid-area: notes;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 900px) {
+    .product {
+      padding-block: var(--space-8) var(--space-9);
+    }
+
+    .hero {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "intro"
+        "shot"
+        "release";
+      gap: var(--space-6);
+    }
+
+    .hero-shot {
+      justify-self: start;
+      max-width: 18rem;
+    }
+
+    .release {
+      max-width: none;
+    }
+
+    .features-body {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .library {
+      max-width: 18rem;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .product {
+      padding-top: var(--space-6);
+    }
+
+    .classes-body {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "grid"
+        "notes"
+        "picker";
+    }
+
+    .notes,
+    .cards.two {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .picker {
+      justify-self: start;
+      max-width: 18rem;
+    }
+
+    .card {
+      padding: var(--space-4);
+    }
+  }
+</style>

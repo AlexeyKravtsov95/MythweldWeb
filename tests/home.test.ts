@@ -9,7 +9,13 @@ import { parse, type HTMLElement } from "node-html-parser";
 import { beforeAll, describe, expect, it } from "vitest";
 import { RELEASE } from "../src/config/release";
 import { SITE } from "../src/config/site";
-import { LOCALES, getDictionary, localeRoot, type Locale } from "../src/i18n";
+import {
+  LOCALES,
+  getDictionary,
+  localeRoot,
+  localizePath,
+  type Locale,
+} from "../src/i18n";
 
 const dist = fileURLToPath(new URL("../dist/", import.meta.url));
 
@@ -121,8 +127,6 @@ describe.each(LOCALES)("home page for %s", (locale) => {
     for (const a of doc.querySelectorAll("a")) {
       const href = a.getAttribute("href") ?? "";
       expect(href, text(a)).not.toMatch(/^(#?|javascript:.*)$/);
-      // Product pages arrive in WEB-M0.4; until then nothing links to them.
-      expect(href).not.toMatch(/\/(talentforge|forever-journey)\//);
       if (/^https?:/.test(href)) expect(allowedExternal).toContain(href);
     }
     expect(
@@ -147,11 +151,26 @@ describe.each(LOCALES)("home page for %s", (locale) => {
     );
   });
 
-  it("shows missing addresses as pending, never as links", () => {
-    const explore = main.querySelector("span[aria-disabled='true']");
+  it("links both plates to the product pages of the same locale", () => {
+    const tf = main.querySelector("article[aria-labelledby='talentforge']");
+    const explore = tf?.querySelector(
+      `a[href="${localizePath(locale, "/talentforge/")}"]`,
+    );
     expect(text(explore)).toContain(home.exploreTalentforge);
-    expect(text(explore)).toContain(home.pagePending);
+    expect(tf?.querySelector("[aria-disabled='true']")).toBeNull();
 
+    const fj = main.querySelector("article[aria-labelledby='forever-journey']");
+    const about = fj?.querySelector(
+      `a[href="${localizePath(locale, "/forever-journey/")}"]`,
+    );
+    expect(text(about)).toContain(home.exploreForeverJourney);
+    // The working CurseForge download stays next to the new link.
+    expect(fj?.querySelector(`a[href="${SITE.links.curseforge}"]`)).not.toBe(
+      null,
+    );
+  });
+
+  it("shows missing addresses as pending, never as links", () => {
     const footer = text(doc.querySelector("footer"));
     const pending = doc.querySelectorAll("footer .pending").map(text);
     const stores = [

@@ -151,7 +151,14 @@ describe("site output", () => {
     const pages = listFiles(dist)
       .filter((file) => file.endsWith(".html"))
       .sort();
-    expect(pages).toEqual(["index.html", "ru/index.html"]);
+    expect(pages).toEqual([
+      "forever-journey/index.html",
+      "index.html",
+      "ru/forever-journey/index.html",
+      "ru/index.html",
+      "ru/talentforge/index.html",
+      "talentforge/index.html",
+    ]);
   });
 
   it("does not publish the dev component preview", () => {

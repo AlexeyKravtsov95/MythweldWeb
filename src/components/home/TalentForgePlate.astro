@@ -2,8 +2,7 @@
 /**
  * TalentForge plate of the home page: store statuses from the release
  * config, the confirmed facts, the real editor screenshot and the nine
- * class artworks. The product page does not exist yet (WEB-M0.4), so its
- * action stays disabled instead of linking to a missing route.
+ * class artworks. Its action leads to the TalentForge page of the locale.
  * At ≤600 the screenshot moves under the statuses via grid areas (the DOM
  * keeps reading order) and is cropped from the top by CSS only.
  */
@@ -13,7 +12,7 @@ import ProductAction from "../ui/ProductAction.astro";
 import ProductPlate from "../ui/ProductPlate.astro";
 import StatusTag from "../ui/StatusTag.astro";
 import { RELEASE } from "../../config/release";
-import { getDictionary, type Locale } from "../../i18n";
+import { getDictionary, localizePath, type Locale } from "../../i18n";
 import { pickMedia } from "../../media/catalog";
 
 interface Props {
@@ -59,9 +58,9 @@ const editor = pickMedia("tf-editor", locale);
       <ProductAction
         variant="talentforge"
         label={t.home.exploreTalentforge}
-        href={null}
-        pendingReason={t.home.pagePending}
+        href={localizePath(locale, "/talentforge/")}
         locale={locale}
+        forward
       />
     </div>
     {editor && (
