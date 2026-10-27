@@ -14,6 +14,8 @@ interface Props {
   alt: string;
   /** "What it is · kind", e.g. "Talent editor · app screenshot, iPhone". */
   caption: string;
+  /** Second caption line, e.g. where the image was published. */
+  note?: string;
   /** Rendered width hint for responsive sources. */
   sizes?: string;
   loading?: "lazy" | "eager";
@@ -23,6 +25,7 @@ const {
   asset,
   alt,
   caption,
+  note,
   sizes = "(max-width: 600px) 100vw, 50vw",
   loading = "lazy",
 } = Astro.props;
@@ -48,7 +51,10 @@ const widths = [
     loading={loading}
     decoding="async"
   />
-  <figcaption class="caption">{caption}</figcaption>
+  <figcaption class="caption">
+    {caption}
+    {note && <span class="note">{note}</span>}
+  </figcaption>
 </figure>
 
 <style>
@@ -72,5 +78,9 @@ const widths = [
     color: var(--color-text-subtle);
     font-size: var(--font-size-caption);
     line-height: var(--line-height-caption);
+  }
+
+  .note {
+    display: block;
   }
 </style>

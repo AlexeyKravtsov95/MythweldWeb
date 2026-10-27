@@ -1,5 +1,5 @@
 import type { ReleaseState } from "../config/release";
-import type { ClassId, MediaGroup } from "../media/catalog";
+import type { AddonShotId, ClassId, MediaGroup } from "../media/catalog";
 import type { Locale } from "./locales";
 
 /**
@@ -50,7 +50,6 @@ export interface Dictionary {
     exploreForeverJourney: string;
     /** Forever Journey availability on CurseForge, by release state. */
     curseforgeStates: Record<ReleaseState, string>;
-    addonPlaceholderNote: string;
     downloadAddon: string;
     bookCreatorLinkLabel: string;
     /** The synthetic English demo book, shown in every locale. */
@@ -69,12 +68,14 @@ export interface Dictionary {
     products: string;
     getTools: string;
     site: string;
-    /** Site pages without an address yet; shown with "link pending". */
+    /** Names of the legal pages; each is shown only once it has an address. */
     pages: {
       privacy: string;
       terms: string;
       contact: string;
     };
+    /** One plain note while no legal page is approved (blocker B7). */
+    legalPending: string;
   };
   release: {
     heading: string;
@@ -109,6 +110,10 @@ export interface Dictionary {
   media: {
     /** Alt text describes the image; captions name what it is. */
     images: Record<MediaGroup, MediaCopy>;
+    /** In-game addon captures from the CurseForge gallery (blocker B1). */
+    addon: Record<AddonShotId, MediaCopy>;
+    /** Says the gallery captures may not show the current addon version. */
+    addonNote: string;
     requiredBeforeRelease: string;
     placeholders: {
       addonScreenshot: PlaceholderCopy;

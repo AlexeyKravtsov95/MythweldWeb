@@ -33,19 +33,23 @@ const products = t.home.products;
 const inline = (state: keyof typeof t.release.states) =>
   t.release.states[state].toLocaleLowerCase(t.meta.htmlLang);
 
-function figure(group: MediaGroup) {
-  const asset = pickMedia(group, locale);
+function figure(group: MediaGroup, from: Locale = locale) {
+  const asset = pickMedia(group, from);
   return asset && { asset, ...t.media.images[group] };
 }
 
 const editor = figure("tf-editor");
 const phoneShots = (["tf-class-picker", "tf-build-library"] as const).map(
-  figure,
+  (group) => figure(group),
 );
+// The Russian sample book is kept out of the build (blocker B4), so the
+// preview shows the English one in every locale, as the pages do.
 const bookPages = (["bc-sample-cover", "bc-sample-chapter"] as const).map(
-  figure,
+  (group) => figure(group, "en"),
 );
-const appShots = (["bc-app-cover", "bc-app-chapter"] as const).map(figure);
+const appShots = (["bc-app-cover", "bc-app-chapter"] as const).map((group) =>
+  figure(group),
+);
 ---
 
 <!doctype html>

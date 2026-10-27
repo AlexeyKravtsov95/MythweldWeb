@@ -170,36 +170,52 @@ describe.each(LOCALES)("home page for %s", (locale) => {
     );
   });
 
-  it("shows missing addresses as pending, never as links", () => {
+  it("shows a store without a listing by its release state, not as a link", () => {
     const footer = text(doc.querySelector("footer"));
     const pending = doc.querySelectorAll("footer .pending").map(text);
     const stores = [
-      [t.release.channels.googlePlay, RELEASE.talentforge.googlePlay],
-      [t.release.channels.appStore, RELEASE.talentforge.appStore],
+      [
+        t.release.channels.googlePlay,
+        RELEASE.talentforge.googlePlay,
+        RELEASE.talentforge.android,
+      ],
+      [
+        t.release.channels.appStore,
+        RELEASE.talentforge.appStore,
+        RELEASE.talentforge.ios,
+      ],
     ] as const;
-    for (const [name, href] of stores) {
+    for (const [name, href, state] of stores) {
       expect(footer).toContain(name);
-      expect(pending.some((p) => p.startsWith(name))).toBe(href === null);
+      const row = pending.find((p) => p.startsWith(name));
+      expect(row !== undefined).toBe(href === null);
+      if (href === null) {
+        expect(row).toBe(`${name} ${t.release.states[state]}`);
+      }
     }
-    for (const page of Object.values(t.footer.pages)) {
-      expect(pending).toContain(`${page} ${t.actions.linkPending}`);
-    }
+    expect(footer).not.toContain(t.actions.linkPending);
   });
 
-  it("keeps the in-game addon slot an honest placeholder", () => {
-    const slot = main.querySelector(
-      "article[aria-labelledby='forever-journey'] [role='img']",
+  it("shows the in-game addon Overview with an honest caption (B1)", () => {
+    const plate = main.querySelector(
+      "article[aria-labelledby='forever-journey']",
     );
-    expect(slot?.getAttribute("aria-label")).toContain(
-      t.media.requiredBeforeRelease,
+    expect(plate?.querySelector("[role='img']")).toBeNull();
+    expect(text(plate)).not.toContain(t.media.requiredBeforeRelease);
+    const figure = plate?.querySelector("figure[data-kind='addon-screenshot']");
+    expect(figure?.querySelector("img")?.getAttribute("alt")).toBe(
+      t.media.addon.overview.alt,
     );
-    expect(slot?.querySelector("img")).toBeNull();
+    const caption = text(figure?.querySelector("figcaption"));
+    expect(caption).toContain(t.media.addon.overview.caption);
+    expect(caption).toContain(t.media.addonNote);
   });
 
   it("describes every image and loads only the first screenshot eagerly", () => {
     const images = main.querySelectorAll("img");
-    // Editor screenshot, nine class artworks, two sample book pages.
-    expect(images).toHaveLength(12);
+    // Editor screenshot, nine class artworks, the addon Overview and two
+    // sample book pages.
+    expect(images).toHaveLength(13);
     for (const img of images) {
       expect(img.getAttribute("alt")?.trim()).toBeTruthy();
       expect(img.getAttribute("src")).toMatch(/^\/_astro\//);
