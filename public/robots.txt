@@ -1,5 +1,6 @@
-# Mythweld main website — pre-release bootstrap (WEB-M0.1).
-# Only placeholder pages exist; indexing is disabled until the public launch
-# is reviewed separately. No sitemap is published yet.
+# Mythweld main website — release candidate (WEB-M0.5).
+# Indexing stays closed until the public launch (WEB-M0.6). At launch:
+# replace "Disallow: /" with "Allow: /" and add
+# "Sitemap: https://mythweld.com/sitemap.xml" (see docs/release-readiness.md).
 User-agent: *
 Disallow: /

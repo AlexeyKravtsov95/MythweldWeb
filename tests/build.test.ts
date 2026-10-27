@@ -203,10 +203,12 @@ describe("site output", () => {
     expect(existsSync(`${dist}en`)).toBe(false);
   });
 
-  it("ships a robots.txt without a sitemap", () => {
+  it("does not advertise the sitemap in robots.txt before WEB-M0.6", () => {
     const robots = readFileSync(`${dist}robots.txt`, "utf8");
     expect(robots).toMatch(/^User-agent: \*/m);
     expect(robots).not.toMatch(/^sitemap:/im);
-    expect(listFiles(dist).some((file) => /sitemap/i.test(file))).toBe(false);
+    expect(listFiles(dist).filter((file) => /sitemap/i.test(file))).toEqual([
+      "sitemap.xml",
+    ]);
   });
 });

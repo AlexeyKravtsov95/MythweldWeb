@@ -149,6 +149,15 @@ Upstream: Google Fonts (`google/fonts`), Geologica v5, JetBrains Mono v24. Fallb
 - **Forever Journey** (`/forever-journey/`, `/ru/forever-journey/`): placeholder «In-game addon screenshot» (B1) на первом экране; в разделе Book Creator — EN-образец `bc-sample-cover/chapter` на обеих локалях, на RU с подписью «… пример на английском» (B4). Скриншоты интерфейса Book Creator (`bc-app-*`) не показаны: EN-снимка нет (B3), а RU-снимок не подменяет EN.
 - Путь «журнал → книга» описан по `ForeverJourneyWeb/src/i18n.ts` и `README.md`: код `FJBOOK1` (`/fj` → Export Book) или файл `ForeverJourney.lua` из SavedVariables; книга собирается в браузере, на сервер ничего не загружается. Архив персонажа подписан как исторический снимок.
 
+## Share-карточки (Open Graph, Twitter) — WEB-M0.5
+
+`public/og/mythweld-en.png` и `public/og/mythweld-ru.png`, 1200×630 PNG. Собраны на этом сайте: знак `LogoMark` (те же два path), слово «Mythweld» и строка `home.eyebrow` шрифтом Geologica, названия трёх продуктов с цветами из токенов, фон `--color-bg`. **Игровых изображений, скриншотов и интерфейсов нет.** Способ: разметка карточки вставлена в страницу `astro preview` (шрифты сайта уже загружены), снимок Chrome DevTools 1200×630 при DPR 1, без последующей обработки. Подключены в `BaseLayout` через `SITE.shareImage` (`og:image`, `twitter:image`, alt — `meta.shareImageAlt`).
+
+| Файл                        | SHA-256                                                            |
+| --------------------------- | ------------------------------------------------------------------ |
+| `public/og/mythweld-en.png` | `ad3f0020b9d0d1ca637f26cf4cb84ff3d60832da61fc6e3eb70f1372d1e5551c` |
+| `public/og/mythweld-ru.png` | `0cface19d6b4f9b55a9e54ff854953659d05b9ecbbaa1f99bab66870af88f69d` |
+
 ## Использование на страницах (WEB-M0.5)
 
 - **Главная** и **Forever Journey**: placeholder «In-game addon screenshot» убран. На главной — `overview`; на странице Forever Journey — `overview` на первом экране (`loading="eager"`) и `chronicle` рядом со списком «Что записывает аддон». Подпись «Вкладка … · скриншот аддона в игре» и строка о галерее CurseForge.

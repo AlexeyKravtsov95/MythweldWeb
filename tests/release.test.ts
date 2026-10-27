@@ -10,16 +10,27 @@ import { fileURLToPath } from "node:url";
 import { parse, type HTMLElement } from "node-html-parser";
 import { beforeAll, describe, expect, it } from "vitest";
 import { LEGAL } from "../src/config/legal";
-import { LOCALES, getDictionary, localizePath } from "../src/i18n";
+import { PUBLIC_PATHS } from "../src/config/pages";
+import { SITE } from "../src/config/site";
+import {
+  DEFAULT_LOCALE,
+  LOCALES,
+  getDictionary,
+  localizePath,
+} from "../src/i18n";
 import { MEDIA } from "../src/media/catalog";
 
 const dist = fileURLToPath(new URL("../dist/", import.meta.url));
 
 /** The six public pages: locale-neutral paths in every locale. */
-const PATHS = ["/", "/talentforge/", "/forever-journey/"] as const;
 const PAGES = LOCALES.flatMap((locale) =>
-  PATHS.map((path) => ({ locale, url: localizePath(locale, path) })),
+  PUBLIC_PATHS.map((path) => ({
+    locale,
+    path,
+    url: localizePath(locale, path),
+  })),
 );
+const ORIGIN = "https://mythweld.com";
 
 function load(url: string): HTMLElement {
   return parse(readFileSync(`${dist}${url.slice(1)}index.html`, "utf8"));
@@ -34,7 +45,7 @@ beforeAll(() => {
   }
 });
 
-describe.each(PAGES)("public page $url", ({ locale, url }) => {
+describe.each(PAGES)("public page $url", ({ locale, path, url }) => {
   const t = getDictionary(locale);
   let doc: HTMLElement;
 
@@ -78,6 +89,52 @@ describe.each(PAGES)("public page $url", ({ locale, url }) => {
     expect(doc.toString()).not.toMatch(/[\w.+-]+@[\w-]+\.[a-z]{2,}/i);
   });
 
+  it("has a unique localized title and description", () => {
+    const title = doc.querySelector("title")?.text ?? "";
+    const description =
+      doc.querySelector('meta[name="description"]')?.getAttribute("content") ??
+      "";
+    expect(title).toContain("Mythweld");
+    expect(title.length).toBeLessThanOrEqual(70);
+    expect(description.length).toBeGreaterThan(50);
+    const others = PAGES.filter((page) => page.url !== url).map(
+      (page) => load(page.url).querySelector("title")?.text,
+    );
+    expect(others).not.toContain(title);
+  });
+
+  it("declares canonical, hreflang, Open Graph and Twitter tags", () => {
+    const meta = (key: string) =>
+      doc
+        .querySelector(`meta[property="${key}"], meta[name="${key}"]`)
+        ?.getAttribute("content");
+    const canonical = `${ORIGIN}${url}`;
+    expect(
+      doc.querySelector('link[rel="canonical"]')?.getAttribute("href"),
+    ).toBe(canonical);
+    const hreflang = doc
+      .querySelectorAll('link[rel="alternate"][hreflang]')
+      .map((l) => `${l.getAttribute("hreflang")} ${l.getAttribute("href")}`);
+    expect(hreflang).toEqual([
+      ...LOCALES.map(
+        (alt) =>
+          `${getDictionary(alt).meta.htmlLang} ${ORIGIN}${localizePath(alt, path)}`,
+      ),
+      `x-default ${ORIGIN}${localizePath(DEFAULT_LOCALE, path)}`,
+    ]);
+    expect(meta("og:url")).toBe(canonical);
+    expect(meta("og:title")).toBe(doc.querySelector("title")?.text);
+    expect(meta("og:locale")).toBe(t.meta.ogLocale);
+    const image = `${ORIGIN}${SITE.shareImage[locale]}`;
+    expect(meta("og:image")).toBe(image);
+    expect(meta("og:image:width")).toBe("1200");
+    expect(meta("og:image:height")).toBe("630");
+    expect(meta("og:image:alt")).toBe(t.meta.shareImageAlt);
+    expect(meta("twitter:card")).toBe("summary_large_image");
+    expect(meta("twitter:image")).toBe(image);
+    expect(existsSync(`${dist}${SITE.shareImage[locale].slice(1)}`)).toBe(true);
+  });
+
   it("gives the journal steps the command from the addon's own page", () => {
     if (!url.endsWith("/forever-journey/")) return;
     expect(text(doc.querySelector("main"))).toContain("/fj open");
@@ -108,6 +165,33 @@ describe("legal configuration", () => {
         /legal-drafts|privacy-policy|terms\.(en|ru)/.test(file),
       ),
     ).toBe(false);
+  });
+});
+
+describe("sitemap", () => {
+  let xml = "";
+
+  beforeAll(() => {
+    xml = readFileSync(`${dist}sitemap.xml`, "utf8");
+  });
+
+  it("lists exactly the six public pages", () => {
+    const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+    expect(locs.sort()).toEqual(
+      PAGES.map((page) => `${ORIGIN}${page.url}`).sort(),
+    );
+    for (const page of PAGES) {
+      expect(existsSync(`${dist}${page.url.slice(1)}index.html`)).toBe(true);
+    }
+  });
+
+  it("never lists dev previews, drafts or assets", () => {
+    expect(xml).not.toMatch(/\/dev\/|legal-drafts|_astro|\.png|404/);
+  });
+
+  it("links every page to its alternates", () => {
+    const alternates = xml.match(/<xhtml:link /g) ?? [];
+    expect(alternates).toHaveLength(PAGES.length * (LOCALES.length + 1));
   });
 });
 
