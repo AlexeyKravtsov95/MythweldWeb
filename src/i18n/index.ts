@@ -6,6 +6,7 @@ import type { Dictionary } from "./types";
 export * from "./locales";
 export type {
   Dictionary,
+  FlowStep,
   MediaCopy,
   PlaceholderCopy,
   ProductCopy,

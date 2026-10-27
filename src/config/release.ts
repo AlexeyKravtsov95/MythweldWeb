@@ -17,6 +17,10 @@ export interface Release {
     appStore: string | null;
     dataVersion: string;
   };
+  foreverJourney: {
+    /** State of the addon listing on CurseForge (`SITE.links.curseforge`). */
+    curseforge: ReleaseState;
+  };
 }
 
 export const RELEASE = {
@@ -27,5 +31,8 @@ export const RELEASE = {
     googlePlay: null,
     appStore: null,
     dataVersion: "1.60.1",
+  },
+  foreverJourney: {
+    curseforge: "available",
   },
 } as const satisfies Release;

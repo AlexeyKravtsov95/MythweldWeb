@@ -1,4 +1,10 @@
 ---
+/**
+ * Site header (v3.2 board, 07): logo, product links, Book Creator ↗ and
+ * EN/RU. At ≤900 the links and EN/RU fold behind a 44×44 menu button.
+ * Without JavaScript the button stays hidden and the links stay visible,
+ * so the script below only enhances an already usable header.
+ */
 import { SITE } from "../config/site";
 import { getDictionary, localeRoot, type Locale } from "../i18n";
 import LanguageSwitcher from "./LanguageSwitcher.astro";
@@ -11,30 +17,99 @@ interface Props {
 
 const { locale, path } = Astro.props;
 const t = getDictionary(locale);
+const { products } = t.home;
+const home = localeRoot(locale);
+const sections = [
+  { href: `${home}#talentforge`, label: products.talentforge.name },
+  { href: `${home}#forever-journey`, label: products.foreverJourney.name },
+];
 ---
 
-<header class="site-header">
+<header class="site-header" data-site-header>
   <div class="container bar">
-    <a class="brand" href={localeRoot(locale)} aria-label={t.a11y.homeLink}>
+    <a class="brand" href={home} aria-label={t.a11y.homeLink}>
       <LogoMark size={30} />
       <span class="wordmark" aria-hidden="true">
         {t.meta.siteName}
       </span>
     </a>
-    <nav class="primary" aria-label={t.a11y.primaryNav}>
-      <ul>
-        <li>
-          <a href={SITE.links.bookCreator} target="_blank" rel="noopener">
-            {t.home.products.bookCreator.name}
-            <span aria-hidden="true">↗</span>
-            <span class="visually-hidden">({t.a11y.opensInNewTab})</span>
-          </a>
-        </li>
-      </ul>
-    </nav>
-    <LanguageSwitcher locale={locale} path={path} />
+    <button
+      class="menu-toggle"
+      type="button"
+      aria-expanded="false"
+      aria-controls="site-menu"
+      hidden
+    >
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 20 20"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="square"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path class="line-top" d="M3 5h14"></path>
+        <path class="line-mid" d="M3 10h14"></path>
+        <path class="line-bottom" d="M3 15h14"></path>
+      </svg>
+      <span class="visually-hidden">{t.a11y.menu}</span>
+    </button>
+    <div class="menu" id="site-menu">
+      <nav class="primary" aria-label={t.a11y.primaryNav}>
+        <ul>
+          {sections.map((link) => (
+            <li>
+              <a href={link.href}>{link.label}</a>
+            </li>
+          ))}
+          <li>
+            <a href={SITE.links.bookCreator} target="_blank" rel="noopener">
+              {products.bookCreator.name}
+              <span aria-hidden="true">↗</span>
+              <span class="visually-hidden">({t.a11y.opensInNewTab})</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <LanguageSwitcher locale={locale} path={path} />
+    </div>
   </div>
 </header>
+
+<script>
+  const header = document.querySelector<HTMLElement>("[data-site-header]");
+  const toggle = header?.querySelector<HTMLButtonElement>(".menu-toggle");
+  const menu = header?.querySelector<HTMLElement>(".menu");
+
+  if (header && toggle && menu) {
+    const setOpen = (open: boolean) => {
+      toggle.setAttribute("aria-expanded", String(open));
+      header.toggleAttribute("data-menu-open", open);
+    };
+
+    header.setAttribute("data-enhanced", "");
+    toggle.hidden = false;
+
+    toggle.addEventListener("click", () => {
+      setOpen(toggle.getAttribute("aria-expanded") !== "true");
+    });
+
+    // Same-page anchors keep the page, so close the menu on navigation.
+    menu.addEventListener("click", (event) => {
+      if ((event.target as Element).closest("a")) setOpen(false);
+    });
+
+    header.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      if (toggle.getAttribute("aria-expanded") !== "true") return;
+      setOpen(false);
+      toggle.focus();
+    });
+  }
+</script>
 
 <style>
   .site-header {
@@ -45,7 +120,7 @@ const t = getDictionary(locale);
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-2) var(--space-5);
+    gap: var(--space-2) var(--space-8);
     min-height: 4rem;
     padding-block: var(--space-2);
   }
@@ -65,13 +140,19 @@ const t = getDictionary(locale);
     letter-spacing: var(--letter-spacing-heading);
   }
 
-  .primary {
-    margin-inline-start: auto;
+  .menu {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-5);
   }
 
   .primary ul {
     display: flex;
-    gap: var(--space-2);
+    flex-wrap: wrap;
+    gap: 0 var(--space-2);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -92,5 +173,83 @@ const t = getDictionary(locale);
   .primary a:hover {
     background: var(--color-surface);
     color: var(--color-action-primary-hover);
+  }
+
+  .menu-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: var(--size-target-min);
+    height: var(--size-target-min);
+    margin-inline-start: auto;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+  }
+
+  .menu-toggle:hover {
+    background: var(--color-surface);
+  }
+
+  .menu-toggle path {
+    transform-origin: 10px 10px;
+    transition:
+      transform 0.15s,
+      opacity 0.15s;
+  }
+
+  [data-menu-open] .line-top {
+    transform: translateY(5px) rotate(45deg);
+  }
+
+  [data-menu-open] .line-mid {
+    opacity: 0;
+  }
+
+  [data-menu-open] .line-bottom {
+    transform: translateY(-5px) rotate(-45deg);
+  }
+
+  @media (max-width: 900px) {
+    .bar {
+      gap: var(--space-2) var(--space-4);
+    }
+
+    [data-enhanced] .menu-toggle:not([hidden]) {
+      display: inline-flex;
+    }
+
+    /* Open menu: a full-width list under the bar, EN/RU at its end. */
+    [data-enhanced] .menu {
+      display: none;
+      flex-basis: 100%;
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--space-4);
+      padding-block: var(--space-2) var(--space-4);
+      border-top: 1px solid var(--color-divider);
+    }
+
+    [data-enhanced][data-menu-open] .menu {
+      display: flex;
+    }
+
+    [data-enhanced] .primary ul {
+      flex-direction: column;
+    }
+
+    [data-enhanced] .primary a {
+      display: flex;
+      min-height: var(--size-button-height);
+      padding-inline: 0;
+      color: var(--color-text);
+      font-size: var(--font-size-body);
+    }
+
+    [data-enhanced] .menu :global(.lang) {
+      align-self: flex-start;
+    }
   }
 </style>

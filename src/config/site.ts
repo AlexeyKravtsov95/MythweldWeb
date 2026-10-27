@@ -6,5 +6,7 @@ export const SITE = {
   url: "https://mythweld.com",
   links: {
     bookCreator: "https://journal.mythweld.com/",
+    /** Forever Journey addon page, checked on 2026-10-27. */
+    curseforge: "https://www.curseforge.com/wow/addons/forever-journey",
   },
 } as const;

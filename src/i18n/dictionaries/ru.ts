@@ -9,13 +9,15 @@ export const ru = {
     homeTitle:
       "Mythweld — независимые инструменты для World of Warcraft: Forever",
     homeDescription:
-      "Mythweld — независимая коллекция игровых инструментов: TalentForge, Forever Journey и Book Creator. Новый сайт в разработке.",
+      "Независимые инструменты для World of Warcraft: Forever. TalentForge помогает планировать билды талантов на телефоне, а аддон Forever Journey ведёт дневник в игре, из которого Book Creator делает книгу для печати.",
   },
   a11y: {
     skipToContent: "Перейти к содержимому",
     primaryNav: "Основная навигация",
     languageSwitcher: "Язык",
     homeLink: "Главная Mythweld",
+    menu: "Меню",
+    footerNav: "Ссылки в подвале",
     opensInNewTab: "откроется в новой вкладке",
   },
   languageNames: {
@@ -23,34 +25,74 @@ export const ru = {
     ru: "Русский",
   },
   home: {
-    eyebrow: "Сайт в разработке",
-    heading: "Mythweld",
-    lead: "Независимая коллекция игровых инструментов для World of Warcraft: Forever. Это временная страница-заглушка, пока создаётся новый сайт.",
+    eyebrow: "Инструменты для World of Warcraft: Forever",
+    heading: "Соберите билд. Сохраните историю.",
+    lead: "Планировщик талантов для телефона и дневник в игре, из которого получается книга для печати.",
     productsHeading: "Продукты",
     products: {
       talentforge: {
         name: "TalentForge",
         kind: "Мобильное приложение",
-        summary: "Планировщик билдов талантов для World of Warcraft: Forever.",
+        summary:
+          "Планируйте таланты для всех девяти классов в настоящих деревьях специализаций и возвращайтесь к билдам позже.",
       },
       foreverJourney: {
         name: "Forever Journey",
-        kind: "Игровой аддон",
-        summary: "Аддон-дневник персонажа прямо в игре.",
+        kind: "Аддон для WoW",
+        summary:
+          "Записывает уровни, зоны, смерти, победы над боссами и ваши заметки, пока вы играете.",
       },
       bookCreator: {
         name: "Book Creator",
         kind: "Веб-инструмент",
-        summary: "Генератор PDF-книг для печати прямо в браузере.",
+        summary: "Превращает дневник в PDF-книгу для печати прямо в браузере.",
       },
     },
-    bookCreatorLinkLabel: "Открыть Book Creator",
-    statusNote:
-      "Страницы продуктов, скриншоты и ссылки на загрузку появятся здесь, когда будут готовы.",
+    talentforgeFeatures: {
+      autosave: "Сохраняет при каждом изменении",
+      offline: "Работает без сети",
+      languages: "Английский и русский",
+    },
+    exploreTalentforge: "Подробнее о TalentForge",
+    pagePending: "страница готовится",
+    curseforgeStates: {
+      available: "Доступен на CurseForge",
+      testing: "Тестируется на CurseForge",
+      prep: "Готовится к выходу на CurseForge",
+    },
+    addonPlaceholderNote: "Не рисуем и не имитируем.",
+    downloadAddon: "Скачать аддон",
+    bookCreatorLinkLabel: "Создать книгу приключений",
+    bookSample: {
+      coverAlt:
+        "Обложка примера книги на английском: My Journey, Aelirien, ночной эльф, друид, уровень 80",
+      chapterAlt:
+        "Страница примера книги на английском: глава I, июнь 2026 г., записи дневника",
+      caption: "Пример книги на английском · демо-персонаж",
+    },
+    flow: {
+      heading: "Планируйте → Играйте → Помните",
+      steps: {
+        plan: { title: "Планируйте", text: "TalentForge — до входа в игру." },
+        play: { title: "Играйте", text: "Forever Journey — пока качаетесь." },
+        remember: {
+          title: "Помните",
+          text: "Book Creator — когда глава закончена.",
+        },
+      },
+    },
   },
   footer: {
     disclaimer:
       "Mythweld — независимый фанатский проект. Он не связан с Blizzard Entertainment и не одобрен ею. World of Warcraft и связанные названия и изображения — товарные знаки Blizzard Entertainment, Inc.",
+    products: "Продукты",
+    getTools: "Где взять",
+    site: "Сайт",
+    pages: {
+      privacy: "Конфиденциальность",
+      terms: "Условия",
+      contact: "Контакты",
+    },
   },
   release: {
     heading: "Статус выпуска",

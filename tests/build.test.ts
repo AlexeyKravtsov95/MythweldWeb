@@ -55,10 +55,14 @@ describe.each(LOCALES)("built page for %s", (locale) => {
 
   it("renders localized visible content", () => {
     const main = doc.querySelector("main")?.text ?? "";
+    expect(main).toContain(t.home.heading);
     expect(main).toContain(t.home.lead);
-    expect(main).toContain(t.home.productsHeading);
+    expect(main).toContain(t.home.products.talentforge.summary);
+    expect(main).toContain(t.home.products.foreverJourney.summary);
     for (const other of LOCALES.filter((l) => l !== locale)) {
-      expect(main).not.toContain(getDictionary(other).home.lead);
+      const copy = getDictionary(other).home;
+      expect(main).not.toContain(copy.heading);
+      expect(main).not.toContain(copy.lead);
     }
   });
 
@@ -103,7 +107,8 @@ describe.each(LOCALES)("built page for %s", (locale) => {
   it("only links internally to pages that exist", () => {
     for (const a of doc.querySelectorAll("a[href^='/']")) {
       const href = a.getAttribute("href") ?? "";
-      expect(existsSync(`${dist}${href.slice(1)}index.html`), href).toBe(true);
+      const path = href.split("#")[0] ?? "";
+      expect(existsSync(`${dist}${path.slice(1)}index.html`), href).toBe(true);
     }
   });
 
