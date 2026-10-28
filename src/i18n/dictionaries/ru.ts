@@ -113,6 +113,13 @@ export const ru = {
       talentData: "Данные талантов",
     },
   },
+  notFound: {
+    title: "Страница не найдена",
+    description: "По этому адресу на mythweld.com нет страницы.",
+    heading: "Страница не найдена",
+    lead: "По этому адресу нет страницы. Возможно, она переехала или в ссылке опечатка.",
+    homeLink: "Перейти на главную Mythweld",
+  },
   actions: {
     linkPending: "ссылка ожидается",
     inPreparation: "в подготовке",

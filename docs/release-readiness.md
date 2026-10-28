@@ -18,28 +18,28 @@
 
 ## Остальные проверки
 
-| Проверка                                                                      | Статус       | Комментарий                                                                                                   |
-| ----------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------- |
-| Title/description, canonical, `hreflang`, `lang`, OG, Twitter на 6 страницах  | **GO**       | Тест `tests/release.test.ts`. Share-card EN/RU из знака и шрифта, без игровых изображений.                    |
-| `sitemap.xml` ровно с 6 URL и alternates, без `/dev/`                         | **GO**       | Собирается из `src/config/pages.ts`. В `robots.txt` не объявлен до WEB-M0.6.                                  |
-| `robots.txt` = `Disallow: /`                                                  | **GO** (лок) | Снимается только в WEB-M0.6. Lighthouse SEO 69 из-за `is-crawlable` — ожидаемо.                               |
-| Нет трекеров, cookies-кода, сторонних скриптов, форм                          | **GO**       | Тесты «no trackers», «loads no third-party scripts».                                                          |
-| Нет фиктивных ссылок, `mailto:`, придуманных контактов                        | **GO**       | Тест «has no dead or invented links».                                                                         |
-| Браузерный QA 6 страниц × 1440/768/390/320 × (страница, клавиатура/меню) = 48 | **GO**       | Нет горизонтальной прокрутки, цели ≥44 px, контраст ≥5,52:1, фокус виден у всех 264 элементов, меню и Escape. |
-| Lighthouse: Accessibility / Best Practices                                    | **GO**       | 100 / 100 (главная desktop, RU Forever Journey mobile).                                                       |
-| `prefers-reduced-motion`                                                      | **GO**       | Правило в `src/styles/global.css` сводит transition/animation к 0,01 мс; анимаций на страницах нет.           |
-| Команды `/fj open`, Export Book, `/reload` в реальном аддоне                  | **Владелец** | Тексты сверены с CurseForge и Book Creator; в игре агентом не проверены (verification gate).                  |
-| Актуальность снимков аддона относительно 0.7.0                                | **Владелец** | Не подтверждена (Overview ~26.09.2026). Подпись честная; заменить по возможности.                             |
-| Performance (Core Web Vitals)                                                 | **Владелец** | Не измерялось на реальном хостинге. Локально: статика, изображения AVIF/WebP с `srcset`, шрифты с preload.    |
-| 404, TLS, редиректы, www → apex, заголовки кэша                               | **NO-GO**    | Зависят от хостинга WEB-M0.6. Страницы 404 в сайте нет: поведение задаёт хостинг.                             |
+| Проверка                                                                      | Статус       | Комментарий                                                                                                                                                                        |
+| ----------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Title/description, canonical, `hreflang`, `lang`, OG, Twitter на 6 страницах  | **GO**       | Тест `tests/release.test.ts`. Share-card EN/RU из знака и шрифта, без игровых изображений.                                                                                         |
+| `sitemap.xml` ровно с 6 URL и alternates, без `/dev/`                         | **GO**       | Собирается из `src/config/pages.ts`. В `robots.txt` не объявлен до WEB-M0.6.                                                                                                       |
+| `robots.txt` = `Disallow: /`                                                  | **GO** (лок) | Снимается только в WEB-M0.6. Lighthouse SEO 69 из-за `is-crawlable` — ожидаемо.                                                                                                    |
+| Нет трекеров, cookies-кода, сторонних скриптов, форм                          | **GO**       | Тесты «no trackers», «loads no third-party scripts».                                                                                                                               |
+| Нет фиктивных ссылок, `mailto:`, придуманных контактов                        | **GO**       | Тест «has no dead or invented links».                                                                                                                                              |
+| Браузерный QA 6 страниц × 1440/768/390/320 × (страница, клавиатура/меню) = 48 | **GO**       | Нет горизонтальной прокрутки, цели ≥44 px, контраст ≥5,52:1, фокус виден у всех 264 элементов, меню и Escape.                                                                      |
+| Lighthouse: Accessibility / Best Practices                                    | **GO**       | 100 / 100 (главная desktop, RU Forever Journey mobile).                                                                                                                            |
+| `prefers-reduced-motion`                                                      | **GO**       | Правило в `src/styles/global.css` сводит transition/animation к 0,01 мс; анимаций на страницах нет.                                                                                |
+| Команды `/fj open`, Export Book, `/reload` в реальном аддоне                  | **Владелец** | Тексты сверены с CurseForge и Book Creator; в игре агентом не проверены (verification gate).                                                                                       |
+| Актуальность снимков аддона относительно 0.7.0                                | **Владелец** | Не подтверждена (Overview ~26.09.2026). Подпись честная; заменить по возможности.                                                                                                  |
+| Performance (Core Web Vitals)                                                 | **Владелец** | Не измерялось на реальном хостинге. Локально: статика, изображения AVIF/WebP с `srcset`, шрифты с preload.                                                                         |
+| 404, TLS, редиректы, www → apex, заголовки кэша                               | **NO-GO**    | WEB-M0.6A: `404.html` (EN+RU), Content-Type/Cache-Control и ручной деплой в VK Cloud подготовлены — `docs/deploy-vk-cloud.md`. Проверка на staging, TLS, www/apex — за владельцем. |
 
 ## Чек-лист WEB-M0.6 (публичный запуск)
 
 1. Владелец утверждает Privacy, Terms и Contact (B7) → страницы EN/RU → адреса в `src/config/legal.ts`.
 2. Владелец подтверждает статусы магазинов и обновляет `RELEASE.checked` (B6); ссылки — только на опубликованные листинги.
-3. Выбран хостинг/CDN; проверено, какие журналы и cookies он создаёт, — отражено в Privacy.
+3. Хостинг: VK Cloud Object Storage + CDN (решение владельца в Issue #12, деплой — `docs/deploy-vk-cloud.md`). Журналы и cookies провайдера подтверждены (раздел 11 того документа) и отражены в Privacy.
 4. Проверка в игре: `/fj open`, Export Book, `/reload` → импорт в Book Creator.
-5. Домен: TLS, `www` → apex (или наоборот), `http` → `https`, `/en/` не существует, `trailingSlash: "always"` совпадает с редиректами хостинга, страница 404 (статическая `404.html` или ответ хостинга).
-6. `public/robots.txt`: `Disallow: /` → `Allow: /` и строка `Sitemap: https://mythweld.com/sitemap.xml`. Одновременно обновить тест `keeps robots.txt closed until the WEB-M0.6 launch` в `tests/release.test.ts` и тест `does not advertise the sitemap…` в `tests/build.test.ts` — это и есть переключение release gate.
+5. Домен: TLS, `www` → apex (или наоборот), `http` → `https`, `/en/` не существует, `trailingSlash: "always"` совпадает с редиректами хостинга, `404.html` отдаётся со статусом 404 (smoke-тест `npm run smoke`).
+6. `public/robots.txt`: `Disallow: /` → `Allow: /` и строка `Sitemap: https://mythweld.com/sitemap.xml`. Одновременно обновить тест `keeps robots.txt closed until the WEB-M0.6 launch` в `tests/release.test.ts` и тест `does not advertise the sitemap…` в `tests/build.test.ts` — это и есть переключение release gate. Тот же шаг снимает защиту `Disallow: /` в `scripts/deploy/objects.ts` и проверку в `scripts/deploy/smoke.ts`.
 7. После деплоя: превью ссылок (OG) в мессенджерах для `/` и `/ru/`, Lighthouse на проде, Search Console (по решению владельца).
 8. `journal.mythweld.com`, `legal.mythweld.com`, `ota.mythweld.com` не трогать.

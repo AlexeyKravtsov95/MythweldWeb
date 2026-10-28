@@ -36,6 +36,9 @@ All user-facing copy lives in typed dictionaries (`src/i18n/dictionaries/en.ts`,
 
 ```text
 .github/workflows/ci.yml  CI: npm ci → format → check → build → test
+.github/workflows/deploy-vk-cloud.yml  manual deploy to VK Cloud Object Storage (docs/deploy-vk-cloud.md)
+deploy/vk-cloud/          bucket website config and reference public-read policy
+docs/deploy-vk-cloud.md   VK Cloud S3 + CDN setup, keys, secrets, purge and rollback (in Russian)
 docs/assets-manifest.md   provenance, kinds and usage rules of every image and font
 docs/screenshots/         component screenshots attached to PRs
 public/                   static files (robots.txt, favicon, fonts/ with OFL licences)
@@ -50,6 +53,7 @@ src/i18n/                 locales, routing helpers, typed dictionaries
 src/layouts/              BaseLayout: <html lang>, meta, hreflang, skip link, font preload
 src/media/                typed media catalog and image lookup
 src/pages/                routes: / and /ru/ (+ dev-only /dev/components/{en,ru}/)
+scripts/                  deploy plan, upload and smoke checks (deploy/), secret scan
 src/styles/               tokens.css (v3.2 tokens), fonts.css, global.css
 tests/                    i18n, tokens, fonts, media, components, built-site smoke tests
 AGENTS.md                 working rules for AI agents (in Russian)
@@ -79,18 +83,21 @@ AGENTS.md                 working rules for AI agents (in Russian)
 
 ## Scripts
 
-| Command                | What it does                                                   |
-| ---------------------- | -------------------------------------------------------------- |
-| `npm run dev`          | Dev server with hot reload                                     |
-| `npm run build`        | Production static build into `dist/`                           |
-| `npm run preview`      | Serve the built `dist/` locally                                |
-| `npm run check`        | `astro check` + `tsc --noEmit` (strict type checking)          |
-| `npm test`             | Vitest: i18n, tokens and smoke checks of `dist/` (build first) |
-| `npm run format:check` | Prettier check (`npm run format` to fix)                       |
-| `npm run verify`       | Everything CI runs: format, check, build, test                 |
+| Command                  | What it does                                                    |
+| ------------------------ | --------------------------------------------------------------- |
+| `npm run dev`            | Dev server with hot reload                                      |
+| `npm run build`          | Production static build into `dist/`                            |
+| `npm run preview`        | Serve the built `dist/` locally                                 |
+| `npm run check`          | `astro check` + `tsc --noEmit` (strict type checking)           |
+| `npm test`               | Vitest: i18n, tokens and smoke checks of `dist/` (build first)  |
+| `npm run format:check`   | Prettier check (`npm run format` to fix)                        |
+| `npm run verify`         | Everything CI runs: format, check, build, test                  |
+| `npm run deploy:plan`    | Deploy plan of `dist/` (Content-Type, Cache-Control), no upload |
+| `npm run secrets:check`  | Secret scan of tracked files and `dist/`                        |
+| `npm run smoke -- <url>` | HTTP smoke checks of a deployed copy (routes, 404, headers)     |
 
 ## Infrastructure boundaries
 
-This repository will build the **main website only**. Do not modify the working `journal.mythweld.com`, `legal.mythweld.com` or `ota.mythweld.com` services, and do not change DNS or production deployments without a separately reviewed task. The site is not deployed yet; `robots.txt` disallows indexing and no sitemap is published until a reviewed public launch.
+This repository will build the **main website only**. Do not modify the working `journal.mythweld.com`, `legal.mythweld.com` or `ota.mythweld.com` services, and do not change DNS or production deployments without a separately reviewed task. The site is not deployed yet; the manual VK Cloud deploy (WEB-M0.6A) targets only the `mythweld-web` bucket and needs the owner's approval, see `docs/deploy-vk-cloud.md`; `robots.txt` disallows indexing and no sitemap is published until a reviewed public launch.
 
 This is an independent fan project, not affiliated with Blizzard Entertainment.

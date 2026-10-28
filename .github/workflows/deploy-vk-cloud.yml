@@ -1,0 +1,138 @@
+# Manual deploy of the static site to the VK Cloud Object Storage bucket
+# `mythweld-web` (staging until WEB-M0.6B). Never runs on push or merge.
+# Setup, keys, CDN and rollback: docs/deploy-vk-cloud.md.
+name: Deploy to VK Cloud
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit SHA or tag on main to deploy. Rollback: the SHA of an earlier deployment."
+        required: true
+        default: main
+      prune:
+        description: "Delete bucket objects that are not in this build (old _astro/ files are always kept)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-vk-cloud
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Verify and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+    outputs:
+      sha: ${{ steps.ref.outputs.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Allow only reviewed commits on main
+        id: ref
+        env:
+          REF: ${{ inputs.ref }}
+        run: |
+          sha="$(git rev-parse --verify "${REF}^{commit}")"
+          if ! git merge-base --is-ancestor "$sha" origin/main; then
+            echo "::error::$REF ($sha) is not on main. Only merged commits are deployed."
+            exit 1
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "Deploying $sha" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Set up Node.js (from .nvmrc)
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies (lockfile only)
+        run: npm ci
+
+      - name: Verify (format, checks, build, tests)
+        run: npm run verify
+
+      - name: Secret scan (tracked files and dist)
+        run: |
+          node scripts/check-secrets.ts
+          node scripts/check-secrets.ts dist
+
+      - name: Deploy plan (dry run)
+        run: node scripts/deploy/deploy.ts --dry-run
+
+      - name: Keep the build
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist-${{ steps.ref.outputs.sha }}
+          path: dist/
+          retention-days: 30
+          if-no-files-found: error
+
+  deploy:
+    name: Upload and smoke-test
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Secrets and variables live in this environment. Its protection rules
+    # (required reviewer = owner, deployment branch = main) are the approval
+    # gate: the job waits until the owner approves the run.
+    environment:
+      name: vk-cloud-staging
+      url: ${{ vars.STAGING_BASE_URL }}
+    env:
+      S3_BUCKET: mythweld-web
+      S3_ENDPOINT: ${{ vars.VK_S3_ENDPOINT }}
+      S3_REGION: ${{ vars.VK_S3_REGION }}
+      # VK Cloud S3 does not need the CRC checksums newer AWS CLIs add.
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      AWS_EC2_METADATA_DISABLED: "true"
+    steps:
+      - name: Checkout deploy scripts
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.build.outputs.sha }}
+          persist-credentials: false
+
+      - name: Set up Node.js (from .nvmrc)
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      - name: Download the build
+        uses: actions/download-artifact@v8
+        with:
+          name: dist-${{ needs.build.outputs.sha }}
+          path: dist/
+
+      - name: Secret scan (downloaded dist)
+        run: node scripts/check-secrets.ts dist
+
+      - name: Upload to mythweld-web
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.VK_S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.VK_S3_SECRET_ACCESS_KEY }}
+          PRUNE: ${{ inputs.prune }}
+        run: |
+          if [ "$PRUNE" = "true" ]; then
+            node scripts/deploy/deploy.ts
+          else
+            node scripts/deploy/deploy.ts --no-prune
+          fi
+
+      - name: Smoke test the staging address
+        env:
+          SMOKE_BASE_URL: ${{ vars.STAGING_BASE_URL }}
+        run: node scripts/deploy/smoke.ts

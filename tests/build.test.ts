@@ -152,6 +152,7 @@ describe("site output", () => {
       .filter((file) => file.endsWith(".html"))
       .sort();
     expect(pages).toEqual([
+      "404.html",
       "forever-journey/index.html",
       "index.html",
       "ru/forever-journey/index.html",
