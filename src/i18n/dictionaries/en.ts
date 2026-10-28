@@ -113,6 +113,13 @@ export const en = {
       talentData: "Talent data",
     },
   },
+  notFound: {
+    title: "Page not found",
+    description: "There is no page at this address on mythweld.com.",
+    heading: "Page not found",
+    lead: "There is no page at this address. It may have moved, or the link may contain a typo.",
+    homeLink: "Go to the Mythweld home page",
+  },
   actions: {
     linkPending: "link pending",
     inPreparation: "in preparation",

@@ -16,7 +16,10 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify": "npm run format:check && npm run check && npm run build && npm test"
+    "verify": "npm run format:check && npm run check && npm run build && npm test",
+    "secrets:check": "node scripts/check-secrets.ts && node scripts/check-secrets.ts dist",
+    "deploy:plan": "node scripts/deploy/deploy.ts --dry-run",
+    "smoke": "node scripts/deploy/smoke.ts"
   },
   "dependencies": {
     "astro": "7.4.2"

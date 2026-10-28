@@ -92,6 +92,17 @@ export interface Dictionary {
       talentData: string;
     };
   };
+  /**
+   * The shared 404 page (`404.html`). Object Storage serves one error
+   * document for every unknown URL, so the page shows every locale.
+   */
+  notFound: {
+    title: string;
+    description: string;
+    heading: string;
+    lead: string;
+    homeLink: string;
+  };
   actions: {
     /** Second line of a disabled store button. */
     linkPending: string;

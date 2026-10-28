@@ -1,0 +1,91 @@
+---
+/**
+ * Shared 404 page, built as `dist/404.html`. Object Storage and the CDN in
+ * front of it return this one file with HTTP 404 for every unknown URL in
+ * every locale, so it shows the copy of each locale, each block in its own
+ * language with a link to that locale's home page. All links and assets are
+ * root-relative, so the page works at any depth (`/ru/a/b/`). It is not in
+ * the sitemap and asks not to be indexed.
+ */
+import ProductAction from "../components/ui/ProductAction.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { DEFAULT_LOCALE, LOCALES, getDictionary, localeRoot } from "../i18n";
+
+const t = getDictionary(DEFAULT_LOCALE);
+const blocks = LOCALES.map((locale) => {
+  const { meta, notFound } = getDictionary(locale);
+  return { locale, lang: meta.htmlLang, copy: notFound };
+});
+const title = `${blocks.map((b) => b.copy.title).join(" · ")} — ${t.meta.siteName}`;
+---
+
+<BaseLayout
+  locale={DEFAULT_LOCALE}
+  path="/"
+  title={title}
+  description={t.notFound.description}
+  indexable={false}
+>
+  <div class="container not-found">
+    {blocks.map(({ locale, lang, copy }, index) => (
+      <section
+        lang={lang}
+        aria-labelledby={`not-found-${locale}`}
+        data-not-found={locale}
+      >
+        {index === 0 ? (
+          <h1 id={`not-found-${locale}`}>{copy.heading}</h1>
+        ) : (
+          <h2 id={`not-found-${locale}`}>{copy.heading}</h2>
+        )}
+        <p class="lead">{copy.lead}</p>
+        <div class="action">
+          <ProductAction
+            variant={index === 0 ? "primary" : "secondary"}
+            label={copy.homeLink}
+            href={localeRoot(locale)}
+            locale={locale}
+            forward
+          />
+        </div>
+      </section>
+    ))}
+  </div>
+</BaseLayout>
+
+<style>
+  .not-found {
+    display: grid;
+    gap: var(--space-8);
+    padding-block: var(--space-9) var(--space-10);
+  }
+
+  section {
+    display: grid;
+    gap: var(--space-3);
+    max-width: 46rem;
+  }
+
+  section + section {
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--color-divider);
+  }
+
+  h1 {
+    font-size: var(--font-size-h1-product);
+  }
+
+  h2 {
+    font-size: var(--font-size-h2);
+  }
+
+  .lead {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lead);
+    line-height: 1.45;
+  }
+
+  .action {
+    margin-top: var(--space-3);
+  }
+</style>

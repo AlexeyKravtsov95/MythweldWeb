@@ -17,9 +17,14 @@ interface Props {
   path: string;
   title: string;
   description: string;
+  /**
+   * `false` for the shared 404 page: it is served at every unknown URL, so it
+   * has no canonical address, alternates or `og:url` and asks not to be indexed.
+   */
+  indexable?: boolean;
 }
 
-const { locale, path, title, description } = Astro.props;
+const { locale, path, title, description, indexable = true } = Astro.props;
 const t = getDictionary(locale);
 const site = Astro.site ?? new URL("https://mythweld.com");
 const canonical = new URL(localizePath(locale, path), site).href;
@@ -59,16 +64,22 @@ const fontPreloads = [
         crossorigin="anonymous"
       />
     ))}
-    <link rel="canonical" href={canonical} />
-    {alternates.map((alt) => (
-      <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />
-    ))}
-    <link rel="alternate" hreflang="x-default" href={xDefault} />
+    {indexable ? (
+      <>
+        <link rel="canonical" href={canonical} />
+        {alternates.map((alt) => (
+          <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />
+        ))}
+        <link rel="alternate" hreflang="x-default" href={xDefault} />
+      </>
+    ) : (
+      <meta name="robots" content="noindex" />
+    )}
     <meta property="og:site_name" content={t.meta.siteName} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content={canonical} />
+    {indexable && <meta property="og:url" content={canonical} />}
     <meta property="og:locale" content={t.meta.ogLocale} />
     {otherOgLocales.map((ogLocale) => (
       <meta property="og:locale:alternate" content={ogLocale} />
