@@ -24,8 +24,12 @@ import {
   staleKeys,
 } from "../scripts/deploy/objects.ts";
 import {
-  NOT_FOUND_MARKER,
+  NOT_FOUND_MARKERS,
   ROUTES,
+  VK_403_NOTE,
+  classifyMissing,
+  count,
+  report,
   smoke,
   type Fetch,
 } from "../scripts/deploy/smoke.ts";
@@ -213,7 +217,9 @@ describe("shared 404 page", () => {
       expect(link?.text).toContain(t.notFound.homeLink);
       expect(title).toContain(t.notFound.title);
     }
-    expect(doc.toString()).toContain(NOT_FOUND_MARKER);
+    for (const marker of NOT_FOUND_MARKERS) {
+      expect(doc.toString()).toContain(marker);
+    }
   });
 
   it("uses only root-relative links and assets, so it works at any depth", () => {
@@ -317,27 +323,44 @@ describe("deploy workflow", () => {
   });
 });
 
+interface Answer {
+  status: number;
+  contentType?: string;
+  body?: string;
+}
+
 /**
  * A stand-in for Static-Site Hosting of the bucket: `<dir>/` serves
  * `<dir>/index.html`, a slash-less directory redirects to `<dir>/`, unknown
- * keys answer 404 with the error document, and every object carries the
- * metadata of the upload plan.
+ * keys answer 404 with the error document (or `missing`), paths in
+ * `forbidden` answer 403 with it, and every object carries the metadata of
+ * the upload plan.
  */
 function fakeBucket(
-  options: { spaFallback?: boolean; plainType?: boolean } = {},
+  options: {
+    spaFallback?: boolean;
+    plainType?: boolean;
+    missing?: Answer;
+    forbidden?: readonly string[];
+  } = {},
 ): Fetch {
-  const respond = (key: string, status: number) => {
+  const respond = (
+    key: string,
+    status: number,
+    override: Omit<Answer, "status"> = {},
+  ) => {
     const meta = objectMeta(key);
-    return new Response(readFileSync(join(dist, key)), {
+    return new Response(override.body ?? readFileSync(join(dist, key)), {
       status,
       headers: {
-        "content-type": options.plainType
-          ? "application/octet-stream"
-          : meta.contentType,
+        "content-type":
+          override.contentType ??
+          (options.plainType ? "application/octet-stream" : meta.contentType),
         "cache-control": meta.cacheControl,
       },
     });
   };
+  const missing = options.missing ?? { status: 404 };
   return async (url) => {
     const { protocol, pathname } = new URL(url);
     if (protocol === "http:") {
@@ -345,6 +368,9 @@ function fakeBucket(
         status: 301,
         headers: { location: url.replace(/^http:/, "https:") },
       });
+    }
+    if (options.forbidden?.includes(pathname)) {
+      return respond(ERROR_DOCUMENT, 403);
     }
     let key = decodeURIComponent(pathname).slice(1);
     if (key === "" || key.endsWith("/")) key += INDEX_DOCUMENT;
@@ -358,15 +384,115 @@ function fakeBucket(
     }
     return options.spaFallback
       ? respond(INDEX_DOCUMENT, 200)
-      : respond(ERROR_DOCUMENT, 404);
+      : respond(ERROR_DOCUMENT, missing.status, missing);
   };
 }
+
+const MISSING = /smoke-missing/;
 
 describe("smoke checks", () => {
   it("pass on a bucket that serves the plan", async () => {
     const checks = await smoke("https://staging.test/", fakeBucket());
     expect(checks.filter((c) => c.outcome !== "pass")).toEqual([]);
     expect(checks.length).toBeGreaterThan(20);
+    const missing = checks.filter((c) => MISSING.test(c.name));
+    expect(missing.map((c) => c.detail)).toEqual(
+      Array(4).fill("404 with the site 404 page"),
+    );
+  });
+
+  it("warn, not fail, when unknown paths answer 403 with the site 404 page (VK Cloud)", async () => {
+    const checks = await smoke(
+      "https://staging.test",
+      fakeBucket({ missing: { status: 403 } }),
+    );
+    const notPassed = checks.filter((c) => c.outcome !== "pass");
+    expect(notPassed).toHaveLength(4);
+    for (const check of notPassed) {
+      expect(check.outcome).toBe("warn");
+      expect(check.name).toMatch(MISSING);
+      expect(check.detail).toBe(VK_403_NOTE);
+    }
+    expect(count(checks).fail).toBe(0);
+  });
+
+  it.each([
+    [
+      "403 with the provider's XML error",
+      {
+        status: 403,
+        contentType: "application/xml",
+        body: '<?xml version="1.0"?><Error><Code>AccessDenied</Code></Error>',
+      },
+    ],
+    [
+      "403 with someone else's HTML",
+      {
+        status: 403,
+        contentType: "text/html; charset=utf-8",
+        body: "<html><body><h1>403 Forbidden</h1></body></html>",
+      },
+    ],
+    [
+      "403 with HTML that has only one marker",
+      {
+        status: 403,
+        contentType: "text/html; charset=utf-8",
+        body: '<html><body><div data-not-found="en">Gone</div></body></html>',
+      },
+    ],
+    [
+      "404 with someone else's HTML",
+      {
+        status: 404,
+        contentType: "text/html",
+        body: "<html><body><h1>Not Found</h1></body></html>",
+      },
+    ],
+    [
+      "404 with the site page as text/plain",
+      { status: 404, contentType: "text/plain; charset=utf-8" },
+    ],
+    [
+      "403 with the site page as application/octet-stream",
+      { status: 403, contentType: "application/octet-stream" },
+    ],
+    ["401 with the site page", { status: 401 }],
+    ["410 with the site page", { status: 410 }],
+    ["500 with the site page", { status: 500 }],
+    ["302 with the site page", { status: 302 }],
+  ] satisfies [string, Answer][])(
+    "fail when unknown paths answer %s",
+    async (_, missing) => {
+      const checks = await smoke(
+        "https://staging.test",
+        fakeBucket({ missing }),
+      );
+      const notPassed = checks.filter((c) => c.outcome !== "pass");
+      expect(notPassed.map((c) => c.outcome)).toEqual(Array(4).fill("fail"));
+      for (const check of notPassed) expect(check.name).toMatch(MISSING);
+    },
+  );
+
+  it("keep 403 a failure for existing pages and assets", async () => {
+    const css =
+      readFileSync(join(dist, INDEX_DOCUMENT), "utf8").match(
+        /\/_astro\/[^"'\s,?#]+\.css/,
+      )?.[0] ?? "";
+    expect(css).not.toBe("");
+    const forbidden = ["/ru/talentforge/", css, "/favicon.svg", "/robots.txt"];
+    const checks = await smoke(
+      "https://staging.test",
+      fakeBucket({ missing: { status: 403 }, forbidden }),
+    );
+    const failed = checks.filter((c) => c.outcome === "fail");
+    expect(failed.map((c) => c.name)).toEqual(
+      expect.arrayContaining(forbidden.map((path) => `GET ${path}`)),
+    );
+    for (const check of failed) expect(check.name).not.toMatch(MISSING);
+    for (const check of checks.filter((c) => c.outcome === "warn")) {
+      expect(check.name).toMatch(MISSING);
+    }
   });
 
   it("fail when unknown paths fall back to 200", async () => {
@@ -388,5 +514,55 @@ describe("smoke checks", () => {
       (c) => c.outcome === "fail" && c.detail.includes("content-type"),
     );
     expect(wrongType.length).toBeGreaterThan(10);
+  });
+});
+
+describe("missing-path classification", () => {
+  const site = () => readFileSync(join(dist, ERROR_DOCUMENT), "utf8");
+
+  it.each([
+    [404, "text/html; charset=utf-8", "pass"],
+    [404, "TEXT/HTML", "pass"],
+    [403, "text/html; charset=utf-8", "warn"],
+    [403, "text/html", "warn"],
+    [200, "text/html; charset=utf-8", "fail"],
+    [403, "", "fail"],
+    [403, "text/plain", "fail"],
+    [404, "application/xhtml+xml", "fail"],
+    [400, "text/html; charset=utf-8", "fail"],
+    [503, "text/html; charset=utf-8", "fail"],
+  ] as const)("%i, %s with the site page → %s", (status, type, outcome) => {
+    expect(classifyMissing(status, type, site()).outcome).toBe(outcome);
+  });
+
+  it("names the VK Cloud limitation on 403 and the problems on a failure", () => {
+    expect(classifyMissing(403, "text/html", site())).toEqual({
+      outcome: "warn",
+      detail: VK_403_NOTE,
+    });
+    const { detail } = classifyMissing(200, "text/plain", "<p>home</p>");
+    expect(detail).toMatch(
+      /^status 200, content-type "text\/plain", not the site 404 page;/,
+    );
+  });
+});
+
+describe("smoke report", () => {
+  it("lists WARN rows with totals, and only FAIL counts as a failure", () => {
+    const checks = [
+      { outcome: "pass", name: "GET /", detail: "200" },
+      { outcome: "warn", name: "GET /smoke-missing-x/", detail: VK_403_NOTE },
+      { outcome: "warn", name: "http → https", detail: "200" },
+    ] as const;
+    const text = report("https://staging.test", checks);
+    expect(text).toContain("**1 PASS, 2 WARN, 0 FAIL**");
+    expect(text).toContain(`| WARN | GET /smoke-missing-x/ | ${VK_403_NOTE} |`);
+    expect(count(checks)).toEqual({ pass: 1, warn: 2, fail: 0 });
+  });
+
+  it("is not muted in the workflow: a FAIL still fails the deploy job", () => {
+    const workflow = read(".github/workflows/deploy-vk-cloud.yml");
+    expect(workflow).toContain("run: node scripts/deploy/smoke.ts");
+    expect(workflow).not.toMatch(/continue-on-error|\|\|\s*true/);
   });
 });

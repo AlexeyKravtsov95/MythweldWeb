@@ -1,6 +1,6 @@
-# Деплой на VK Cloud Object Storage + CDN — WEB-M0.6A (Issue #12)
+# Деплой на VK Cloud Object Storage + CDN — WEB-M0.6A (Issue #12, #14)
 
-Состояние на **2026-10-28**. Документ описывает, как статическая сборка Astro попадает в бакет `mythweld-web` и как владелец вручную настраивает ключи, GitHub, CDN и откат.
+Состояние на **2026-10-28**, после первого деплоя (run [40681410586](https://github.com/AlexeyKravtsov95/MythweldWeb/actions/runs/40681410586)) и решения владельца по HTTP 403 (Issue #14). Документ описывает, как статическая сборка Astro попадает в бакет `mythweld-web` и как владелец вручную настраивает ключи, GitHub, CDN и откат.
 
 **Чего этот PR не делает:** не меняет DNS, не публикует сайт на `mythweld.com`, не снимает `Disallow: /` в `robots.txt`, не трогает `journal.mythweld.com`, `legal.mythweld.com`, `ota.mythweld.com` и ресурсы OTA. Workflow запускается только вручную и только после одобрения владельцем; агент его не запускал.
 
@@ -13,9 +13,9 @@ GitHub Actions (workflow_dispatch, одобрение владельца)
   └─ npm ci → npm run verify → secret scan → план загрузки → артефакт dist/
        └─ aws s3 cp по одному файлу (Content-Type, Cache-Control) → бакет mythweld-web
             ├─ Static-Site Hosting бакета: index.html / 404.html
-            │    http://mythweld-web.hb-website.hb.ru-msk.vkcloud-storage.ru   ← staging (HTTP)
-            └─ отдельный CDN-ресурс (не OTA), origin = website-хост бакета
-                 https://cl-XXXXXXXX.service.cdn.msk.vkcs.cloud                  ← staging (HTTPS?)
+            │    https://mythweld-web.hb-website.ru-msk.vkcloud-storage.ru   ← staging (HTTPS работает)
+            └─ отдельный CDN-ресурс (не OTA), origin = website-хост бакета — ещё не создан
+                 https://cl-XXXXXXXX.service.cdn.msk.vkcs.cloud               ← staging через CDN (раздел 7.1)
                  mythweld.com — только в WEB-M0.6B, после отдельного GO
 ```
 
@@ -37,7 +37,7 @@ GitHub Actions (workflow_dispatch, одобрение владельца)
 
 ## 3. Content-Type и Cache-Control
 
-Метаданные задаются при загрузке каждого объекта (`--content-type`, `--cache-control`). Сохраняет ли VK S3 их без изменений, документация не говорит (**ПРОВЕРИТЬ** — smoke-тест проверяет это на каждом деплое). Изменить метаданные уже загруженного объекта можно только повторной загрузкой (`storage/s3/concepts/about`); лимит метаданных — 2048 байт.
+Метаданные задаются при загрузке каждого объекта (`--content-type`, `--cache-control`). Документация не говорит, сохраняет ли VK S3 их без изменений; первый деплой подтвердил: website-хост отдаёт ровно заданные Content-Type и Cache-Control (smoke проверяет это на каждом деплое). Изменить метаданные уже загруженного объекта можно только повторной загрузкой (`storage/s3/concepts/about`); лимит метаданных — 2048 байт.
 
 | Класс       | Файлы                                                      | Cache-Control                                      | Почему                                                                                                                                    |
 | ----------- | ---------------------------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
@@ -63,12 +63,21 @@ S3="--endpoint-url https://hb.ru-msk.vkcloud-storage.ru --region ru-msk --profil
    ```
    Без ACL `public-read` или политики с `GetObject` для `"*"` сайт отвечает `403` (`storage/s3/instructions/manage-static-site`, гайд `storage/s3/how-to-guides/cdn-ssh`). Политики достаточно, ACL `public-read` не нужен.
 3. **Static-Site Hosting.** В документации описан только AWS CLI. Режим «Сайт» в кабинете упомянут в анонсе, но шаги не описаны.
+
    ```bash
    aws s3api put-bucket-website --bucket mythweld-web --website-configuration file://deploy/vk-cloud/website.json $S3
    aws s3api get-bucket-website --bucket mythweld-web $S3
    ```
-   Адрес сайта: `mythweld-web.hb-website.hb.ru-msk.vkcloud-storage.ru` (`storage/s3/concepts/static-site-hosting`). Путь на `/` отдаёт `<путь>/index.html`; путь без `/`, для которого нет объекта, перенаправляется на `…/`; при ответе `4XX` отдаётся `ErrorDocument`. **ПРОВЕРИТЬ:** сохраняется ли при этом статус **404** (документация не говорит). Это проверяет smoke-тест; fallback 200 считается провалом.
-4. **HTTPS на website-хосте — ПРОВЕРИТЬ.** `storage/s3/concepts/about`: хостинг сайтов «доступен только через HTTP»; гайд cdn-ssh: HTTPS «задается при настройке CDN»; при этом шаблон адреса в `static-site-hosting` начинается с `https://`. Пока считаем website-хост HTTP-only, HTTPS — только через CDN.
+
+   Адрес сайта (подтверждён на живом бакете): **`https://mythweld-web.hb-website.ru-msk.vkcloud-storage.ru`**. Раньше здесь был ошибочный `mythweld-web.hb-website.hb.ru-msk.…` с лишним `hb.` — его не использовать. Путь на `/` отдаёт `<путь>/index.html`; путь без `/`, для которого нет объекта, перенаправляется на `…/` (`/talentforge` → 302 на `/talentforge/`).
+
+   **Отсутствующий URL → HTTP 403 с нашей страницей 404 (известное ограничение VK Cloud, неблокирующее).** Наблюдение 2026-10-28 (smoke run 40681410586 и `curl -i` владельца):
+   - `GET /404.html` → **200**, `text/html; charset=utf-8`, `Cache-Control` класса `document`, фирменная страница «Page not found · Страница не найдена» (`data-not-found="en"`, `noindex`);
+   - `GET /this-page-does-not-exist` → **403 Forbidden**, `text/html; charset=utf-8`, **та же** фирменная страница.
+
+   То есть `ErrorDocument` настроен и работает, но сервис сохраняет статус 403, а не 404. Вероятная причина — у анонимного пользователя нет `s3:ListBucket` (так ведёт себя S3 GetObject API), но для website endpoint это поведение провайдера не задокументировано; причина **не подтверждена** VK Cloud. **Решение владельца (Issue #14):** принять как известную особенность, в поддержку ради этого не обращаться, **публичный `s3:ListBucket` не добавлять** (он позволил бы перечислять все объекты бакета). Smoke считает такой ответ WARN (раздел 8), любой другой ответ на отсутствующий URL — FAIL. Остаточный риск: поисковики увидят 403 вместо 404 для несуществующих адресов; пока действует `Disallow: /` это не важно, пересмотреть в WEB-M0.6B.
+
+4. **HTTPS на website-хосте работает** (подтверждено smoke из GitHub Actions и `curl` владельца), вопреки фразе `storage/s3/concepts/about` о «доступе только через HTTP». **Редиректа HTTP → HTTPS на website-хосте нет:** `http://…/` отвечает 200 — smoke отмечает это WARN. Принудительный HTTPS — задача CDN (раздел 7.1).
 5. **Версионирование бакета — РЕШЕНИЕ ВЛАДЕЛЬЦА, сейчас рекомендуется не включать.** Включённое версионирование нельзя выключить, только приостановить (`storage/s3/concepts/versioning`). Lifecycle умеет только Expiration и AbortIncompleteMultipartUpload (`concepts/lifecycle`), поэтому старые версии копятся и тарифицируются. Основной откат — повторный деплой коммита (раздел 9).
 
 ## 5. Ключ для GitHub Actions (минимальная область)
@@ -110,29 +119,72 @@ S3="--endpoint-url https://hb.ru-msk.vkcloud-storage.ru --region ru-msk --profil
    - **Variables** (не секреты):
      - `VK_S3_ENDPOINT` = `https://hb.ru-msk.vkcloud-storage.ru`;
      - `VK_S3_REGION` = `ru-msk`;
-     - `STAGING_BASE_URL` — адрес для smoke: сначала `http://mythweld-web.hb-website.hb.ru-msk.vkcloud-storage.ru`, после настройки CDN — `https://cl-….service.cdn.msk.vkcs.cloud`.
+     - `STAGING_BASE_URL` — адрес для smoke: сейчас `https://mythweld-web.hb-website.ru-msk.vkcloud-storage.ru`, после проверки CDN — `https://cl-….service.cdn.msk.vkcs.cloud` (раздел 7.1, шаг 6).
 4. GitHub маскирует значения секретов в логах. Скрипты ключи не читают и не печатают: их получает только AWS CLI через свои переменные окружения в шаге «Upload to mythweld-web».
 
 ## 7. CDN-ресурс для сайта
 
-Отдельный ресурс только для сайта; ресурс OTA не переиспользовать и не менять. Настройки (`networks/cdn/instructions/create-resource`, `manage-cdn/*`):
+Отдельный ресурс только для сайта; ресурс OTA не переиспользовать, не копировать и не менять. Ресурс пока **не создан**; пошаговый порядок — раздел 7.1. Настройки (`networks/cdn/instructions/create-resource`, `manage-cdn/*`):
 
-| Настройка            | Значение                                                                                                                                                                                                                                                                                                                                                                  |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Способ создания      | CDN → «Создать ресурс» со своим источником. Создание из вкладки бакета ставит origin и Host на S3 API-хост `hb.ru-msk.vkcloud-storage.ru` (`storage/s3/_includes/_s3-create-cdn.md`), а он **не** раскрывает `/ru/` → `index.html` и не отдаёт `404.html`.                                                                                                                |
-| Источник (origin)    | `mythweld-web.hb-website.hb.ru-msk.vkcloud-storage.ru`. **ПРОВЕРИТЬ:** это вывод из того, где работает Static-Site Hosting, а гайд cdn-ssh советует создание из бакета и HTTPS. Критерий — smoke через CDN: `/ru/` = 200, неизвестный путь = 404.                                                                                                                         |
-| Протокол к источнику | HTTP (website-хост HTTP-only, раздел 4). Если HTTPS к website-хосту заработает, переключить на HTTPS.                                                                                                                                                                                                                                                                     |
-| Host header          | «Кастомный» = `mythweld-web.hb-website.hb.ru-msk.vkcloud-storage.ru`.                                                                                                                                                                                                                                                                                                     |
-| Персональный домен   | **РЕШЕНИЕ ВЛАДЕЛЬЦА.** «После создания CDN-ресурса изменить персональные домены невозможно». Для staging — ресурс со служебным доменом `cl-….service.cdn.msk.vkcs.cloud`; можно ли создать его без персонального домена — **ПРОВЕРИТЬ** в мастере. Для `mythweld.com` в WEB-M0.6B, вероятно, понадобится отдельный ресурс. Домены `journal`, `legal`, `ota` не добавлять. |
-| Сертификат           | Let's Encrypt (выпуск обычно до 30 минут; нужен включённый «Доступ к контенту конечным пользователям» и домен, указывающий на CDN) или свой PEM. Есть ли TLS на служебном домене — **ПРОВЕРИТЬ**. TLS ≥ 1.2.                                                                                                                                                              |
-| HTTP → HTTPS         | Отдельной опции в документации нет — **ПРОВЕРИТЬ** в кабинете. Smoke отмечает результат как WARN.                                                                                                                                                                                                                                                                         |
-| Кэш на CDN           | «Настройка источника»: CDN берёт `Cache-Control` объектов (`s-maxage=300` для HTML, год для `_astro/`). Без заголовка TTL был бы 4 дня, поэтому заголовок есть у каждого объекта.                                                                                                                                                                                         |
-| Кэш в браузере       | «По источнику».                                                                                                                                                                                                                                                                                                                                                           |
-| Query string         | «Игнорировать все»: параметров на сайте нет, `?x=1` не создаёт копий в кэше.                                                                                                                                                                                                                                                                                              |
-| Заголовки ответа     | `staticHeaders` (до 50): `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`. `Strict-Transport-Security` — только в WEB-M0.6B на боевом домене после проверки HTTPS. CSP — отдельно: Astro встраивает стили и скрипт меню inline.             |
-| Методы               | GET/HEAD (по умолчанию).                                                                                                                                                                                                                                                                                                                                                  |
-| Rewrite              | Не поддерживается («такая возможность не предусмотрена», `networks/cdn/faq`). Раскрытие `/ru/` делает website-хост бакета.                                                                                                                                                                                                                                                |
-| www → apex           | Отдельный ресурс с `force_return` 301 — в WEB-M0.6B.                                                                                                                                                                                                                                                                                                                      |
+| Настройка            | Значение                                                                                                                                                                                                                                                                                                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Способ создания      | CDN → «Создать ресурс» со своим источником. Создание из вкладки бакета ставит origin и Host на S3 API-хост `hb.ru-msk.vkcloud-storage.ru` (`storage/s3/_includes/_s3-create-cdn.md`), а он **не** раскрывает `/ru/` → `index.html` и не отдаёт `404.html`.                                                                                                                  |
+| Источник (origin)    | Website-хост бакета `mythweld-web.hb-website.ru-msk.vkcloud-storage.ru` — без схемы и `/`, **не** S3 API-хост. Критерий — smoke через CDN (раздел 7.1, шаг 6).                                                                                                                                                                                                              |
+| Протокол к источнику | HTTPS, если мастер его предлагает: website-хост отвечает по HTTPS (раздел 4). Если доступен только HTTP — записать выбор в Issue.                                                                                                                                                                                                                                           |
+| Host header          | «Кастомный» = `mythweld-web.hb-website.ru-msk.vkcloud-storage.ru` (тот же хост, что origin, без схемы).                                                                                                                                                                                                                                                                     |
+| Персональный домен   | **РЕШЕНИЕ ВЛАДЕЛЬЦА.** «После создания CDN-ресурса изменить персональные домены невозможно». Для staging — ресурс со служебным доменом `cl-….service.cdn.msk.vkcs.cloud`; можно ли создать его без персонального домена — **ПРОВЕРИТЬ** в мастере. Для `mythweld.com` в WEB-M0.6B, вероятно, понадобится отдельный ресурс. Домены `journal`, `legal`, `ota` не добавлять.   |
+| Сертификат           | Let's Encrypt (выпуск обычно до 30 минут; нужен включённый «Доступ к контенту конечным пользователям» и домен, указывающий на CDN) или свой PEM. Есть ли TLS на служебном домене — **ПРОВЕРИТЬ**. TLS ≥ 1.2.                                                                                                                                                                |
+| HTTP → HTTPS         | Отдельной опции в документации нет — **ПРОВЕРИТЬ** в кабинете («принудительный HTTPS» или аналог). На website-хосте редиректа нет. Smoke отмечает результат как WARN.                                                                                                                                                                                                       |
+| Кэш на CDN           | «Настройка источника»: CDN берёт `Cache-Control` объектов (`s-maxage=300` для HTML, год для `_astro/`). Без заголовка TTL был бы 4 дня, поэтому заголовок есть у каждого объекта.                                                                                                                                                                                           |
+| Кэш в браузере       | «По источнику».                                                                                                                                                                                                                                                                                                                                                             |
+| Query string         | «Игнорировать все»: параметров на сайте нет, `?x=1` не создаёт копий в кэше.                                                                                                                                                                                                                                                                                                |
+| Заголовки ответа     | `staticHeaders` (до 50): `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`. `Strict-Transport-Security` — только в WEB-M0.6B на боевом домене после проверки HTTPS. CSP — отдельно: Astro встраивает стили и скрипт меню inline.               |
+| Методы               | GET/HEAD (по умолчанию).                                                                                                                                                                                                                                                                                                                                                    |
+| Rewrite              | Не поддерживается («такая возможность не предусмотрена», `networks/cdn/faq`). Раскрытие `/ru/` делает website-хост бакета. Умеет ли CDN превратить 403 отсутствующего объекта в 404 — **не проверено**: так не утверждать и глобальную замену 403 → 404 не настраивать (настоящие отказы в доступе должны оставаться 403). Прокси или VM только ради кода 404 не добавлять. |
+| www → apex           | Отдельный ресурс с `force_return` 301 — в WEB-M0.6B.                                                                                                                                                                                                                                                                                                                        |
+
+### 7.1. Чек-лист: создание отдельного CDN-ресурса (ручной шаг владельца)
+
+Агент ничего не создаёт и не меняет: каждый шаг выполняет владелец в кабинете VK Cloud. Ресурс OTA не открывать на редактирование и не использовать как шаблон. Результат каждого шага с пометкой «записать» — в комментарий к Issue.
+
+0. **Исходное состояние.** Последний деплой без FAIL; ожидаемые WARN — 4 × `403` на отсутствующих URL и `http → https`. Проверка: `curl -sI https://mythweld-web.hb-website.ru-msk.vkcloud-storage.ru/ru/` → `200`.
+1. **Создание.** CDN → «Создать ресурс» (не из вкладки бакета). Имя, например, `mythweld-web-staging`.
+2. **Источник.**
+   - Адрес: `mythweld-web.hb-website.ru-msk.vkcloud-storage.ru` — без `https://` и без `/`. Не `hb.ru-msk.vkcloud-storage.ru` (S3 API-хост).
+   - Протокол к источнику: HTTPS, если есть в мастере; иначе HTTP. Записать, что выбрано и какие варианты были.
+   - Host header: «Кастомный» = `mythweld-web.hb-website.ru-msk.vkcloud-storage.ru`.
+3. **Домен.**
+   - Если мастер позволяет создать ресурс только со служебным доменом `cl-….service.cdn.msk.vkcs.cloud` — так и сделать.
+   - **Если мастер требует персональный домен — остановиться.** Это ручной blocker: персональные домены после создания не меняются, а DNS в этой задаче не трогаем. Записать в Issue, что требуется, и предложить владельцу вариант на согласование (например, отдельный staging-поддомен). Ничего не создавать до решения. `mythweld.com`, `www`, `journal`, `legal`, `ota` не добавлять.
+4. **TLS и HTTPS.**
+   - Записать, есть ли сертификат на служебном домене без своего сертификата. Let's Encrypt выпускается только для персонального домена, который уже указывает на CDN (до ~30 минут).
+   - Найти опцию принудительного HTTPS (HTTP → HTTPS). Если есть — включить и записать её название; если нет — WARN в smoke остаётся.
+   - Минимальная версия TLS — 1.2.
+5. **Кэш и заголовки.**
+   - Кэш на CDN — «Настройка источника»: HTML `s-maxage=300`, `_astro/` — `max-age=31536000, immutable`, `fonts/`, `og/`, `favicon.svg` — сутки. Если такого режима нет — единый TTL не больше 5 минут, записать.
+   - Кэш в браузере — «По источнику»; query string — «Игнорировать все».
+   - `staticHeaders` — из таблицы выше; `Strict-Transport-Security` не добавлять.
+   - Правила подмены кода ответа (403 → 404) не включать, пока не доказано, что они затрагивают только отсутствующие объекты.
+6. **Проверка служебного URL CDN** — до смены `STAGING_BASE_URL`:
+   ```bash
+   npm run smoke -- https://cl-XXXXXXXX.service.cdn.msk.vkcs.cloud
+   ```
+   Ожидание: 6 маршрутов = `200` с верным `<html lang>`; ассеты, шрифт, OG, favicon, `robots.txt`, `sitemap.xml` — PASS; 4 отсутствующих URL — PASS (`404`) или WARN (`403` + наша страница); `http → https` — PASS или WARN. **Любой FAIL — ресурс настроен неверно**, `STAGING_BASE_URL` не менять. Дополнительно вручную (подставить свой `cl-…`):
+   ```bash
+   curl -sI https://cl-XXXXXXXX.service.cdn.msk.vkcs.cloud/ru/
+   ```
+   ```bash
+   curl -si https://cl-XXXXXXXX.service.cdn.msk.vkcs.cloud/no-such-page/ | head -n 20
+   ```
+   ```bash
+   curl -sI http://cl-XXXXXXXX.service.cdn.msk.vkcs.cloud/
+   ```
+   ```bash
+   openssl s_client -connect cl-XXXXXXXX.service.cdn.msk.vkcs.cloud:443 -servername cl-XXXXXXXX.service.cdn.msk.vkcs.cloud </dev/null | openssl x509 -noout -subject -issuer -dates
+   ```
+   Записать: статус и тело отсутствующего URL через CDN (403 не считать исправленным без этой проверки), повторный запрос `/ru/` — есть ли заголовок попадания в кэш и как он называется, `Cache-Control` на ответе CDN, редирект HTTP → HTTPS, сертификат (субъект, издатель, срок), `Set-Cookie` (раздел 11).
+7. **Только после smoke без FAIL:** сменить `STAGING_BASE_URL` в environment `vk-cloud-staging` на служебный URL CDN. DNS не трогать.
+8. **Apex `mythweld.com`** — ниже; текущие DNS-записи остаются без изменений, выбор ALIAS/ANAME или `www` с редиректом — в WEB-M0.6B.
 
 Ограничения:
 
@@ -168,10 +220,15 @@ NS не переносить, записи поддоменов не трога�
 5. Порядок загрузки: `_astro/` → остальные файлы → HTML → `404.html`. Затем удаляются объекты, которых нет в сборке, кроме `_astro/`.
 6. Smoke по `STAGING_BASE_URL` пишет таблицу в Summary и падает при любом FAIL. Что проверяется:
    - 6 маршрутов (`/`, `/talentforge/`, `/forever-journey/`, `/ru/`, `/ru/talentforge/`, `/ru/forever-journey/`): 200, `text/html; charset=utf-8`, Cache-Control `document`, верный `<html lang>`;
-   - 4 неизвестных пути (в корне, в `/ru/`, внутри раздела, в `_astro/`): **404** и страница 404 сайта, а не fallback 200;
+   - 4 неизвестных пути (в корне, в `/ru/`, внутри раздела, в `_astro/`) — только для них:
+     - `404` + страница 404 сайта (`text/html`, маркеры `data-not-found="en"`, `data-not-found="ru"`, `noindex`) → **PASS**;
+     - `403` + та же страница → **WARN** «VK Cloud known limitation: HTTP 403 with custom 404 document» (раздел 4, решение владельца в Issue #14);
+     - `200` (fallback), `403`/`404` с чужим телом или не `text/html`, любой другой статус → **FAIL**;
    - `robots.txt`: 200 и `Disallow: /`; `sitemap.xml`: 200 и XML;
    - `_astro/*.css`, `*.avif`, `*.webp`: тип и `immutable`; шрифт, share card, favicon: тип и `static`;
-   - WARN (не провал): `/talentforge` без слеша → редирект на `/talentforge/`; `http://` → `https://`.
+   - WARN (не провал): `403` на неизвестных путях (см. выше); `/talentforge` без слеша → редирект на `/talentforge/`; `http://` → `https://`.
+   - Для существующих страниц и файлов исключений нет: `403` (как и любой не-`200`) на маршруте, ассете, `robots.txt` или `sitemap.xml` — **FAIL**.
+   - Итог «N PASS, N WARN, N FAIL» и таблица попадают в Summary запуска, WARN дополнительно выводятся как аннотации `::warning`. WARN не делает job красным; job падает только при FAIL.
 7. Вручную после smoke: открыть 6 страниц в браузере (шрифты, изображения, меню) и страницу 404 на `/ru/a/b/`. Превью ссылок проверять только на боевом домене: OG указывает на `https://mythweld.com/…`.
 
 Ручной smoke без деплоя: `npm run smoke -- https://cl-….service.cdn.msk.vkcs.cloud`.
@@ -213,8 +270,10 @@ Website-хост бакета и служебный домен CDN публич�
 
 ## 12. Открытые пункты и NO-GO к WEB-M0.6B
 
-- **ПРОВЕРИТЬ на staging:** статус 404 у ErrorDocument; сохранение Content-Type и Cache-Control; origin CDN = website-хост; TLS на служебном домене; HTTP → HTTPS; `Set-Cookie` от инфраструктуры; права ключа бакета.
-- **Владелец:** ключ бакета и environment; первый запуск workflow после merge; CDN-ресурс; бюджет; решение по apex; запрос в поддержку о журналах.
+- **Подтверждено на staging (run 40681410586):** загрузка 143/143; 6 маршрутов EN/RU = 200 с верным языком, Content-Type и Cache-Control; ассеты, `robots.txt`, `sitemap.xml` — PASS; HTTPS на website-хосте работает; `/talentforge` → 302.
+- **Известное неблокирующее ограничение:** отсутствующий URL → `403` с нашей страницей 404 (раздел 4). Это **не** «404 исправлен»: статус остаётся 403, smoke показывает WARN.
+- **ПРОВЕРИТЬ:** origin CDN = website-хост и поведение отсутствующего URL через CDN (раздел 7.1); TLS на служебном домене; HTTP → HTTPS (на website-хосте редиректа нет); `Set-Cookie` от инфраструктуры; права ключа бакета.
+- **Владелец:** CDN-ресурс по чек-листу 7.1; бюджет; решение по apex; запрос в поддержку о журналах.
 - **NO-GO к публичному запуску (WEB-M0.6B):**
   - B7 (Privacy, Terms, Contact);
   - B6 / `RELEASE.checked`;

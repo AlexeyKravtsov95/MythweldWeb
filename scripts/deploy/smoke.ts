@@ -4,11 +4,13 @@
  *
  *   node scripts/deploy/smoke.ts https://<staging-host>
  *
- * Every public route answers 200 with HTML in its locale, unknown paths
- * answer 404 with the site's 404 page (not a 200 fallback), robots.txt keeps
- * indexing closed, and Content-Type / Cache-Control match `objects.ts`.
- * Exits 1 if any check fails; warnings do not fail the run. `smoke()` takes
- * the fetch function, so `tests/deploy.test.ts` runs it on a fake bucket.
+ * Every public route and asset answers 200 with the type and cache policy of
+ * `objects.ts`, routes in their locale, robots.txt keeps indexing closed, and
+ * unknown paths answer with the site's 404 page (not a 200 fallback): 404 is a
+ * pass, 403 is a warning (VK Cloud Static-Site Hosting serves the error
+ * document with 403 for missing keys; accepted by the owner in Issue #14),
+ * anything else fails. Exits 1 if any check fails; warnings do not fail the run. `smoke()`
+ * takes the fetch function, so `tests/deploy.test.ts` runs it on a fake bucket.
  */
 import { appendFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
@@ -29,11 +31,50 @@ export const ROUTES = REQUIRED_KEYS.filter(
   (key) => key === "index.html" || key.endsWith("/index.html"),
 ).map((key) => `/${key.slice(0, -"index.html".length)}`);
 
-/** Marker of the shared 404 page (`src/pages/404.astro`). */
-export const NOT_FOUND_MARKER = 'data-not-found="en"';
+/**
+ * Markers of the shared 404 page (`src/pages/404.astro`): both locale blocks
+ * and noindex, so an arbitrary HTML error page is not taken for ours.
+ */
+export const NOT_FOUND_MARKERS = [
+  'data-not-found="en"',
+  'data-not-found="ru"',
+  '<meta name="robots" content="noindex">',
+] as const;
+
+/** Detail of the one accepted deviation: owner decision in Issue #14. */
+export const VK_403_NOTE =
+  "VK Cloud known limitation: HTTP 403 with custom 404 document";
 
 function lang(route: string): string {
   return route.startsWith("/ru/") ? "ru" : "en";
+}
+
+/**
+ * Outcome for a URL that does not exist: 404 + the site 404 page passes,
+ * 403 + the site 404 page warns, any other status (200 fallback included) or
+ * body, or a non-HTML error, fails.
+ */
+export function classifyMissing(
+  status: number,
+  contentType: string,
+  body: string,
+): { outcome: Outcome; detail: string } {
+  const html =
+    (contentType.split(";")[0] ?? "").trim().toLowerCase() === "text/html";
+  const page = html && NOT_FOUND_MARKERS.every((m) => body.includes(m));
+  if (page && status === 404) {
+    return { outcome: "pass", detail: "404 with the site 404 page" };
+  }
+  if (page && status === 403) return { outcome: "warn", detail: VK_403_NOTE };
+  const problems = [
+    `status ${status}`,
+    html ? "" : `content-type "${contentType}"`,
+    page ? "" : "not the site 404 page",
+  ].filter(Boolean);
+  return {
+    outcome: "fail",
+    detail: `${problems.join(", ")}; expected 404 (or 403, known VK Cloud limitation) with the site 404 page as text/html, no 200 fallback`,
+  };
 }
 
 export async function smoke(base: string, fetchFn: Fetch): Promise<Check[]> {
@@ -94,15 +135,12 @@ export async function smoke(base: string, fetchFn: Fetch): Promise<Check[]> {
   ]) {
     const res = await get(path);
     const body = await res.text();
-    const page = body.includes(NOT_FOUND_MARKER);
-    const ok = res.status === 404 && page;
-    add(
-      ok ? "pass" : "fail",
-      `GET ${path}`,
-      ok
-        ? "404 with the site 404 page"
-        : `status ${res.status}${page ? "" : ", not the site 404 page"}; expected 404 (no 200 fallback)`,
+    const { outcome, detail } = classifyMissing(
+      res.status,
+      res.headers.get("content-type") ?? "",
+      body,
     );
+    add(outcome, `GET ${path}`, detail);
   }
 
   // Canonical URLs end with "/" and every internal link uses them; the
@@ -179,9 +217,18 @@ export async function smoke(base: string, fetchFn: Fetch): Promise<Check[]> {
   return checks;
 }
 
+export function count(checks: readonly Check[]): Record<Outcome, number> {
+  const totals: Record<Outcome, number> = { pass: 0, warn: 0, fail: 0 };
+  for (const c of checks) totals[c.outcome] += 1;
+  return totals;
+}
+
 export function report(base: string, checks: readonly Check[]): string {
+  const { pass, warn, fail } = count(checks);
   return [
     `### Smoke: ${base}`,
+    "",
+    `**${pass} PASS, ${warn} WARN, ${fail} FAIL** — WARN does not fail the run.`,
     "",
     "| Result | Check | Detail |",
     "| --- | --- | --- |",
@@ -202,8 +249,14 @@ async function main(): Promise<void> {
   console.log(text);
   const summaryFile = process.env["GITHUB_STEP_SUMMARY"];
   if (summaryFile) appendFileSync(summaryFile, `${text}\n`);
-  const failed = checks.filter((c) => c.outcome === "fail").length;
-  if (failed > 0) throw new Error(`${failed} smoke check(s) failed.`);
+  if (process.env["GITHUB_ACTIONS"] === "true") {
+    // Annotations on the run page; a warning never marks the job failed.
+    for (const c of checks.filter((c) => c.outcome === "warn")) {
+      console.log(`::warning title=Smoke WARN::${c.name}: ${c.detail}`);
+    }
+  }
+  const { fail } = count(checks);
+  if (fail > 0) throw new Error(`${fail} smoke check(s) failed.`);
 }
 
 if (
