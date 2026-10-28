@@ -107,4 +107,11 @@ describe("dictionaries", () => {
     expect(ru.a11y.skipToContent).not.toBe(en.a11y.skipToContent);
     expect(ru.home.lead).toMatch(/[а-яё]/i);
   });
+
+  it("breaks long Russian class names only at morpheme boundaries", () => {
+    // Soft hyphens (U+00AD) wrap the 3-column tiles at 320 px.
+    const names = getDictionary("ru").talentforge.classNames;
+    expect(names.rogue).toBe("Разбой\u00adник");
+    expect(names.warlock).toBe("Черно\u00adкнижник");
+  });
 });

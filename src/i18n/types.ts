@@ -17,6 +17,8 @@ export interface Dictionary {
     siteName: string;
     homeTitle: string;
     homeDescription: string;
+    /** Alt text of the share card (`og:image:alt`, `twitter:image:alt`). */
+    shareImageAlt: string;
   };
   a11y: {
     skipToContent: string;

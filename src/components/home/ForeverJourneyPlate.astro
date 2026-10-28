@@ -64,8 +64,7 @@ const pages = [
   />
   <p class="summary">{fj.summary}</p>
   <a class="more" href={localizePath(locale, "/forever-journey/")}>
-    {t.home.exploreForeverJourney}
-    <span aria-hidden="true">→</span>
+    {t.home.exploreForeverJourney}&nbsp;<span aria-hidden="true">→</span>
   </a>
 
   <section class="book" aria-labelledby="book-creator">
@@ -110,12 +109,13 @@ const pages = [
     color: var(--color-text);
   }
 
+  /* Inline text, not flex: when the RU label wraps at 320 px, the arrow
+     stays after the last word instead of drifting to the right edge. */
   .more {
-    display: inline-flex;
-    align-items: center;
+    display: inline-block;
     align-self: flex-start;
-    gap: var(--space-2);
     min-height: var(--size-target-min);
+    padding-block: var(--space-2);
     margin-top: calc(-1 * var(--space-2));
     color: var(--color-fj-highlight);
     font-weight: var(--font-weight-label);

@@ -9,6 +9,8 @@ export const en = {
     homeTitle: "Mythweld — independent tools for World of Warcraft: Forever",
     homeDescription:
       "Independent tools for World of Warcraft: Forever. TalentForge plans talent builds on your phone; the Forever Journey addon keeps an in-game journal that Book Creator turns into a printable book.",
+    shareImageAlt:
+      "Mythweld logo mark and name, tools for World of Warcraft: Forever: TalentForge, Forever Journey, Book Creator",
   },
   a11y: {
     skipToContent: "Skip to content",

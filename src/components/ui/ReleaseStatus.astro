@@ -190,4 +190,13 @@ const stores = [
       padding: var(--space-5);
     }
   }
+
+  /* At 320 px a label column leaves no room for the chips: stack them. */
+  @media (max-width: 360px) {
+    .rows > div {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-1);
+      padding-block: var(--space-2);
+    }
+  }
 </style>

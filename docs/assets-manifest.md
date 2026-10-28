@@ -7,7 +7,7 @@
 ## Правила использования
 
 1. Показываем только файлы из этого реестра. Пиксели не меняем: без перерисовки, ретуши, наложений, рамок-телефонов, теней и наклона. Допустимы только уменьшенные производные AVIF/WebP, которые `astro:assets` строит при сборке (`FigureWithCaption`, `ClassArtworkGrid`).
-2. Кадрирование — только CSS и всегда с подписью о том, что это фрагмент.
+2. Кадрирование — только CSS и всегда с подписью о том, что это фрагмент. Исключение: обрезка только пустого фона экрана, когда весь интерфейс снимка остаётся в кадре (`tf-class-picker` на ≤600 px, WEB-M0.5B), — подпись не меняется.
 3. Язык изображения следует языку страницы: `pickMedia(group, locale)`. Если файла для языка нет — `AssetPlaceholder`, а не изображение на другом языке. Исключения прямо подписаны языком изображения: EN-образец книги на RU-страницах (B4) и снимки аддона с английским интерфейсом на RU-страницах (B1).
 4. У каждого изображения есть alt, описывающий содержимое, и подпись «что это · тип» (`media.images.*` в словарях). Плитки классов с видимым названием — `alt=""`.
 5. Типы не подменяют друг друга:
@@ -143,11 +143,20 @@ Upstream: Google Fonts (`google/fonts`), Geologica v5, JetBrains Mono v24. Fallb
 
 Новых файлов нет: страницы используют только записи этого реестра через `pickMedia(group, locale)`.
 
-- **TalentForge** (`/talentforge/`, `/ru/talentforge/`): `tf-editor` языка страницы (первый экран, `loading="eager"`), `tf-class-picker`, `tf-build-library`, девять иллюстраций классов с названиями (`alt=""`) и одна иллюстрация воина в пояснении «Class artwork». Игровые иконки талантов показаны только как **CSS-фрагмент** `tf-editor` (`object-fit`/`object-position`, пиксели не меняются) с подписью «Fragment of the talent editor · app screenshot, iPhone» / «Фрагмент редактора талантов · …».
+- **TalentForge** (`/talentforge/`, `/ru/talentforge/`): `tf-editor` языка страницы (первый экран, `loading="eager"`), `tf-class-picker`, `tf-build-library`, девять иллюстраций классов с названиями (`alt=""`) и одна иллюстрация воина в пояснении «Class artwork». На ≤600 px `tf-class-picker` обрезан снизу только CSS до 1206:1390: девять плиток классов заканчиваются на строке 1326 из 2622, ниже — пустой фон приложения (WEB-M0.5B). `tf-build-library` показан целиком: кнопки «New build» / «Import build» внизу экрана — часть интерфейса. Игровые иконки талантов показаны только как **CSS-фрагмент** `tf-editor` (`object-fit`/`object-position`, пиксели не меняются) с подписью «Fragment of the talent editor · app screenshot, iPhone» / «Фрагмент редактора талантов · …».
 - Блок «The real trees» — **без изображения**: горизонтального снимка нет (B2), а рендер из макета (стр. 26) отклонён. Фраза макета «All three specialization trees on one screen when you turn the phone» не используется: по `TalentForge/docs/mobile-architecture.md` (M5.UX.2b.1) в горизонтальном режиме дерево остаётся одно, а описание таланта открывается боковой панелью 300 dp — это и написано на странице.
 - Пункт макета «Data updates over the air» не используется: удалённая доставка данных реализована, но выключена во всех сборках (`TalentForge/docs/ota/README.md`, M5.OTA.PROD.1). Вместо него — «Builds keep their data» (сохранённый билд открывается на своей версии данных, M5.DATA).
 - **Forever Journey** (`/forever-journey/`, `/ru/forever-journey/`): placeholder «In-game addon screenshot» (B1) на первом экране; в разделе Book Creator — EN-образец `bc-sample-cover/chapter` на обеих локалях, на RU с подписью «… пример на английском» (B4). Скриншоты интерфейса Book Creator (`bc-app-*`) не показаны: EN-снимка нет (B3), а RU-снимок не подменяет EN.
 - Путь «журнал → книга» описан по `ForeverJourneyWeb/src/i18n.ts` и `README.md`: код `FJBOOK1` (`/fj` → Export Book) или файл `ForeverJourney.lua` из SavedVariables; книга собирается в браузере, на сервер ничего не загружается. Архив персонажа подписан как исторический снимок.
+
+## Share-карточки (Open Graph, Twitter) — WEB-M0.5
+
+`public/og/mythweld-en.png` и `public/og/mythweld-ru.png`, 1200×630 PNG. Собраны на этом сайте: знак `LogoMark` (те же два path), слово «Mythweld» и строка `home.eyebrow` шрифтом Geologica, названия трёх продуктов с цветами из токенов, фон `--color-bg`. **Игровых изображений, скриншотов и интерфейсов нет.** Способ: разметка карточки вставлена в страницу `astro preview` (шрифты сайта уже загружены), снимок Chrome DevTools 1200×630 при DPR 1, без последующей обработки. Подключены в `BaseLayout` через `SITE.shareImage` (`og:image`, `twitter:image`, alt — `meta.shareImageAlt`).
+
+| Файл                        | SHA-256                                                            |
+| --------------------------- | ------------------------------------------------------------------ |
+| `public/og/mythweld-en.png` | `ad3f0020b9d0d1ca637f26cf4cb84ff3d60832da61fc6e3eb70f1372d1e5551c` |
+| `public/og/mythweld-ru.png` | `0cface19d6b4f9b55a9e54ff854953659d05b9ecbbaa1f99bab66870af88f69d` |
 
 ## Использование на страницах (WEB-M0.5)
 

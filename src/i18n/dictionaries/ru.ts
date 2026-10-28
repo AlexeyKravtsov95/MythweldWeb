@@ -10,6 +10,8 @@ export const ru = {
       "Mythweld — независимые инструменты для World of Warcraft: Forever",
     homeDescription:
       "Независимые инструменты для World of Warcraft: Forever. TalentForge помогает планировать билды талантов на телефоне, а аддон Forever Journey ведёт дневник в игре, из которого Book Creator делает книгу для печати.",
+    shareImageAlt:
+      "Знак и название Mythweld, инструменты для World of Warcraft: Forever: TalentForge, Forever Journey, Book Creator",
   },
   a11y: {
     skipToContent: "Перейти к содержимому",
@@ -290,7 +292,7 @@ export const ru = {
       priest: "Жрец",
       shaman: "Шаман",
       mage: "Маг",
-      warlock: "Чернок\u00adнижник",
+      warlock: "Черно\u00adкнижник",
       druid: "Друид",
     },
     classArtworkCaption: "Девять классов · иллюстрации TalentForge",

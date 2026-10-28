@@ -13,6 +13,8 @@
  * - "Data updates over the air" is left out: remote data delivery is built
  *   but disabled in every app build. Builds keeping their data version is
  *   shown instead.
+ * - On phones the class picker is cropped to its UI (CSS only): below the
+ *   nine class tiles the capture is empty app background.
  */
 import { Image, Picture } from "astro:assets";
 import BaseLayout from "../../layouts/BaseLayout.astro";
@@ -131,7 +133,7 @@ const featureItems = [
           </div>
         </div>
         {picker && (
-          <div class="picker">
+          <div class="picker" data-crop="class-picker">
             <FigureWithCaption
               asset={picker}
               {...t.media.images["tf-class-picker"]}
@@ -449,6 +451,14 @@ const featureItems = [
     .picker {
       justify-self: start;
       max-width: 18rem;
+    }
+
+    /* The class tiles end at row 1326 of 2622; the rest of the capture is
+       empty background. Keep the status bar and a margin below the tiles. */
+    .picker :global(img) {
+      aspect-ratio: 1206 / 1390;
+      object-fit: cover;
+      object-position: 50% 0;
     }
 
     .card {

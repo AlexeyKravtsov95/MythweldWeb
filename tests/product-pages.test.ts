@@ -247,6 +247,35 @@ describe.each(LOCALES)("TalentForge page for %s", (locale) => {
     expect(alts).toContain(t.media.images["tf-build-library"].alt);
   });
 
+  it("crops the class picker on phones to its UI, with CSS only", () => {
+    const picker = main.querySelector("[data-crop='class-picker']");
+    const img = picker?.querySelector("img");
+    expect(img?.getAttribute("alt")).toBe(
+      t.media.images["tf-class-picker"].alt,
+    );
+    expect(img?.getAttribute("src")).toMatch(/^\/_astro\//);
+    expect(picker?.querySelectorAll("source").length).toBeGreaterThan(0);
+    expect(text(picker?.querySelector("figcaption"))).toBe(
+      t.media.images["tf-class-picker"].caption,
+    );
+    const css = load(locale, "/talentforge/")
+      .querySelectorAll('link[rel="stylesheet"]')
+      .map((link) =>
+        readFileSync(`${dist}${link.getAttribute("href")?.slice(1)}`, "utf8"),
+      )
+      .join("\n");
+    const phone = [
+      ...css.matchAll(/@media \((?:max-width:\s*|width<=)600px\)\{(.*?\})\}/gs),
+    ]
+      .map((block) => block[1])
+      .join("\n");
+    // The nine tiles end at row 1326 of the 1206 × 2622 capture.
+    expect(phone).toMatch(
+      /\.picker\[[^\]]+\] img\{aspect-ratio:1206\/1390;object-fit:cover;object-position:50% 0\}/,
+    );
+    expect(css).not.toMatch(/\.library\[[^\]]+\] img\{[^}]*aspect-ratio/);
+  });
+
   it("reads release states from the config, never from store links", () => {
     const panel = main.querySelector(
       "section[aria-labelledby='release-status']",
