@@ -104,6 +104,7 @@ export const ru = {
       available: "Доступно",
       testing: "Закрытое тестирование",
       prep: "В подготовке",
+      awaiting_review: "Ожидает проверки Apple",
     },
     channels: {
       android: "Android",

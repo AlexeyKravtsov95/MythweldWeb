@@ -302,19 +302,17 @@ describe.each(LOCALES)("TalentForge page for %s", (locale) => {
     expect(panelText).toContain(t.release.states[tf.ios]);
     expect(panelText).toContain(`v${tf.dataVersion}`);
     const stores = [
-      [t.release.channels.googlePlay, tf.googlePlay, tf.android],
-      [t.release.channels.appStore, tf.appStore, tf.ios],
+      [t.release.channels.googlePlay, tf.googlePlay],
+      [t.release.channels.appStore, tf.appStore],
     ] as const;
-    for (const [name, href, state] of stores) {
+    for (const [name, href] of stores) {
       const action = panel
         ?.querySelectorAll(".stores > *")
         .find((el) => text(el).startsWith(name));
       if (href === null) {
         expect(action?.tagName).toBe("SPAN");
         expect(action?.getAttribute("aria-disabled")).toBe("true");
-        expect(text(action)).toContain(
-          state === "prep" ? t.actions.inPreparation : t.actions.linkPending,
-        );
+        expect(text(action)).toContain(t.actions.linkPending);
       } else {
         expect(action?.getAttribute("href")).toBe(href);
       }

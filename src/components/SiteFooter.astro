@@ -8,7 +8,7 @@
  * Site column is one plain note, not a list of dead links.
  */
 import { LEGAL } from "../config/legal";
-import { RELEASE, type ReleaseState } from "../config/release";
+import { RELEASE, type TalentForgeReleaseState } from "../config/release";
 import { SITE } from "../config/site";
 import { getDictionary, localizePath, type Locale } from "../i18n";
 import LogoMark from "./LogoMark.astro";
@@ -28,7 +28,7 @@ interface FooterLink {
   /** `null` while the address does not exist. */
   href: string | null;
   /** Shown instead of a link while `href` is `null`. */
-  state?: ReleaseState;
+  state?: TalentForgeReleaseState;
 }
 
 const legal: FooterLink[] = [

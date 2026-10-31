@@ -4,10 +4,10 @@
  * never carries the meaning alone. `pending` is the dashed "link pending"
  * chip without a dot. `framed={false}` drops the border for table rows.
  */
-import type { ReleaseState } from "../../config/release";
+import type { TalentForgeReleaseState } from "../../config/release";
 
 interface Props {
-  state: ReleaseState | "pending";
+  state: TalentForgeReleaseState | "pending";
   label: string;
   framed?: boolean;
 }
@@ -43,6 +43,10 @@ const { state, label, framed = true } = Astro.props;
     color: var(--color-text-subtle);
   }
 
+  .status-tag[data-state="awaiting_review"] {
+    white-space: normal;
+  }
+
   .dot {
     flex: 0 0 auto;
     width: var(--space-2);
@@ -57,7 +61,8 @@ const { state, label, framed = true } = Astro.props;
     background: var(--color-status-testing);
   }
 
-  [data-state="prep"] .dot {
+  [data-state="prep"] .dot,
+  [data-state="awaiting_review"] .dot {
     background: var(--color-status-prep);
   }
 
