@@ -33,7 +33,9 @@ HTTP пока отвечает 200 без редиректа. Повторная
 ## Стек и маршруты
 
 Astro 7, `output: "static"`, TypeScript `astro/tsconfigs/strictest`, Vitest и Prettier.
-Без backend, аккаунтов, БД, cookies и аналитики. Node.js **24 LTS** (`.nvmrc`,
+В коде сайта нет backend, аккаунтов, БД, аналитики и установки cookies.
+Использование cookies и журналирование на уровне инфраструктуры требуют отдельной проверки.
+Node.js **24 LTS** (`.nvmrc`,
 `package.json#engines`); точные версии зависимостей в `package-lock.json`.
 
 | EN                  | RU                     | Компонент                                         |
