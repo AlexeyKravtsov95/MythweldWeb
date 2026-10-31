@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { PermissionFlagsBits } from "discord.js";
 import { runApply, runDryRun, type ApplyOptions } from "../src/executor.js";
-import { FakeDiscordApi, fullExistingState } from "./helpers.js";
+import {
+  FakeDiscordApi,
+  allRequiredBotBits,
+  fullExistingState,
+} from "./helpers.js";
 
 const TEST_TOKEN = "test-secret-bot-token-do-not-print";
 
@@ -217,6 +221,52 @@ describe("runApply — защита (сценарии 8, 9, 10, 11)", () => {
     const details = outcome.steps.map((step) => step.detail).join("\n");
     expect(details).not.toContain(TEST_TOKEN);
     expect(details).toContain("[REDACTED]");
+  });
+});
+
+describe("права ролей в пределах фактических прав бота (финальное ревью)", () => {
+  it("FakeDiscordApi отклоняет роль с правами, которых нет у бота", async () => {
+    const fake = new FakeDiscordApi(); // ровно шесть документированных прав
+    const exceeding = allRequiredBotBits() | PermissionFlagsBits.KickMembers;
+
+    await expect(
+      fake.createRole({
+        roleKey: "moderator",
+        name: "Moderator",
+        permissionsBitfield: exceeding,
+      }),
+    ).rejects.toThrow(/Missing Permissions/);
+
+    // Administrator у бота снимает ограничение (семантика Discord).
+    const adminBot = new FakeDiscordApi({
+      permissionsBitfield:
+        allRequiredBotBits() | PermissionFlagsBits.Administrator,
+    });
+    await expect(
+      adminBot.createRole({
+        roleKey: "moderator",
+        name: "Moderator",
+        permissionsBitfield: exceeding,
+      }),
+    ).resolves.toMatchObject({ id: expect.any(String) });
+  });
+
+  it("успешный Apply на пустом сервере с ровно шестью правами бота создаёт роли в их пределах", async () => {
+    const fake = new FakeDiscordApi(); // permissionsBitfield = 6 прав invite
+    const outcome = await runApply(fake, options(true));
+
+    expect(outcome.status).toBe("applied");
+    expect(fake.createdRoles).toHaveLength(3);
+    for (const role of fake.createdRoles) {
+      expect(
+        (role.permissionsBitfield & ~fake.permissionsBitfield) === 0n,
+        `${role.name}: грант выходит за права бота`,
+      ).toBe(true);
+    }
+    // Каналы и сообщения также созданы полностью.
+    expect(fake.createdCategoryRecords).toHaveLength(5);
+    expect(fake.createdChannels).toHaveLength(8);
+    expect(fake.sentMessages).toHaveLength(6);
   });
 });
 

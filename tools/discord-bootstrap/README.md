@@ -22,12 +22,34 @@ TypeScript-сборки сайта; команды сайта (`npm run verify`,
 | COMMUNITY       | `general`             | Text  | общение для всех              |
 | STAFF           | `mod-log`             | Text  | скрыт; только Moderator и бот |
 
-Роли: `Moderator` (модерирование без Administrator), `Developer` и `Member`
-(базовые права, без административных). Существующие каналы, роли и сообщения
-инструмент не удаляет, не переименовывает и не перемещает.
+Роли: `Moderator`, `Developer` и `Member`. Существующие каналы, роли и
+сообщения инструмент не удаляет, не переименовывает и не перемещает.
 
 Форумы создаются с List View и тегами `Bug`, `Question`, `Feature Request`,
 `Resolved` (`Resolved` — moderated, ставить его могут только модераторы).
+
+### Права ролей: автоматически и вручную
+
+Discord запрещает боту выдавать ролям и в оверрайтах каналов права, которых
+нет у него самого. Поэтому Bootstrap с шестью правами invite назначает
+**только безопасный базис**, а всё остальное остаётся ручным шагом владельца
+(расширять права бота ради автоматизации принципиально не будем).
+
+**Назначается автоматически** (в пределах шести прав бота):
+
+| Кому                                       | Что                                                                                         |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `Moderator`, `Developer`, `Member`         | `View Channel`, `Send Messages`, `Read Message History`, `Embed Links`                      |
+| `Moderator` в STAFF (`mod-log`, категория) | те же четыре права через channel overwrites                                                 |
+| `@everyone` в read-only каналах            | чтение разрешено, `Send Messages` запрещён                                                  |
+| `@everyone` в форумах и `general`          | базовые права общения; темы, ответы и реакции уже доступны `@everyone` по умолчанию Discord |
+
+**Включается владельцем вручную после Bootstrap** (Server Settings → Roles →
+роль Moderator): `Manage Messages`, `Manage Threads`, `Timeout (Moderate Members)`,
+`Kick Members`, `Ban Members`, `View Audit Log`, `Attach Files`; при необходимости
+для `Developer`/`Member` — `Attach Files`, `Add Reactions`, `Use External Emojis`.
+Роль Moderator получает полномочия, а не права на настройки сервера —
+Administrator не выдаётся никому.
 
 ## Подготовка
 
@@ -136,8 +158,10 @@ npm run setup:apply
 2. **Community Settings** (Server Settings → Community): проверьте, что выбраны
    системные каналы (Rules/Guidelines, Community Updates) — инструмент их не
    меняет. Membership Screening и Onboarding настраивайте на своё усмотрение.
-3. **Роли участникам** инструмент не выдаёт: назначьте `Moderator` персоналу
-   и `Member`/`Developer` — по вашему решению.
+3. **Права модерирования роли Moderator** включаются вручную (см. таблицу
+   выше: Manage Messages, Timeout, Kick/Ban и др.) — бот не может выдать
+   права, которых нет у него самого. Назначьте `Moderator` персоналу и
+   `Member`/`Developer` участникам — инструмент роли пользователям не выдаёт.
 4. Если dry-run показал конфликты (например, канал `welcome` существует как
    голосовой) — переименуйте/удалите лишнее или приведите тип канала вручную,
    затем запустите `setup:apply` снова.

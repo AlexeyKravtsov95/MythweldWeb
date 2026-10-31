@@ -191,6 +191,23 @@ describe("probeForumHistory — активные и архивные темы (F
     expect(result).toBe("unknown");
   });
 
+  it("не запрашивает лишнюю страницу, когда hasMore=false (конец архива)", async () => {
+    let calls = 0;
+    const result = await probeForumHistory(
+      async () => [],
+      async (before) => {
+        calls += 1;
+        if (before === undefined) {
+          return { threads: [thread("a1", deleted)], hasMore: false };
+        }
+        throw new Error("лишняя страница запрошена, хотя hasMore=false");
+      },
+      needle,
+    );
+    expect(result).toBe("absent");
+    expect(calls).toBe(1);
+  });
+
   it("возвращает unknown при нечитаемом стартовом сообщении темы", async () => {
     const result = await probeForumHistory(
       async () => [thread("t1", unreadable)],

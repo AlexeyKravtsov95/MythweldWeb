@@ -98,6 +98,19 @@ export class FakeDiscordApi implements DiscordApi {
     if (this.failRoleKeys.has(input.roleKey)) {
       throw new Error(`mock: role create failed for ${input.name}`);
     }
+    // Simulates real Discord behaviour: a bot cannot create a role whose
+    // permissions exceed its own (Administrator on the bot lifts the limit).
+    const botIsAdmin =
+      (this.permissionsBitfield & PermissionFlagsBits.Administrator) ===
+      PermissionFlagsBits.Administrator;
+    const exceedsBot =
+      !botIsAdmin &&
+      (input.permissionsBitfield & ~this.permissionsBitfield) !== 0n;
+    if (exceedsBot) {
+      throw new Error(
+        "DiscordAPIError[50013]: Missing Permissions — role requires permissions the bot does not have",
+      );
+    }
     this.createdRoles.push(input);
     const id = nextId();
     this.roles.push({ id, name: input.name });

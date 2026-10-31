@@ -54,7 +54,35 @@ export function missingBotPermissions(
   );
 }
 
-/** Least-privilege role grants; none of them includes Administrator. */
+/**
+ * Exactly the six permissions of the documented OAuth2 invite.
+ *
+ * Discord refuses to create roles or channel overwrites that grant
+ * permissions the bot itself does not have, so every automatic grant
+ * (role permissions and overwrite allow/deny sets below) must stay
+ * within this set. Anything beyond it is a manual owner step (README).
+ */
+export const BOT_GRANTABLE_PERMISSIONS: readonly bigint[] = [
+  PermissionFlagsBits.ViewChannel,
+  PermissionFlagsBits.SendMessages,
+  PermissionFlagsBits.EmbedLinks,
+  PermissionFlagsBits.ReadMessageHistory,
+  PermissionFlagsBits.ManageChannels,
+  PermissionFlagsBits.ManageRoles,
+];
+
+/** True when every bit of `bits` is present in `bitfield` (Administrator wins). */
+export function bitsWithin(bitfield: bigint, bits: readonly bigint[]): boolean {
+  return bits.every((bit) => hasPermission(bitfield, bit));
+}
+
+/**
+ * Automatic role grants. Deliberately limited to the safe subset the
+ * bootstrap bot can grant (subset of BOT_GRANTABLE_PERMISSIONS): Discord
+ * rejects roles with permissions the bot lacks. Global moderation powers
+ * for Moderator (Kick/Ban/Timeout/ManageMessages/…) stay a manual owner
+ * step — see README.
+ */
 export const ROLE_PERMISSION_BITS: Readonly<
   Record<RoleKey, readonly bigint[]>
 > = {
@@ -63,32 +91,18 @@ export const ROLE_PERMISSION_BITS: Readonly<
     PermissionFlagsBits.SendMessages,
     PermissionFlagsBits.ReadMessageHistory,
     PermissionFlagsBits.EmbedLinks,
-    PermissionFlagsBits.AttachFiles,
-    PermissionFlagsBits.AddReactions,
-    PermissionFlagsBits.KickMembers,
-    PermissionFlagsBits.BanMembers,
-    PermissionFlagsBits.ModerateMembers,
-    PermissionFlagsBits.ManageMessages,
-    PermissionFlagsBits.ManageThreads,
-    PermissionFlagsBits.ViewAuditLog,
   ],
   developer: [
     PermissionFlagsBits.ViewChannel,
     PermissionFlagsBits.SendMessages,
     PermissionFlagsBits.ReadMessageHistory,
     PermissionFlagsBits.EmbedLinks,
-    PermissionFlagsBits.AttachFiles,
-    PermissionFlagsBits.AddReactions,
-    PermissionFlagsBits.UseExternalEmojis,
   ],
   member: [
     PermissionFlagsBits.ViewChannel,
     PermissionFlagsBits.SendMessages,
     PermissionFlagsBits.ReadMessageHistory,
     PermissionFlagsBits.EmbedLinks,
-    PermissionFlagsBits.AttachFiles,
-    PermissionFlagsBits.AddReactions,
-    PermissionFlagsBits.UseExternalEmojis,
   ],
 };
 
@@ -140,15 +154,15 @@ export interface PermissionTargets {
   readonly botUserId: string;
 }
 
+// Every allow/deny below must stay within BOT_GRANTABLE_PERMISSIONS:
+// Discord rejects overwrites that touch permissions the bot lacks.
+// Forum extras (threads, reactions) are not re-granted explicitly —
+// @everyone already has them by default on a fresh server.
 const READ_ONLY_EVERYONE_ALLOW = [
   PermissionFlagsBits.ViewChannel,
   PermissionFlagsBits.ReadMessageHistory,
 ];
-const READ_ONLY_EVERYONE_DENY = [
-  PermissionFlagsBits.SendMessages,
-  PermissionFlagsBits.CreatePublicThreads,
-  PermissionFlagsBits.SendMessagesInThreads,
-];
+const READ_ONLY_EVERYONE_DENY = [PermissionFlagsBits.SendMessages];
 const TALK_EVERYONE_ALLOW = [
   PermissionFlagsBits.ViewChannel,
   PermissionFlagsBits.SendMessages,
@@ -158,9 +172,6 @@ const FORUM_EVERYONE_ALLOW = [
   PermissionFlagsBits.ViewChannel,
   PermissionFlagsBits.ReadMessageHistory,
   PermissionFlagsBits.SendMessages,
-  PermissionFlagsBits.CreatePublicThreads,
-  PermissionFlagsBits.SendMessagesInThreads,
-  PermissionFlagsBits.AddReactions,
 ];
 const STAFF_EVERYONE_DENY = [PermissionFlagsBits.ViewChannel];
 const STAFF_MODERATOR_ALLOW = [
@@ -168,9 +179,6 @@ const STAFF_MODERATOR_ALLOW = [
   PermissionFlagsBits.SendMessages,
   PermissionFlagsBits.ReadMessageHistory,
   PermissionFlagsBits.EmbedLinks,
-  PermissionFlagsBits.AttachFiles,
-  PermissionFlagsBits.ManageMessages,
-  PermissionFlagsBits.ManageThreads,
 ];
 const BOT_MESSAGE_ALLOW = [
   PermissionFlagsBits.ViewChannel,
@@ -183,11 +191,7 @@ const BOT_MESSAGE_ALLOW = [
 function staffOverwrites(targets: PermissionTargets): readonly OverwriteSpec[] {
   const overwrites: OverwriteSpec[] = [
     { id: targets.everyoneRoleId, allow: [], deny: [...STAFF_EVERYONE_DENY] },
-    {
-      id: targets.botUserId,
-      allow: [...BOT_MESSAGE_ALLOW, PermissionFlagsBits.ManageMessages],
-      deny: [],
-    },
+    { id: targets.botUserId, allow: [...BOT_MESSAGE_ALLOW], deny: [] },
   ];
   const moderatorId = targets.roleIdByKey["moderator"];
   if (moderatorId !== undefined) {

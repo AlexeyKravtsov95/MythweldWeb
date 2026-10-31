@@ -158,8 +158,9 @@ export async function probeForumHistory(
     ) {
       sawUnreadable = true;
     }
-    if (archived.threads.length === 0) {
-      // No more archived threads — full scan completed.
+    if (archived.threads.length === 0 || !archived.hasMore) {
+      // Discord reported the end of the archive (or an empty page) —
+      // the full scan is complete, no extra page is requested.
       return sawUnreadable ? "unknown" : "absent";
     }
     const lastId = archived.threads[archived.threads.length - 1]?.id;
