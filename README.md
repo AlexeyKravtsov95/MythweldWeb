@@ -1,103 +1,92 @@
 # Mythweld Web
 
-Official web portal for [Mythweld](https://mythweld.com/): an independent collection of gaming tools.
+Основной сайт [Mythweld](https://mythweld.com/) — независимые инструменты для игроков:
+**TalentForge** (планировщик талантов World of Warcraft: Forever), **Forever Journey**
+(аддон-дневник персонажа) и связанный **Book Creator** (генератор PDF на `journal.mythweld.com`).
 
-## Products
+## Статус на 2026-10-31
 
-- **TalentForge** — mobile talent-build planner for World of Warcraft: Forever.
-- **Forever Journey** — in-game character journal addon.
-- **Book Creator** — [journal.mythweld.com](https://journal.mythweld.com/), browser-based printable PDF generator.
+В `main` реализованы главная и обе продуктовые страницы на EN/RU, SEO-метаданные,
+`sitemap.xml`, общая 404-страница и ручной деплой в VK Cloud. По наблюдениям владельца
+от **2026-10-30**, записанным в [Issue #16](https://github.com/AlexeyKravtsov95/MythweldWeb/issues/16),
+`https://mythweld.com/` и `/ru/` отвечают HTTP/2 200 через отдельный VK CDN;
+HTTP пока отвечает 200 без редиректа. Повторная сетевая проверка в Issue #16 не выполнялась.
 
-## Project status
+Техническая доступность по URL не закрывает release gates: **B6** (подтверждение
+статусов/магазинов) и **B7** (утверждение Privacy, Terms, Contact) остаются открыты.
+В репозитории `RELEASE.checked = 2026-10-26`, legal-адреса — `null`, черновики не
+опубликованы. `robots.txt` сохраняет `Disallow: /` до отдельного release approval;
+это ограничение индексации, а не доступа. Sitemap уже собирается, но не объявлен в robots.
 
-**WEB-M0.3 — home page.** `/` and `/ru/` render the v3.2 home page (The Forge, Product First) from one component, `src/components/home/HomePage.astro`: hero, the TalentForge and Forever Journey plates with real product media, Book Creator as the related tool, Plan → Play → Remember and the footer. Release states come from `src/config/release.ts`, links from `src/config/site.ts`. Product pages (`/talentforge/`, `/forever-journey/`) are WEB-M0.4 and are not linked yet; open release blockers are listed in `docs/assets-manifest.md`. WEB-M0.2 added the curated media, self-hosted Geologica and JetBrains Mono and the components in `src/components/ui/`.
+## Быстрый вход для Codex / Sol
 
-Component preview (development only, never built or published): `npm run dev`, then <http://localhost:4321/dev/components/en/> and `/dev/components/ru/`.
+1. Прочитать текущую Issue и [AGENTS.md](AGENTS.md).
+2. Найти нужные модули в [карте архитектуры](docs/architecture.md).
+3. Для задач о запуске свериться с [текущим состоянием](docs/current-state.md) и
+   [release gates](docs/release-readiness.md); читать только релевантные исходники.
 
-Design baseline: **Mythweld v3.2 — The Forge (Product First)**. Preserve real product imagery: no fabricated class icons, talent trees, app UI, addon screenshots or product features.
+Локальные skills: [repo-navigator](.agents/skills/repo-navigator/SKILL.md) для поиска
+файлов/символов, [session-handoff](.agents/skills/session-handoff/SKILL.md) для передачи
+результатов сессии. Они не требуют автоматического чтения всего репозитория.
+Следующий инженерный этап **WEB-M0.6B — отдельная Issue**.
 
-## Stack
+## Стек и маршруты
 
-- [Astro](https://astro.build/) 7, static output (`dist/`), no backend, no analytics, no cookies.
-- TypeScript in `astro/tsconfigs/strictest` mode.
-- Vitest for unit tests and smoke checks of the built site; Prettier for formatting.
-- Node.js **24 LTS** (pinned in `.nvmrc` and `package.json#engines`); exact dependency versions with a committed `package-lock.json`.
+Astro 7, `output: "static"`, TypeScript `astro/tsconfigs/strictest`, Vitest и Prettier.
+Без backend, аккаунтов, БД, cookies и аналитики. Node.js **24 LTS** (`.nvmrc`,
+`package.json#engines`); точные версии зависимостей в `package-lock.json`.
 
-## Routing and localization
+| EN                  | RU                     | Компонент                                         |
+| ------------------- | ---------------------- | ------------------------------------------------- |
+| `/`                 | `/ru/`                 | `src/components/home/HomePage.astro`              |
+| `/talentforge/`     | `/ru/talentforge/`     | `src/components/product/TalentForgePage.astro`    |
+| `/forever-journey/` | `/ru/forever-journey/` | `src/components/product/ForeverJourneyPage.astro` |
 
-| Route  | Locale            | Source                     |
-| ------ | ----------------- | -------------------------- |
-| `/`    | English (default) | `src/pages/index.astro`    |
-| `/ru/` | Russian           | `src/pages/ru/index.astro` |
+Маршруты обёрнуты файлами в `src/pages/`. Все пользовательские тексты — в типизированных
+словарях `src/i18n/dictionaries/`, общий тип — `src/i18n/types.ts`.
+`404.html` содержит EN/RU; `/dev/components/{en,ru}/` доступен только в dev и не публикуется.
 
-All user-facing copy lives in typed dictionaries (`src/i18n/dictionaries/en.ts`, `ru.ts`) that must satisfy the `Dictionary` type in `src/i18n/types.ts`; a missing or extra key fails type checking. Routing helpers (`localizePath`, `localeFromPath`) are in `src/i18n/locales.ts`.
+Дизайн: **Mythweld v3.2 — The Forge (Product First)**, токены — `src/styles/tokens.css`.
+Происхождение оригинальных изображений и шрифтов — [assets manifest](docs/assets-manifest.md).
 
-## Project structure
+## Локальная работа
 
-```text
-.github/workflows/ci.yml  CI: npm ci → format → check → build → test
-.github/workflows/deploy-vk-cloud.yml  manual deploy to VK Cloud Object Storage (docs/deploy-vk-cloud.md)
-deploy/vk-cloud/          bucket website config and reference public-read policy
-docs/deploy-vk-cloud.md   VK Cloud S3 + CDN setup, keys, secrets, purge and rollback (in Russian)
-docs/assets-manifest.md   provenance, kinds and usage rules of every image and font
-docs/screenshots/         component screenshots attached to PRs
-public/                   static files (robots.txt, favicon, fonts/ with OFL licences)
-src/assets/media/         curated original product images (see the manifest)
-src/components/           header (with mobile menu), footer, language switcher, logo
-src/components/home/      home page: HomePage and its plates and Plan → Play → Remember
-src/components/ui/        v3.2 components: ProductPlate, ProductAction, StatusTag,
-                          ReleaseStatus, FigureWithCaption, AssetPlaceholder,
-                          ClassArtworkGrid, MediaGrid
-src/config/               site links and release facts (statuses, store links)
-src/i18n/                 locales, routing helpers, typed dictionaries
-src/layouts/              BaseLayout: <html lang>, meta, hreflang, skip link, font preload
-src/media/                typed media catalog and image lookup
-src/pages/                routes: / and /ru/ (+ dev-only /dev/components/{en,ru}/)
-scripts/                  deploy plan, upload and smoke checks (deploy/), secret scan
-src/styles/               tokens.css (v3.2 tokens), fonts.css, global.css
-tests/                    i18n, tokens, fonts, media, components, built-site smoke tests
-AGENTS.md                 working rules for AI agents (in Russian)
+```bash
+nvm install
+nvm use
+npm ci
+npm run dev
 ```
 
-## Local development on macOS
+Dev-сервер: `http://localhost:4321/`, RU — `/ru/`. Перед PR:
 
-1. Install Node.js 24 LTS. With [nvm](https://github.com/nvm-sh/nvm):
+```bash
+npm run verify
+```
 
-   ```bash
-   nvm install
-   ```
+| Команда                  | Назначение                                                   |
+| ------------------------ | ------------------------------------------------------------ |
+| `npm run check`          | `astro check` + `tsc --noEmit`                               |
+| `npm run build`          | Статическая сборка в `dist/`                                 |
+| `npm test`               | Vitest; сначала нужна сборка, smoke-тесты читают `dist/`     |
+| `npm run format:check`   | Проверка Prettier                                            |
+| `npm run verify`         | Формат → типы → сборка → тесты, те же проверки в CI          |
+| `npm run preview`        | Локальный просмотр `dist/`                                   |
+| `npm run deploy:plan`    | План загрузки `dist/` без публикации                         |
+| `npm run secrets:check`  | Проверка отслеживаемых файлов и `dist/` на секреты           |
+| `npm run smoke -- <url>` | HTTP smoke указанного адреса; это отдельная сетевая проверка |
 
-   (`nvm use` picks the version from `.nvmrc`; Homebrew `brew install node@24` also works.)
+## Деплой и границы
 
-2. Install dependencies exactly as locked:
+GitHub Actions (`workflow_dispatch`) → VK Cloud Object Storage `mythweld-web` →
+отдельный VK CDN → `mythweld.com`. DNS — Cloudflare Free, apex CNAME flattening,
+DNS only (данные владельца в Issue #16). Подробности и исторические шаги настройки —
+[runbook](docs/deploy-vk-cloud.md); текущие открытые проверки — [current state](docs/current-state.md).
+Имя environment `vk-cloud-staging` в workflow сохранено и не означает, что домен ещё недоступен.
 
-   ```bash
-   npm ci
-   ```
+Изменения — по Issue, отдельная `feature/<issue-id>-<кратко>` и PR в `main`.
+Merge выполняет владелец. Production deploy и изменения DNS/CDN/S3/secrets требуют
+отдельной согласованной задачи. `journal.mythweld.com`, `legal.mythweld.com`,
+`ota.mythweld.com` и другие репозитории не трогать.
 
-3. Start the dev server at <http://localhost:4321/> (Russian at <http://localhost:4321/ru/>):
-
-   ```bash
-   npm run dev
-   ```
-
-## Scripts
-
-| Command                  | What it does                                                    |
-| ------------------------ | --------------------------------------------------------------- |
-| `npm run dev`            | Dev server with hot reload                                      |
-| `npm run build`          | Production static build into `dist/`                            |
-| `npm run preview`        | Serve the built `dist/` locally                                 |
-| `npm run check`          | `astro check` + `tsc --noEmit` (strict type checking)           |
-| `npm test`               | Vitest: i18n, tokens and smoke checks of `dist/` (build first)  |
-| `npm run format:check`   | Prettier check (`npm run format` to fix)                        |
-| `npm run verify`         | Everything CI runs: format, check, build, test                  |
-| `npm run deploy:plan`    | Deploy plan of `dist/` (Content-Type, Cache-Control), no upload |
-| `npm run secrets:check`  | Secret scan of tracked files and `dist/`                        |
-| `npm run smoke -- <url>` | HTTP smoke checks of a deployed copy (routes, 404, headers)     |
-
-## Infrastructure boundaries
-
-This repository will build the **main website only**. Do not modify the working `journal.mythweld.com`, `legal.mythweld.com` or `ota.mythweld.com` services, and do not change DNS or production deployments without a separately reviewed task. The site is not deployed yet; the manual VK Cloud deploy (WEB-M0.6A) targets only the `mythweld-web` bucket and needs the owner's approval, see `docs/deploy-vk-cloud.md`; `robots.txt` disallows indexing and no sitemap is published until a reviewed public launch.
-
-This is an independent fan project, not affiliated with Blizzard Entertainment.
+Независимый фан-проект, не связан с Blizzard Entertainment.
