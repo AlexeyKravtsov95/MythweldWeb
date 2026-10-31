@@ -1,0 +1,25 @@
+{
+  "name": "@mythweld/discord-bootstrap",
+  "version": "0.1.0",
+  "private": true,
+  "description": "One-off Discord server bootstrap CLI for the Mythweld community server (dry-run / apply).",
+  "type": "module",
+  "engines": {
+    "node": ">=24.11.0 <25"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "setup:dry": "npm run build && node --env-file-if-exists=.env dist/index.js --dry-run",
+    "setup:apply": "npm run build && node --env-file-if-exists=.env dist/index.js --apply"
+  },
+  "dependencies": {
+    "discord.js": "14.28.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  }
+}
