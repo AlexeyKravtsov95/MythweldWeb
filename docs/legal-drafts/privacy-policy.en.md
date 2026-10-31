@@ -1,37 +1,46 @@
 # Mythweld — Privacy Policy
 
-> **DRAFT — NOT PUBLISHED, NOT LEGALLY APPROVED.** Prepared for the owner's review (WEB-M0.5, blocker B7). Every `[OWNER DECISION: …]` must be resolved before publication. See `README.md` for the facts this draft relies on.
+> **DRAFT — NOT PUBLISHED, NOT LEGALLY APPROVED.** Owner review: WEB-M0.6B.1A / B7. Resolve the `[OWNER DECISION: …]` markers and approve both languages before publication. IDs refer to `owner-decisions.md`; facts and limits of verification are in `README.md`.
 
-**Effective date:** [OWNER DECISION: date]
+**Effective date:** [OWNER DECISION: OD-04 — date of this policy]
 
 ## Who we are
 
-mythweld.com (the "site") presents independent tools for World of Warcraft: Forever: the TalentForge mobile app, the Forever Journey addon and the Book Creator web tool. The site is run by [OWNER DECISION: name of the person or legal entity, country].
+mythweld.com (the "site") presents independent tools for World of Warcraft: Forever: the TalentForge mobile app, the Forever Journey addon and the Book Creator web tool. The site is run by [OWNER DECISION: OD-01 — name of the person or legal entity and country].
 
-Contact: [OWNER DECISION: approved contact address or page].
+Contact: [OWNER DECISION: OD-02 — approved public contact and person responsible for requests].
 
 ## What the site itself does
 
-- The site is a set of static pages. It has no accounts, sign-in, forms, comments or file uploads.
+- The site consists of static information pages. It has no accounts, sign-in, forms, comments or file uploads.
 - The site's code does not use analytics, advertising pixels or tracking scripts, and does not set cookies or write to browser storage.
 - Fonts and images are served from the site itself; the pages load no third-party scripts.
 
-## Server logs and hosting
+## Technical requests and hosting
 
-[OWNER DECISION: hosting and CDN provider, region.] When you open any website, the server or CDN that delivers it usually receives technical data such as your IP address, browser user-agent, the requested address and time. [OWNER DECISION: whether such access logs are kept for mythweld.com, for what purpose, for how long, who can access them, and whether the provider sets any cookies of its own.]
+The site is delivered through VK Cloud Object Storage and a CDN. Delivery infrastructure technically receives your IP address, request time, requested URL, browser User-Agent and TLS connection parameters. A CDN handles the visitor's connection; an origin may receive a forwarded request. This does not mean every component receives the same fields.
 
-## Links to other services
+Technical information about requests may be processed to deliver the site and keep the delivery service secure. It **may remain in technical logs after the request has been served**. We have not confirmed specific retention periods, the fields in internal logs or provider access arrangements. We do not promise that logs are absent or deleted immediately.
 
-The site links to services with their own rules:
+[OWNER DECISION: OD-07 — confirm the purposes of delivery/security, any use of accessible logs by the site operator, and the applicable legal basis; do not describe analytics or other uses without evidence.]
 
-- **CurseForge** (www.curseforge.com), where the Forever Journey addon is downloaded.
-- **Book Creator** (journal.mythweld.com). According to its own description, it reads the journal and makes the PDF locally in your browser, needs no account and does not upload the journal to a server. [OWNER DECISION: link to the Book Creator's own privacy notice, if one is published.]
-- **TalentForge** app documents at legal.mythweld.com describe the TalentForge app, not this site. [OWNER DECISION: whether to link them from the TalentForge page.]
+The site's code sets no cookies. This does not establish whether infrastructure services set cookies in other circumstances. [OWNER DECISION: OD-08 — approve this limited disclosure or provide confirmed infrastructure cookie details and any required user controls. No infrastructure cookie inventory has been confirmed.]
 
-## Your rights
+## Contact and your rights
 
-[OWNER DECISION: rights under the applicable law (for example access, correction, deletion of log data) and how to exercise them.]
+[OWNER DECISION: OD-02 — approve how messages and voluntarily provided contact details will be received, used to answer requests, accessed and retained; no contact form exists on this site.]
+
+[OWNER DECISION: OD-09 — confirm applicable rights and how to exercise them through the approved contact, who handles requests and how they are assessed and answered. Do not promise access to, correction of or deletion of provider logs that the operator cannot control.]
+
+## Other products and services
+
+These pages describe the portal only. Following an external link takes you to a separate service:
+
+- **CurseForge** (www.curseforge.com), where the Forever Journey addon is available.
+- **Book Creator** (journal.mythweld.com), the separate web tool for creating a book from a journal.
+
+The TalentForge app documents hosted at legal.mythweld.com concern the app and do not replace this site's policy. This policy does not govern the app, addon or Book Creator. [OWNER DECISION: OD-06 — approve product document links; include only existing, relevant notices, without assuming every service has a published policy.]
 
 ## Changes
 
-We will publish any change to this policy on this page with a new effective date.
+Changes to this policy will be published on this page with a new effective date.
