@@ -17,7 +17,7 @@ Mythweld is an independent fan project. It is not affiliated with or endorsed by
 ## Content of the site
 
 - The site presents product descriptions and release states. Availability may change; a status is not a promise of a future release or store listing. Use the verification date shown on the page when assessing release information.
-- Product screenshots are original assets; addon gallery captions identify captures that may show an earlier version.
+- Screenshots illustrate the products' interfaces. Some captures include third-party game materials; addon gallery captions identify images that may show an older version.
 - [OWNER DECISION: OD-05 — approve the copyright notice, rights holder and reuse terms for the site's own content; distinguish third-party game names, artwork and other materials. Do not grant rights the operator does not hold.]
 
 ## Products and other services
