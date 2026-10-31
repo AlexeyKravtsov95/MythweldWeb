@@ -223,13 +223,18 @@ function loadEnvTokenSafe(): readonly string[] {
   }
 }
 
-main().catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error);
-  // Never print the token, even if an error message happens to contain it.
-  console.error(redactSecrets(message, loadEnvTokenSafe()));
-  if (error instanceof ConfigError) {
-    console.error("");
-    console.error(USAGE);
-  }
-  process.exitCode = 1;
-});
+void main().then(
+  (code: number) => {
+    process.exitCode = code;
+  },
+  (error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    // Never print the token, even if an error message happens to contain it.
+    console.error(redactSecrets(message, loadEnvTokenSafe()));
+    if (error instanceof ConfigError) {
+      console.error("");
+      console.error(USAGE);
+    }
+    process.exitCode = 1;
+  },
+);

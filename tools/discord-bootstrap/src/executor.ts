@@ -197,28 +197,45 @@ export async function runApply(
     botUserId: api.botUserId,
   };
 
-  /** Drops overwrites that reference roles the bot cannot manage yet. */
-  const usableOverwrites = (
-    specs: readonly OverwriteSpec[],
-  ): readonly OverwriteSpec[] => {
-    const knownRoleIds = new Set(
-      Object.values(roleIdByKey).filter((id): id is string => id !== undefined),
-    );
-    return specs.filter(
-      (spec) => !knownRoleIds.has(spec.id) || manageableRoleIds.has(spec.id),
-    );
-  };
+  /**
+   * STAFF is only created when the Moderator role exists and the bot can
+   * safely configure its access (bot's highest role above it). Otherwise
+   * dependent steps are blocked explicitly — partial STAFF permissions are
+   * never configured silently.
+   */
+  const moderatorRoleId = roleIdByKey["moderator"];
+  const moderatorUsable =
+    moderatorRoleId !== undefined && manageableRoleIds.has(moderatorRoleId);
+  const staffBlockReason =
+    moderatorRoleId === undefined
+      ? "роль Moderator не создана или не найдена — создайте её (или устраните ошибку создания) и повторите запуск"
+      : moderatorUsable
+        ? null
+        : "роль Moderator выше роли бота в иерархии — перетащите роль бота выше Moderator в настройках сервера и повторите запуск";
 
   // 4. Categories.
   const categoryIdByKey = new Map<string, string>();
   for (const planned of plan.categories) {
+    const definition = TARGET.categories.find(
+      (category) => category.key === planned.categoryKey,
+    );
     if (planned.action === "exists" && planned.existingId !== null) {
       categoryIdByKey.set(planned.categoryKey, planned.existingId);
-      steps.push({
-        label: `Категория ${planned.name}`,
-        status: "skipped",
-        detail: "уже существует — не изменяется",
-      });
+      if (definition?.staffOnly === true && staffBlockReason !== null) {
+        steps.push({
+          label: `Категория ${planned.name}`,
+          status: "warning",
+          detail:
+            "уже существует — не изменяется автоматически; проверьте вручную доступ к STAFF: " +
+            staffBlockReason,
+        });
+      } else {
+        steps.push({
+          label: `Категория ${planned.name}`,
+          status: "skipped",
+          detail: "уже существует — не изменяется",
+        });
+      }
       continue;
     }
     if (planned.action === "conflict") {
@@ -229,9 +246,6 @@ export async function runApply(
       });
       continue;
     }
-    const definition = TARGET.categories.find(
-      (category) => category.key === planned.categoryKey,
-    );
     if (definition === undefined) {
       steps.push({
         label: `Категория ${planned.name}`,
@@ -240,12 +254,20 @@ export async function runApply(
       });
       continue;
     }
+    if (definition.staffOnly && staffBlockReason !== null) {
+      steps.push({
+        label: `Категория ${planned.name}`,
+        status: "failed",
+        detail: `заблокировано: ${staffBlockReason}`,
+      });
+      continue;
+    }
     try {
       const created = await api.createCategory({
         categoryKey: planned.categoryKey,
         name: planned.name,
         staffOnly: definition.staffOnly,
-        overwrites: usableOverwrites(categoryOverwrites(definition, targets)),
+        overwrites: categoryOverwrites(definition, targets),
       });
       categoryIdByKey.set(planned.categoryKey, created.id);
       steps.push({
@@ -265,13 +287,24 @@ export async function runApply(
   // 5. Channels.
   const channelIdByKey = new Map<string, string>();
   for (const planned of plan.channels) {
+    const definition = findChannel(planned.channelKey);
     if (planned.action === "exists" && planned.existingId !== null) {
       channelIdByKey.set(planned.channelKey, planned.existingId);
-      steps.push({
-        label: `Канал #${planned.name}`,
-        status: "skipped",
-        detail: "уже существует — не изменяется",
-      });
+      if (definition?.staffOnly === true && staffBlockReason !== null) {
+        steps.push({
+          label: `Канал #${planned.name}`,
+          status: "warning",
+          detail:
+            "уже существует — не изменяется автоматически; проверьте вручную доступ к STAFF: " +
+            staffBlockReason,
+        });
+      } else {
+        steps.push({
+          label: `Канал #${planned.name}`,
+          status: "skipped",
+          detail: "уже существует — не изменяется",
+        });
+      }
       continue;
     }
     if (planned.action === "conflict") {
@@ -282,6 +315,22 @@ export async function runApply(
       });
       continue;
     }
+    if (definition === undefined) {
+      steps.push({
+        label: `Канал #${planned.name}`,
+        status: "failed",
+        detail: "определение не найдено в целевой конфигурации",
+      });
+      continue;
+    }
+    if (definition.staffOnly && staffBlockReason !== null) {
+      steps.push({
+        label: `Канал #${planned.name}`,
+        status: "failed",
+        detail: `заблокировано: ${staffBlockReason}`,
+      });
+      continue;
+    }
     const parentId = categoryIdByKey.get(planned.categoryKey);
     if (parentId === undefined) {
       steps.push({
@@ -289,15 +338,6 @@ export async function runApply(
         status: "skipped",
         detail:
           "категория не создана — канал будет создан при следующем запуске",
-      });
-      continue;
-    }
-    const definition = findChannel(planned.channelKey);
-    if (definition === undefined) {
-      steps.push({
-        label: `Канал #${planned.name}`,
-        status: "failed",
-        detail: "определение не найдено в целевой конфигурации",
       });
       continue;
     }
@@ -313,7 +353,7 @@ export async function runApply(
         categoryKey: planned.categoryKey,
         parentId,
         topic,
-        overwrites: usableOverwrites(channelOverwrites(definition, targets)),
+        overwrites: channelOverwrites(definition, targets),
         forumTags: planned.kind === "forum" ? [...definition.forumTags] : [],
       });
       channelIdByKey.set(planned.channelKey, created.id);

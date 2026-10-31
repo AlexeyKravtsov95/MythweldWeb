@@ -11,8 +11,8 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
-    "setup:dry": "npm run build && node --env-file-if-missing=.env dist/index.js --dry-run",
-    "setup:apply": "npm run build && node --env-file-if-missing=.env dist/index.js --apply"
+    "setup:dry": "npm run build && node --env-file-if-exists=.env dist/index.js --dry-run",
+    "setup:apply": "npm run build && node --env-file-if-exists=.env dist/index.js --apply"
   },
   "dependencies": {
     "discord.js": "14.28.0"

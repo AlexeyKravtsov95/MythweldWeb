@@ -17,10 +17,18 @@ import {
   type ForumChannel,
   type Guild,
   type GuildBasedChannel,
+  type Message,
   type TextChannel,
+  type ThreadChannel,
 } from "discord.js";
 import { findChannel } from "./config.js";
 import { footerMarker, STARTUP_MESSAGES } from "./messages.js";
+import {
+  probeForumHistory,
+  probeTextHistory,
+  type ProbeMessage,
+  type StarterProbe,
+} from "./probe.js";
 import type {
   CategoryCreateInput,
   ChannelCreateInput,
@@ -97,57 +105,78 @@ export function createDiscordConnection(
       deny: spec.deny.reduce((acc, bit) => acc | bit, 0n),
     }));
 
-  const markerIn = (
-    embeds: readonly { readonly footer?: { readonly text?: string } | null }[],
-    channelKey: string,
-  ): boolean =>
-    embeds.some((embed) => embed.footer?.text === footerMarker(channelKey));
+  const toProbeMessage = (message: Message<boolean>): ProbeMessage => ({
+    id: message.id,
+    authorId: message.author.id,
+    footerTexts: message.embeds
+      .map((embed) => embed.footer?.text)
+      .filter((text): text is string => typeof text === "string"),
+  });
 
   const probeTextChannel = async (
     channel: TextChannel,
     channelKey: string,
-  ): Promise<MessageProbe> => {
-    try {
-      const messages = await channel.messages.fetch({ limit: 50 });
-      for (const message of messages.values()) {
-        if (
-          message.author.id === client.user?.id &&
-          markerIn(message.embeds, channelKey)
-        ) {
-          return "sent";
+  ): Promise<MessageProbe> =>
+    probeTextHistory(
+      async (before) => {
+        const options: { limit: number; before?: string } = { limit: 100 };
+        if (before !== undefined) {
+          options.before = before;
         }
-      }
-      return "absent";
-    } catch {
-      return "unknown";
-    }
-  };
+        const messages = await channel.messages.fetch(options);
+        return [...messages.values()].map(toProbeMessage);
+      },
+      {
+        botUserId: client.user?.id ?? "",
+        markerFooter: footerMarker(channelKey),
+      },
+    );
 
   const probeForumChannel = async (
     channel: ForumChannel,
     channelKey: string,
   ): Promise<MessageProbe> => {
-    try {
-      const active = await channel.threads.fetchActive();
-      const archived = await channel.threads.fetchArchived({ limit: 100 });
-      const threads = [
-        ...active.threads.values(),
-        ...archived.threads.values(),
-      ];
-      for (const thread of threads) {
-        const starter = await thread.fetchStarterMessage().catch(() => null);
-        if (
-          starter !== null &&
-          starter.author.id === client.user?.id &&
-          markerIn(starter.embeds, channelKey)
-        ) {
-          return "sent";
+    const needle = {
+      botUserId: client.user?.id ?? "",
+      markerFooter: footerMarker(channelKey),
+    };
+    const starterOf = async (thread: ThreadChannel): Promise<StarterProbe> => {
+      try {
+        const starter = await thread.fetchStarterMessage();
+        if (starter === null) {
+          return { status: "deleted" };
         }
+        return { status: "ok", message: toProbeMessage(starter) };
+      } catch {
+        return { status: "unreadable" };
       }
-      return "absent";
-    } catch {
-      return "unknown";
-    }
+    };
+    return probeForumHistory(
+      async () => {
+        const active = await channel.threads.fetchActive();
+        return Promise.all(
+          [...active.threads.values()].map(async (thread) => ({
+            id: thread.id,
+            starter: await starterOf(thread),
+          })),
+        );
+      },
+      async (before) => {
+        const options: { limit: number; before?: string } = { limit: 100 };
+        if (before !== undefined) {
+          options.before = before;
+        }
+        const archived = await channel.threads.fetchArchived(options);
+        const threads = await Promise.all(
+          [...archived.threads.values()].map(async (thread) => ({
+            id: thread.id,
+            starter: await starterOf(thread),
+          })),
+        );
+        return { threads, hasMore: archived.hasMore };
+      },
+      needle,
+    );
   };
 
   const probeChannel = async (

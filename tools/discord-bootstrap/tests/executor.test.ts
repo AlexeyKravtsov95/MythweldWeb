@@ -219,3 +219,126 @@ describe("runApply — защита (сценарии 8, 9, 10, 11)", () => {
     expect(details).toContain("[REDACTED]");
   });
 });
+
+describe("STAFF зависит от роли Moderator (FIX-2)", () => {
+  function staffCategory(fake: FakeDiscordApi) {
+    return fake.createdCategoryRecords.find(
+      (c) => c.input.categoryKey === "staff",
+    );
+  }
+
+  it("Moderator создан и доступен — STAFF и mod-log создаются с его оверрайтом", async () => {
+    const fake = new FakeDiscordApi();
+    const outcome = await runApply(fake, options(true));
+
+    expect(outcome.status).toBe("applied");
+    const moderatorId = fake.roles.find(
+      (role) => role.name === "Moderator",
+    )?.id;
+    expect(moderatorId).toBeDefined();
+
+    const staff = staffCategory(fake);
+    expect(staff).toBeDefined();
+    const moderatorOverwrite = staff?.input.overwrites.find(
+      (o) => o.id === moderatorId,
+    );
+    expect(moderatorOverwrite?.allow.length).toBeGreaterThan(0);
+
+    const modLog = fake.createdChannels.find((c) => c.channelKey === "mod-log");
+    expect(modLog).toBeDefined();
+    expect(modLog?.overwrites.some((o) => o.id === moderatorId)).toBe(true);
+  });
+
+  it("Moderator уже существует и доступен — STAFF создаётся с существующей ролью", async () => {
+    const fake = new FakeDiscordApi();
+    fake.roles.push({ id: "900000000000000111", name: "Moderator" });
+
+    const outcome = await runApply(fake, options(true));
+
+    expect(outcome.status).toBe("applied");
+    expect(fake.createdRoles.map((role) => role.name)).not.toContain(
+      "Moderator",
+    );
+    const staff = staffCategory(fake);
+    expect(staff).toBeDefined();
+    expect(
+      staff?.input.overwrites.some((o) => o.id === "900000000000000111"),
+    ).toBe(true);
+  });
+
+  it("Moderator выше роли бота — STAFF и mod-log заблокированы, статус не 'applied'", async () => {
+    const fake = new FakeDiscordApi({ rolesManageable: false });
+    const outcome = await runApply(fake, options(true));
+
+    expect(outcome.status).toBe("applied-with-errors");
+    expect(staffCategory(fake)).toBeUndefined();
+    expect(fake.createdChannels.map((c) => c.channelKey)).not.toContain(
+      "mod-log",
+    );
+    const blocked = outcome.steps.filter(
+      (step) => step.label.includes("STAFF") || step.label.includes("mod-log"),
+    );
+    expect(blocked).toHaveLength(2);
+    expect(blocked.every((step) => step.status === "failed")).toBe(true);
+    expect(blocked[0]?.detail).toContain("иерархии");
+    // Независимые шаги продолжили работу.
+    expect(fake.createdChannels.map((c) => c.channelKey)).toContain("welcome");
+  });
+
+  it("ошибка создания Moderator — STAFF заблокирован, остальные шаги выполняются", async () => {
+    const fake = new FakeDiscordApi();
+    fake.failRoleKeys.add("moderator");
+
+    const outcome = await runApply(fake, options(true));
+
+    expect(outcome.status).toBe("applied-with-errors");
+    expect(staffCategory(fake)).toBeUndefined();
+    expect(fake.createdChannels.map((c) => c.channelKey)).not.toContain(
+      "mod-log",
+    );
+    expect(fake.createdChannels.map((c) => c.channelKey)).toContain("general");
+    expect(fake.sentMessages).toHaveLength(6);
+    const staffStep = outcome.steps.find((step) =>
+      step.label.includes("STAFF"),
+    );
+    expect(staffStep?.detail).toContain("Moderator");
+  });
+
+  it("повторный запуск после устранения проблемы создаёт только STAFF и mod-log", async () => {
+    const fake = new FakeDiscordApi({ rolesManageable: false });
+    await runApply(fake, options(true));
+    expect(staffCategory(fake)).toBeUndefined();
+
+    fake.rolesManageable = true;
+    const mutationsBeforeResume = fake.mutations;
+    const second = await runApply(fake, options(true));
+
+    expect(second.status).toBe("applied");
+    expect(
+      fake.createdCategoryRecords.filter(
+        (c) => c.input.categoryKey === "staff",
+      ),
+    ).toHaveLength(1);
+    expect(
+      fake.createdChannels.filter((c) => c.channelKey === "mod-log"),
+    ).toHaveLength(1);
+    expect(fake.mutations).toBe(mutationsBeforeResume + 2);
+  });
+
+  it("существующий STAFF не изменяется, но при недоступном Moderator даёт предупреждение", async () => {
+    const fake = new FakeDiscordApi({ rolesManageable: false });
+    const state = fullExistingState();
+    fake.channels = [...state.channels];
+    fake.roles = [...state.roles];
+
+    const outcome = await runApply(fake, options(true));
+
+    expect(fake.createdCategoryRecords).toHaveLength(0);
+    expect(fake.createdChannels).toHaveLength(0);
+    const staffStep = outcome.steps.find((step) =>
+      step.label.includes("STAFF"),
+    );
+    expect(staffStep?.status).toBe("warning");
+    expect(staffStep?.detail).toContain("вручную");
+  });
+});
