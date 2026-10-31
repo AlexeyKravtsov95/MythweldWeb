@@ -1,0 +1,233 @@
+---
+/** Book Creator overview. Only the registered synthetic EN PDF is shown (B4). */
+import { Picture } from "astro:assets";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { SITE } from "../../config/site";
+import { getDictionary, type Locale } from "../../i18n";
+import { MEDIA } from "../../media/catalog";
+import { imageFor } from "../../media/images";
+import ProductAction from "../ui/ProductAction.astro";
+import ProductNext from "./ProductNext.astro";
+import SectionHeading from "./SectionHeading.astro";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = getDictionary(locale);
+const copy = t.bookCreatorPage;
+const sample = t.home.bookSample;
+const pages = [
+  { asset: MEDIA["bc-sample-cover"].en, alt: sample.coverAlt },
+  { asset: MEDIA["bc-sample-chapter"].en, alt: sample.chapterAlt },
+];
+const { journal, import: importStep, pdf } = copy.steps.items;
+const steps = [journal, importStep, pdf];
+---
+
+<BaseLayout
+  locale={locale}
+  path="/book-creator/"
+  title={copy.meta.title}
+  description={copy.meta.description}
+>
+  <div class="container product" data-product-page="book-creator">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="intro">
+        <p class="kind">{copy.kind}</p>
+        <h1 id="page-title">{t.home.products.bookCreator.name}</h1>
+        <p class="lead">{copy.lead}</p>
+        <div class="actions">
+          <ProductAction
+            variant="forever-journey"
+            label={copy.open}
+            href={SITE.links.bookCreator}
+            locale={locale}
+          />
+        </div>
+        <p class="local">{copy.local}</p>
+      </div>
+      <figure class="sample" data-kind="book-creator-sample">
+        <div class="sheets">
+          {pages.map(
+            ({ asset, alt }) =>
+              asset && (
+                <Picture
+                  src={imageFor(asset)}
+                  alt={alt}
+                  widths={[400, 800, 892]}
+                  sizes="(max-width: 600px) calc(100vw - 2rem), (max-width: 900px) 46vw, 25vw"
+                  formats={["avif", "webp"]}
+                  loading="eager"
+                  decoding="async"
+                />
+              ),
+          )}
+        </div>
+        <figcaption>{copy.sampleCaption}</figcaption>
+      </figure>
+    </section>
+
+    <section class="steps" aria-labelledby="journal-to-pdf">
+      <SectionHeading
+        number="01"
+        id="journal-to-pdf"
+        title={copy.steps.heading}
+      />
+      <ol>
+        {steps.map((step, index) => (
+          <li>
+            <span class="number" aria-hidden="true">
+              {index + 1}
+            </span>
+            <h3>{step.title}</h3>
+            <p>{step.text}</p>
+          </li>
+        ))}
+      </ol>
+      <p class="archive">{copy.archive}</p>
+    </section>
+
+    <ProductNext locale={locale} target="forever-journey" copy={copy.next} />
+  </div>
+</BaseLayout>
+
+<style>
+  .product {
+    display: grid;
+    gap: var(--space-section);
+    padding-block: var(--space-9) var(--space-10);
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: center;
+    gap: var(--space-8);
+  }
+
+  .intro {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-4);
+  }
+
+  .kind,
+  .local,
+  figcaption,
+  .archive {
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-caption);
+  }
+
+  h1 {
+    font-size: var(--font-size-h1-product);
+  }
+
+  .lead {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lead);
+    line-height: 1.45;
+  }
+
+  .actions {
+    margin-block: var(--space-2);
+  }
+
+  .sheets {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: var(--space-4);
+  }
+
+  .sheets :global(img) {
+    width: 100%;
+    height: auto;
+  }
+
+  figcaption {
+    margin-top: var(--space-3);
+  }
+
+  .steps {
+    display: grid;
+    gap: var(--space-7);
+    padding-top: var(--space-section);
+    border-top: 1px solid var(--color-divider);
+  }
+
+  ol {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-6);
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-content: start;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .number {
+    color: var(--color-brand-bronze);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-mono);
+  }
+
+  h3 {
+    font-size: var(--font-size-label);
+    line-height: var(--line-height-caption);
+  }
+
+  li p {
+    grid-column: 2;
+    color: var(--color-text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .archive {
+    max-width: 46rem;
+  }
+
+  @media (max-width: 900px) {
+    .product {
+      padding-top: var(--space-8);
+    }
+
+    .hero,
+    ol {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .intro {
+      max-width: 46rem;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .product {
+      padding-block: var(--space-6) var(--space-9);
+    }
+
+    .sheets {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .actions {
+      width: 100%;
+    }
+
+    .actions :global(a) {
+      width: 100%;
+    }
+  }
+</style>
