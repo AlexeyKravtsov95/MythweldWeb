@@ -104,6 +104,7 @@ export const en = {
       available: "Available",
       testing: "Closed testing",
       prep: "In preparation",
+      awaiting_review: "Awaiting Apple review",
     },
     channels: {
       android: "Android",

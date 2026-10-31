@@ -1,4 +1,4 @@
-import type { ReleaseState } from "../config/release";
+import type { ReleaseState, TalentForgeReleaseState } from "../config/release";
 import type { AddonShotId, ClassId, MediaGroup } from "../media/catalog";
 import type { Locale } from "./locales";
 
@@ -83,7 +83,7 @@ export interface Dictionary {
     heading: string;
     /** Followed by the localized check date. */
     updated: string;
-    states: Record<ReleaseState, string>;
+    states: Record<TalentForgeReleaseState, string>;
     channels: {
       android: string;
       ios: string;
