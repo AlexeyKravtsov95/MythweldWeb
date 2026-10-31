@@ -253,41 +253,48 @@ export const en = {
       label: "Book Creator",
       heading: "From journal to book.",
       text: "Book Creator lays out the journal as chapters and pages and saves a PDF you can print.",
-      points: {
-        browser: "Runs in your browser, on your computer",
-        account: "No account",
-        upload: "Nothing is uploaded",
-      },
-      sampleCaption:
-        "Pages from a sample PDF made by Book Creator · demo character",
-    },
-    journal: {
-      heading: "Bring the journal to Book Creator",
-      text: "The addon does not send the journal anywhere by itself. Pick one of two ways.",
-      exportCode: {
-        title: "Export code",
-        steps: [
-          "In game, open the Forever Journey journal: type /fj open or click the minimap icon.",
-          "Press Export Book: the addon shows code blocks that start with FJBOOK1:.",
-          "Copy every block and paste them into Book Creator.",
-        ],
-      },
-      savedVariables: {
-        title: "SavedVariables file",
-        steps: [
-          "In game, type /reload so the addon writes its data to disk.",
-          "In Book Creator, pick WTF/Account/<ACCOUNT>/SavedVariables/ForeverJourney.lua from your World of Warcraft folder.",
-          "Choose a character: journals of different characters are never merged.",
-        ],
-      },
-      privacy:
-        "Either way, the journal is read and the PDF is made in your browser. Nothing is uploaded to a server.",
-      archive:
-        "A book from the SavedVariables file adds a Character Archive. Its values are a historical snapshot and may not match your character today.",
+      action: "Explore Book Creator",
     },
     next: {
       text: "Plan the build before you log in.",
       action: "TalentForge",
+    },
+  },
+  bookCreatorPage: {
+    meta: {
+      title: "Book Creator — turn your journal into a PDF · Mythweld",
+      description:
+        "Turn your Forever Journey journal into a printable PDF with Book Creator. Import an export code or SavedVariables file and make your book in the browser.",
+    },
+    kind: "Web tool for Forever Journey",
+    lead: "Turn your character’s journal into a book. Book Creator lays out your Forever Journey entries as chapters and pages, ready to save as a printable PDF.",
+    open: "Open Book Creator",
+    local:
+      "No account needed. The journal is read and the PDF is made locally in your browser.",
+    sampleCaption:
+      "Cover and chapter from a PDF made by Book Creator · English demo book, synthetic character. These are PDF pages, not screenshots of the tool.",
+    steps: {
+      heading: "From journal to PDF",
+      items: {
+        journal: {
+          title: "Keep a journal",
+          text: "Play with the Forever Journey addon. It records your adventures; you can add your own notes.",
+        },
+        import: {
+          title: "Bring it to Book Creator",
+          text: "Open the journal with /fj open and use Export Book. Paste all FJBOOK1: blocks into Book Creator. Or type /reload in game, then choose the ForeverJourney.lua file from SavedVariables and select your character.",
+        },
+        pdf: {
+          title: "Save your book",
+          text: "Download the PDF to keep or print. You can also try the demo journal before importing your own.",
+        },
+      },
+    },
+    archive:
+      "A book imported from SavedVariables also includes a Character Archive: a historical snapshot that may differ from your character today.",
+    next: {
+      text: "The story starts with your in-game journal.",
+      action: "About Forever Journey",
     },
   },
   talentforge: {

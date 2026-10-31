@@ -49,7 +49,10 @@ const columns: { title: string; links: FooterLink[]; note?: string }[] = [
         label: products.foreverJourney.name,
         href: localizePath(locale, "/forever-journey/"),
       },
-      { label: products.bookCreator.name, href: SITE.links.bookCreator },
+      {
+        label: products.bookCreator.name,
+        href: localizePath(locale, "/book-creator/"),
+      },
     ],
   },
   {

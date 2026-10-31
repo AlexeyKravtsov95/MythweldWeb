@@ -22,7 +22,7 @@ import { MEDIA } from "../src/media/catalog";
 
 const dist = fileURLToPath(new URL("../dist/", import.meta.url));
 
-/** The six public pages: locale-neutral paths in every locale. */
+/** The eight public pages: locale-neutral paths in every locale. */
 const PAGES = LOCALES.flatMap((locale) =>
   PUBLIC_PATHS.map((path) => ({
     locale,
@@ -136,7 +136,7 @@ describe.each(PAGES)("public page $url", ({ locale, path, url }) => {
   });
 
   it("gives the journal steps the command from the addon's own page", () => {
-    if (!url.endsWith("/forever-journey/")) return;
+    if (!url.endsWith("/book-creator/")) return;
     expect(text(doc.querySelector("main"))).toContain("/fj open");
   });
 });
@@ -175,8 +175,9 @@ describe("sitemap", () => {
     xml = readFileSync(`${dist}sitemap.xml`, "utf8");
   });
 
-  it("lists exactly the six public pages", () => {
+  it("lists exactly the eight public pages", () => {
     const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+    expect(locs).toHaveLength(8);
     expect(locs.sort()).toEqual(
       PAGES.map((page) => `${ORIGIN}${page.url}`).sort(),
     );
@@ -192,6 +193,26 @@ describe("sitemap", () => {
   it("links every page to its alternates", () => {
     const alternates = xml.match(/<xhtml:link /g) ?? [];
     expect(alternates).toHaveLength(PAGES.length * (LOCALES.length + 1));
+    const entries = [...xml.matchAll(/<url>([\s\S]*?)<\/url>/g)];
+    for (const page of PAGES) {
+      const entry = entries.find(([, body]) =>
+        body?.includes(`<loc>${ORIGIN}${page.url}</loc>`),
+      );
+      expect(entry, page.url).toBeDefined();
+      const links = parse(entry?.[1] ?? "").querySelectorAll("[hreflang]");
+      expect(
+        links.map((link) => [
+          link.getAttribute("hreflang"),
+          link.getAttribute("href"),
+        ]),
+      ).toEqual([
+        ...LOCALES.map((locale) => [
+          locale,
+          `${ORIGIN}${localizePath(locale, page.path)}`,
+        ]),
+        ["x-default", `${ORIGIN}${localizePath(DEFAULT_LOCALE, page.path)}`],
+      ]);
+    }
   });
 });
 

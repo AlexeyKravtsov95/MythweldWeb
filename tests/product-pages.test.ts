@@ -1,5 +1,5 @@
 /**
- * TalentForge and Forever Journey pages on the production build in `dist/`
+ * TalentForge, Forever Journey and Book Creator pages on the production build in `dist/`
  * (run `npm run build` first): routes, metadata, headings, localized media,
  * links, honest release states and the Book Creator flow.
  */
@@ -13,7 +13,11 @@ import { LOCALES, getDictionary, localizePath, type Locale } from "../src/i18n";
 import { CLASS_IDS } from "../src/media/catalog";
 
 const dist = fileURLToPath(new URL("../dist/", import.meta.url));
-const PRODUCTS = ["/talentforge/", "/forever-journey/"] as const;
+const PRODUCTS = [
+  "/talentforge/",
+  "/forever-journey/",
+  "/book-creator/",
+] as const;
 type ProductPath = (typeof PRODUCTS)[number];
 
 function file(locale: Locale, path: ProductPath): string {
@@ -32,6 +36,15 @@ const meta = (doc: HTMLElement, selector: string) =>
 
 function pageCopy(locale: Locale, path: ProductPath) {
   const t = getDictionary(locale);
+  if (path === "/book-creator/") {
+    return {
+      meta: t.bookCreatorPage.meta,
+      lead: t.bookCreatorPage.lead,
+      name: t.home.products.bookCreator.name,
+      next: t.bookCreatorPage.next,
+      other: "/forever-journey/" as const,
+    };
+  }
   return path === "/talentforge/"
     ? {
         meta: t.talentforgePage.meta,
@@ -140,9 +153,9 @@ describe.each(
     expect(current.map((a) => a.getAttribute("data-locale"))).toEqual([locale]);
   });
 
-  it("marks its own link as current in the header navigation", () => {
+  it("keeps the addon links and direct Book Creator launch in the header", () => {
     const nav = doc.querySelector("header nav[aria-label]");
-    for (const product of PRODUCTS) {
+    for (const product of PRODUCTS.filter((p) => p !== "/book-creator/")) {
       const link = nav?.querySelector(
         `a[href="${localizePath(locale, product)}"]`,
       );
@@ -213,6 +226,10 @@ describe.each(
     expect(html).not.toMatch(/Straider|ClassicBetaPvP/);
     expect(html).not.toMatch(/[\w.+-]+@[\w-]+\.[\w.]+/);
     expect(doc.querySelectorAll("form, input, iframe")).toHaveLength(0);
+    for (const script of doc.querySelectorAll("script[src]")) {
+      expect(script.getAttribute("src")).toMatch(/^\//);
+    }
+    expect(html).not.toMatch(/google-analytics|googletagmanager|fbq\(|ym\(/i);
   });
 });
 
@@ -414,48 +431,87 @@ describe.each(LOCALES)("Forever Journey page for %s", (locale) => {
     });
   });
 
-  it("presents Book Creator with sample PDF pages, not as addon UI", () => {
+  it("keeps a short connection to the Book Creator overview", () => {
     const section = main.querySelector(
       "section[aria-labelledby='book-creator']",
     );
-    const figure = section?.querySelector("figure");
-    expect(figure?.getAttribute("data-kind")).toBe("book-creator-sample");
-    const alts = figure
-      ?.querySelectorAll("img")
-      .map((i) => i.getAttribute("alt"));
-    expect(alts).toEqual([
-      t.home.bookSample.coverAlt,
-      t.home.bookSample.chapterAlt,
-    ]);
-    expect(text(figure?.querySelector("figcaption"))).toBe(
-      copy.book.sampleCaption,
+    expect(text(section)).toContain(copy.book.text);
+    const link = section?.querySelector("a");
+    expect(link?.getAttribute("href")).toBe(
+      localizePath(locale, "/book-creator/"),
     );
-    for (const alt of alts ?? []) {
-      expect(alt).not.toMatch(/addon|аддон|screenshot|скриншот/i);
-    }
-    // The only real book in Russian names an archived character (B4).
-    if (locale === "ru") expect(copy.book.sampleCaption).toMatch(/английск/);
-  });
-
-  it("explains both real ways to load the journal, all in the browser", () => {
-    const journal = text(main.querySelector(".journal"));
-    expect(journal).toContain("FJBOOK1");
-    expect(journal).toContain("ForeverJourney.lua");
-    for (const step of [
-      ...copy.journal.exportCode.steps,
-      ...copy.journal.savedVariables.steps,
-    ]) {
-      expect(journal).toContain(step);
-    }
-    expect(journal).toContain(copy.journal.privacy);
-    // Archive snapshots are history, not current character stats.
-    expect(journal).toContain(copy.journal.archive);
+    expect(text(link)).toContain(copy.book.action);
+    expect(section?.querySelectorAll("figure, ol")).toHaveLength(0);
   });
 
   it("never claims the addon sends data to Book Creator or a cloud", () => {
     expect(text(main)).not.toMatch(
       /automatically (sends|syncs|uploads)|cloud|облак|автоматически (отправ|синхрон)/i,
     );
+  });
+});
+
+describe.each(LOCALES)("Book Creator page for %s", (locale) => {
+  const t = getDictionary(locale);
+  const copy = t.bookCreatorPage;
+  const main = load(locale, "/book-creator/").querySelector("main");
+
+  it("offers one primary direct launch of the real web tool", () => {
+    const links = main?.querySelectorAll(`a[href="${SITE.links.bookCreator}"]`);
+    expect(links).toHaveLength(1);
+    expect(text(links?.[0])).toContain(copy.open);
+    expect(text(main)).toContain(copy.kind);
+    expect(text(main)).toContain(copy.local);
+  });
+
+  it("presents the registered English PDF pages with an honest caption (B4)", () => {
+    const figure = main?.querySelector(
+      "figure[data-kind='book-creator-sample']",
+    );
+    const images = figure?.querySelectorAll("img");
+    expect(images?.map((image) => image.getAttribute("alt"))).toEqual([
+      t.home.bookSample.coverAlt,
+      t.home.bookSample.chapterAlt,
+    ]);
+    expect(text(figure?.querySelector("figcaption"))).toBe(copy.sampleCaption);
+    // Match the actual built images against the already approved home sample.
+    const home = parse(
+      readFileSync(
+        `${dist}${localizePath(locale, "/").slice(1)}index.html`,
+        "utf8",
+      ),
+    );
+    const approved = home.querySelectorAll("main section.book img");
+    expect(images?.map((image) => image.getAttribute("src"))).toEqual(
+      approved.map((image) => image.getAttribute("src")),
+    );
+    expect(copy.sampleCaption).toMatch(/PDF/);
+    if (locale === "ru")
+      expect(copy.sampleCaption).toContain(
+        "демонстрационная книга на английском языке",
+      );
+  });
+
+  it("explains three steps with both real import options and a historical archive", () => {
+    const steps = main?.querySelectorAll(".steps ol > li");
+    expect(steps).toHaveLength(3);
+    Object.values(copy.steps.items).forEach((step, index) => {
+      expect(text(steps?.[index])).toContain(step.title);
+      expect(text(steps?.[index])).toContain(step.text);
+    });
+    const body = text(main);
+    for (const marker of [
+      "/fj open",
+      "Export Book",
+      "FJBOOK1:",
+      "/reload",
+      "ForeverJourney.lua",
+      "SavedVariables",
+    ]) {
+      expect(body).toContain(marker);
+    }
+    expect(body).toContain(copy.archive);
+    expect(body).not.toMatch(/TalentForge|sync|синхрон|cloud|облак/i);
   });
 });
 

@@ -1,5 +1,5 @@
 /**
- * Sitemap of the six public pages with their hreflang alternates. Built as
+ * Sitemap of the eight public pages with their hreflang alternates. Built as
  * a static file; robots.txt does not point to it until the WEB-M0.6 launch
  * opens indexing.
  */
