@@ -33,6 +33,28 @@ export function allRequiredBotBits(): bigint {
   );
 }
 
+/**
+ * Permissions a fresh Discord server's @everyone role typically has,
+ * including thread permissions. The tool never assumes these defaults —
+ * it reads the real bitfield (auditEveryonePermissions); this constant is
+ * only the fake's initial guild state for tests.
+ */
+export function typicalEveryoneBits(): bigint {
+  return (
+    PermissionFlagsBits.ViewChannel |
+    PermissionFlagsBits.SendMessages |
+    PermissionFlagsBits.EmbedLinks |
+    PermissionFlagsBits.AttachFiles |
+    PermissionFlagsBits.ReadMessageHistory |
+    PermissionFlagsBits.AddReactions |
+    PermissionFlagsBits.UseExternalEmojis |
+    PermissionFlagsBits.CreatePublicThreads |
+    PermissionFlagsBits.CreatePrivateThreads |
+    PermissionFlagsBits.SendMessagesInThreads |
+    PermissionFlagsBits.ChangeNickname
+  );
+}
+
 let idCounter = 300000000000000000n;
 
 function nextId(): string {
@@ -43,6 +65,7 @@ function nextId(): string {
 export interface FakeApiOptions {
   readonly permissionsBitfield?: bigint;
   readonly rolesManageable?: boolean;
+  readonly everyonePermissions?: bigint;
 }
 
 export class FakeDiscordApi implements DiscordApi {
@@ -67,6 +90,7 @@ export class FakeDiscordApi implements DiscordApi {
 
   permissionsBitfield: bigint;
   rolesManageable: boolean;
+  everyonePermissions: bigint;
   failCategoryKeys = new Set<string>();
   failRoleKeys = new Set<RoleCreateInput["roleKey"]>();
 
@@ -74,11 +98,14 @@ export class FakeDiscordApi implements DiscordApi {
     this.permissionsBitfield =
       options.permissionsBitfield ?? allRequiredBotBits();
     this.rolesManageable = options.rolesManageable ?? true;
+    this.everyonePermissions =
+      options.everyonePermissions ?? typicalEveryoneBits();
   }
 
   async fetchSnapshot(): Promise<GuildSnapshot> {
     return {
       guildId: GUILD_ID,
+      everyonePermissions: this.everyonePermissions,
       channels: [...this.channels],
       roles: [...this.roles],
       messageProbes: { ...this.messageProbes },

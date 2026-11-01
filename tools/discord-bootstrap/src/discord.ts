@@ -226,6 +226,9 @@ export function createDiscordConnection(
       }
       return {
         guildId: g.id,
+        // Actual @everyone permissions, read from the guild — defaults are
+        // never assumed (forum participation audit in permissions.ts).
+        everyonePermissions: g.roles.everyone.permissions.bitfield,
         channels,
         roles,
         messageProbes,

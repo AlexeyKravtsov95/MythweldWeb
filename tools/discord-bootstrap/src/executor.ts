@@ -18,6 +18,7 @@ import {
   type TargetConfig,
 } from "./config.js";
 import {
+  auditEveryonePermissions,
   categoryOverwrites,
   channelOverwrites,
   missingBotPermissions,
@@ -139,7 +140,21 @@ export async function runApply(
     return { status: "aborted", plan, steps };
   }
 
-  // 3. Roles.
+  // 3. Audit the actual @everyone permissions (forum participation and
+  // read-only thread gaps that the bot cannot fix automatically).
+  const everyoneWarnings = auditEveryonePermissions(
+    snapshot.everyonePermissions,
+  );
+  steps.push({
+    label: "Проверка роли @everyone",
+    status: everyoneWarnings.length === 0 ? "ok" : "warning",
+    detail:
+      everyoneWarnings.length === 0
+        ? "проблемных настроек не найдено"
+        : everyoneWarnings.join(" • "),
+  });
+
+  // 4. Roles.
   const roleIdByKey: Partial<Record<RoleKey, string>> = {};
   for (const planned of plan.roles) {
     if (planned.action === "exists" && planned.existingId !== null) {
@@ -213,7 +228,7 @@ export async function runApply(
         ? null
         : "роль Moderator выше роли бота в иерархии — перетащите роль бота выше Moderator в настройках сервера и повторите запуск";
 
-  // 4. Categories.
+  // 5. Categories.
   const categoryIdByKey = new Map<string, string>();
   for (const planned of plan.categories) {
     const definition = TARGET.categories.find(
@@ -284,7 +299,7 @@ export async function runApply(
     }
   }
 
-  // 5. Channels.
+  // 6. Channels.
   const channelIdByKey = new Map<string, string>();
   for (const planned of plan.channels) {
     const definition = findChannel(planned.channelKey);
@@ -372,7 +387,7 @@ export async function runApply(
     }
   }
 
-  // 6. Startup messages (only where the probe said "absent").
+  // 7. Startup messages (only where the probe said "absent").
   for (const planned of plan.messages) {
     const message = MESSAGES.find(
       (candidate) => candidate.channelKey === planned.channelKey,

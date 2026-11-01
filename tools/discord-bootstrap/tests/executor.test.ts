@@ -5,6 +5,7 @@ import {
   FakeDiscordApi,
   allRequiredBotBits,
   fullExistingState,
+  typicalEveryoneBits,
 } from "./helpers.js";
 
 const TEST_TOKEN = "test-secret-bot-token-do-not-print";
@@ -267,6 +268,67 @@ describe("права ролей в пределах фактических пр�
     expect(fake.createdCategoryRecords).toHaveLength(5);
     expect(fake.createdChannels).toHaveLength(8);
     expect(fake.sentMessages).toHaveLength(6);
+  });
+});
+
+describe("аудит прав @everyone в отчёте Apply (завершение проверки прав каналов)", () => {
+  function everyoneStep(outcome: {
+    readonly steps: readonly {
+      readonly label: string;
+      readonly status: string;
+      readonly detail: string;
+    }[];
+  }) {
+    return outcome.steps.find(
+      (step) => step.label === "Проверка роли @everyone",
+    );
+  }
+
+  it("типичные thread-права @everyone — шаг warning про read-only, применение продолжается", async () => {
+    const fake = new FakeDiscordApi(); // everyonePermissions = typicalEveryoneBits
+    const outcome = await runApply(fake, options(true));
+
+    expect(outcome.status).toBe("applied");
+    const step = everyoneStep(outcome);
+    expect(step?.status).toBe("warning");
+    expect(step?.detail).toContain("read-only каналы");
+    expect(step?.detail).toContain("вручную");
+    // Предупреждение носит информационный характер: создание продолжено.
+    expect(fake.createdChannels).toHaveLength(8);
+    expect(fake.sentMessages).toHaveLength(6);
+  });
+
+  it("нет Send Messages in Threads у @everyone — предупреждение об ответах в форумах", async () => {
+    const fake = new FakeDiscordApi({
+      everyonePermissions:
+        typicalEveryoneBits() & ~PermissionFlagsBits.SendMessagesInThreads,
+    });
+    const outcome = await runApply(fake, options(true));
+
+    expect(outcome.status).toBe("applied");
+    const step = everyoneStep(outcome);
+    expect(step?.status).toBe("warning");
+    expect(step?.detail).toContain("Send Messages in Threads");
+  });
+
+  it("dry-run отражает те же предупреждения через plan.warnings, без мутаций", async () => {
+    const fake = new FakeDiscordApi();
+    const plan = await runDryRun(fake);
+
+    expect(fake.mutations).toBe(0);
+    expect(plan.warnings.some((w) => w.includes("read-only каналы"))).toBe(
+      true,
+    );
+  });
+
+  it("при недостаточных правах бота шаг аудита не выполняется", async () => {
+    const fake = new FakeDiscordApi({
+      permissionsBitfield: PermissionFlagsBits.ViewChannel,
+    });
+    const outcome = await runApply(fake, options(true));
+
+    expect(outcome.status).toBe("permission-denied");
+    expect(everyoneStep(outcome)).toBeUndefined();
   });
 });
 

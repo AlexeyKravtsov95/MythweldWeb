@@ -128,6 +128,7 @@ const PERMISSION_NAMES: ReadonlyArray<readonly [bigint, string]> = [
   [PermissionFlagsBits.ManageThreads, "ManageThreads"],
   [PermissionFlagsBits.ViewAuditLog, "ViewAuditLog"],
   [PermissionFlagsBits.CreatePublicThreads, "CreatePublicThreads"],
+  [PermissionFlagsBits.CreatePrivateThreads, "CreatePrivateThreads"],
   [PermissionFlagsBits.SendMessagesInThreads, "SendMessagesInThreads"],
 ];
 
@@ -139,6 +140,70 @@ export function permissionNames(bits: readonly bigint[]): readonly string[] {
     }
   }
   return names;
+}
+
+/**
+ * Audit of the actual @everyone permissions read from the guild snapshot.
+ *
+ * Two independent checks, per the current Discord API docs:
+ * 1. Forum participation: creating a post in a forum requires SEND_MESSAGES
+ *    (the docs state CREATE_PUBLIC_THREADS is ignored for forum posts) and
+ *    replying in threads/posts requires SEND_MESSAGES_IN_THREADS. These are
+ *    defaults on a fresh server, but defaults are never assumed — the real
+ *    bitfield is checked and a missing permission becomes a warning with a
+ *    manual fix instruction.
+ * 2. Read-only channels: per the docs ("Only permissions your bot has in
+ *    the guild ... can be allowed/denied"), the bot cannot deny
+ *    CREATE_PUBLIC_THREADS / CREATE_PRIVATE_THREADS /
+ *    SEND_MESSAGES_IN_THREADS without holding them itself — and the bot's
+ *    permissions stay limited to the six invite permissions on principle.
+ *    So whenever @everyone still holds any thread permission, the residual
+ *    thread activity in read-only channels is flagged as a manual step.
+ */
+export function auditEveryonePermissions(
+  everyonePermissions: bigint,
+): readonly string[] {
+  const warnings: string[] = [];
+  const canSendMessages = hasPermission(
+    everyonePermissions,
+    PermissionFlagsBits.SendMessages,
+  );
+  const canSendInThreads = hasPermission(
+    everyonePermissions,
+    PermissionFlagsBits.SendMessagesInThreads,
+  );
+  const canCreatePublicThreads = hasPermission(
+    everyonePermissions,
+    PermissionFlagsBits.CreatePublicThreads,
+  );
+  const canCreatePrivateThreads = hasPermission(
+    everyonePermissions,
+    PermissionFlagsBits.CreatePrivateThreads,
+  );
+
+  if (!canSendMessages) {
+    warnings.push(
+      "у роли @everyone отключено Send Messages: участники не смогут писать в #general " +
+        "и создавать посты в форумах (создание поста регулируется именно Send Messages) — " +
+        "включите его вручную (Server Settings → Roles → @everyone)",
+    );
+  }
+  if (!canSendInThreads) {
+    warnings.push(
+      "у роли @everyone отключено Send Messages in Threads: участники не смогут отвечать " +
+        "в постах форумов и других тредах — включите его вручную (Server Settings → Roles → @everyone)",
+    );
+  }
+  if (canSendInThreads || canCreatePublicThreads || canCreatePrivateThreads) {
+    warnings.push(
+      "read-only каналы: бот может запрещать в оверрайтах только те права, которые есть у него " +
+        "самого (шесть прав invite), поэтому Create Public Threads, Create Private Threads и " +
+        "Send Messages in Threads он запретить для @everyone не может. Если участники не должны " +
+        "создавать треды и отвечать в них в welcome/rules/announcements — запретите эти права " +
+        "для @everyone вручную в настройках каждого канала",
+    );
+  }
+  return warnings;
 }
 
 export interface OverwriteSpec {
@@ -155,9 +220,13 @@ export interface PermissionTargets {
 }
 
 // Every allow/deny below must stay within BOT_GRANTABLE_PERMISSIONS:
-// Discord rejects overwrites that touch permissions the bot lacks.
-// Forum extras (threads, reactions) are not re-granted explicitly —
-// @everyone already has them by default on a fresh server.
+// per the Discord API docs, a bot can only allow/deny permissions it has
+// itself ("Only permissions your bot has in the guild or parent channel
+// (if applicable) can be allowed/denied"). Thread permissions
+// (CreatePublicThreads/CreatePrivateThreads/SendMessagesInThreads) are
+// outside the bot's six invite permissions, so read-only channels deny
+// SendMessages only, and residual thread rights of @everyone are flagged
+// by auditEveryonePermissions as a manual owner step (README).
 const READ_ONLY_EVERYONE_ALLOW = [
   PermissionFlagsBits.ViewChannel,
   PermissionFlagsBits.ReadMessageHistory,
@@ -168,6 +237,10 @@ const TALK_EVERYONE_ALLOW = [
   PermissionFlagsBits.SendMessages,
   PermissionFlagsBits.ReadMessageHistory,
 ];
+// Forum posting is governed by SendMessages (the docs state
+// CREATE_PUBLIC_THREADS is ignored when creating forum posts) and replying
+// by SendMessagesInThreads. Neither can be granted or denied by this bot,
+// so the actual @everyone defaults are audited at runtime instead.
 const FORUM_EVERYONE_ALLOW = [
   PermissionFlagsBits.ViewChannel,
   PermissionFlagsBits.ReadMessageHistory,

@@ -11,6 +11,7 @@ import type {
   TargetConfig,
 } from "./config.js";
 import type { StartupMessageDefinition } from "./messages.js";
+import { auditEveryonePermissions } from "./permissions.js";
 
 export type SnapshotChannelType =
   "category" | "text" | "forum" | "voice" | "announcement" | "other";
@@ -33,6 +34,8 @@ export type MessageProbe = "sent" | "absent" | "unknown";
 export interface GuildSnapshot {
   /** Guild snowflake; doubles as the @everyone role id. */
   readonly guildId: string;
+  /** Actual permission bitfield of the @everyone role (audited, not assumed). */
+  readonly everyonePermissions: bigint;
   readonly channels: readonly SnapshotChannel[];
   readonly roles: readonly SnapshotRole[];
   readonly messageProbes: Readonly<Record<string, MessageProbe>>;
@@ -139,7 +142,11 @@ export function buildPlan(
   snapshot: GuildSnapshot,
 ): BootstrapPlan {
   const conflicts: PlanConflict[] = [];
-  const warnings: string[] = [];
+  // Runtime audit of the actual @everyone permissions: forum participation
+  // and read-only thread gaps are never assumed — see auditEveryonePermissions.
+  const warnings: string[] = [
+    ...auditEveryonePermissions(snapshot.everyonePermissions),
+  ];
 
   const roles: PlannedRole[] = target.roles.map((role) => {
     const existing =

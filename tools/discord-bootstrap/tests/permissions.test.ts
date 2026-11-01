@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PermissionFlagsBits } from "discord.js";
 import {
+  auditEveryonePermissions,
   BOT_GRANTABLE_PERMISSIONS,
   categoryOverwrites,
   channelOverwrites,
@@ -11,7 +12,12 @@ import {
   type PermissionTargets,
 } from "../src/permissions.js";
 import { findChannel, TARGET_CONFIG } from "../src/config.js";
-import { allRequiredBotBits, BOT_USER_ID, GUILD_ID } from "./helpers.js";
+import {
+  allRequiredBotBits,
+  BOT_USER_ID,
+  GUILD_ID,
+  typicalEveryoneBits,
+} from "./helpers.js";
 
 const targets: PermissionTargets = {
   everyoneRoleId: GUILD_ID,
@@ -105,7 +111,7 @@ describe("read-only каналы (сценарий 7)", () => {
     expect(everyone?.deny).not.toContain(PermissionFlagsBits.SendMessages);
   });
 
-  it("в форумах отправка не запрещена; темы и ответы доступны @everyone по умолчанию", () => {
+  it("в форумах отправка не запрещена; посты и ответы не переопределяются оверрайтами", () => {
     for (const key of ["fj-support", "book-creator", "talentforge-support"]) {
       const channel = findChannel(key);
       expect(channel).toBeDefined();
@@ -115,9 +121,11 @@ describe("read-only каналы (сценарий 7)", () => {
 
       expect(everyone?.allow).toContain(PermissionFlagsBits.SendMessages);
       expect(everyone?.deny).not.toContain(PermissionFlagsBits.SendMessages);
-      // Права создания тем/ответов/реакций есть у @everyone по умолчанию
-      // Discord; бот не может ни выдать, ни отозвать их оверрайтом
-      // (они вне его шести прав) — поэтому явных разрешений не добавляем.
+      // По документации Discord создание поста в форуме регулируется
+      // SendMessages (CREATE_PUBLIC_THREADS игнорируется), ответ в треде —
+      // SendMessagesInThreads. Оба права вне шести прав бота: бот не может
+      // ни выдать, ни запретить их оверрайтом, поэтому фактические права
+      // @everyone проверяются отдельным аудитом (auditEveryonePermissions).
       expect(everyone?.allow).not.toContain(
         PermissionFlagsBits.CreatePublicThreads,
       );
@@ -128,6 +136,61 @@ describe("read-only каналы (сценарий 7)", () => {
         PermissionFlagsBits.SendMessagesInThreads,
       );
     }
+  });
+});
+
+describe("аудит фактических прав @everyone (read-only треды и форумы)", () => {
+  it("типичный @everyone: предупреждение о read-only тредах, которые бот не может запретить", () => {
+    const warnings = auditEveryonePermissions(typicalEveryoneBits());
+
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain("read-only каналы");
+    expect(warnings[0]).toContain("Create Public Threads");
+    expect(warnings[0]).toContain("Send Messages in Threads");
+  });
+
+  it("нет Send Messages — предупреждение о постах форумов и #general", () => {
+    const warnings = auditEveryonePermissions(
+      typicalEveryoneBits() & ~PermissionFlagsBits.SendMessages,
+    );
+
+    expect(
+      warnings.some((warning) => warning.includes("отключено Send Messages")),
+    ).toBe(true);
+    expect(warnings.some((warning) => warning.includes("#general"))).toBe(true);
+  });
+
+  it("нет Send Messages in Threads — предупреждение об ответах в форумах", () => {
+    const warnings = auditEveryonePermissions(
+      typicalEveryoneBits() & ~PermissionFlagsBits.SendMessagesInThreads,
+    );
+
+    expect(
+      warnings.some((warning) =>
+        warning.includes("отключено Send Messages in Threads"),
+      ),
+    ).toBe(true);
+    // Thread-права всё ещё есть (CreatePublic/CreatePrivate) — read-only
+    // примечание остаётся.
+    expect(
+      warnings.some((warning) => warning.includes("read-only каналы")),
+    ).toBe(true);
+  });
+
+  it("thread-прав полностью нет — read-only примечание не выводится", () => {
+    const conservative =
+      PermissionFlagsBits.ViewChannel | PermissionFlagsBits.SendMessages;
+    const warnings = auditEveryonePermissions(conservative);
+
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain("Send Messages in Threads");
+    expect(warnings[0]).not.toContain("read-only каналы");
+  });
+
+  it("Administrator у @everyone покрывает все права (семантика Discord)", () => {
+    expect(auditEveryonePermissions(PermissionFlagsBits.Administrator)).toEqual(
+      [expect.stringContaining("read-only каналы")],
+    );
   });
 });
 

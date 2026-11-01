@@ -1,15 +1,23 @@
 import { describe, expect, it } from "vitest";
+import { PermissionFlagsBits } from "discord.js";
 import { buildPlan, type GuildSnapshot } from "../src/planner.js";
 import { TARGET_CONFIG } from "../src/config.js";
 import { STARTUP_MESSAGES } from "../src/messages.js";
-import { fullExistingState, GUILD_ID } from "./helpers.js";
+import { fullExistingState, GUILD_ID, typicalEveryoneBits } from "./helpers.js";
 
 function snapshot(
   channels: GuildSnapshot["channels"],
   roles: GuildSnapshot["roles"] = [],
   probes: GuildSnapshot["messageProbes"] = {},
+  everyonePermissions: bigint = typicalEveryoneBits(),
 ): GuildSnapshot {
-  return { guildId: GUILD_ID, channels, roles, messageProbes: probes };
+  return {
+    guildId: GUILD_ID,
+    everyonePermissions,
+    channels,
+    roles,
+    messageProbes: probes,
+  };
 }
 
 describe("buildPlan — планирование (сценарии 1, 3, 9, 12)", () => {
@@ -149,6 +157,81 @@ describe("buildPlan — планирование (сценарии 1, 3, 9, 12)"
     );
     expect(plan.warnings.some((warning) => warning.includes("Moderator"))).toBe(
       true,
+    );
+  });
+});
+
+describe("предупреждения по фактическим правам @everyone (dry-run)", () => {
+  it("типичные права — предупреждение о read-only тредах, которые бот не может запретить", () => {
+    const plan = buildPlan(TARGET_CONFIG, STARTUP_MESSAGES, snapshot([]));
+
+    expect(
+      plan.warnings.some((warning) => warning.includes("read-only каналы")),
+    ).toBe(true);
+    // read-only примечание само упоминает thread-права, но предупреждения
+    // «отключено …» о нехватке прав форумов быть не должно.
+    expect(plan.warnings.some((warning) => warning.includes("отключено"))).toBe(
+      false,
+    );
+  });
+
+  it("отключённый Send Messages in Threads — предупреждение об ответах в форумах", () => {
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot(
+        [],
+        [],
+        {},
+        typicalEveryoneBits() & ~PermissionFlagsBits.SendMessagesInThreads,
+      ),
+    );
+
+    expect(
+      plan.warnings.some((warning) =>
+        warning.includes("Send Messages in Threads"),
+      ),
+    ).toBe(true);
+  });
+
+  it("отключённый Send Messages — предупреждение о постах в форумах и #general", () => {
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot(
+        [],
+        [],
+        {},
+        typicalEveryoneBits() & ~PermissionFlagsBits.SendMessages,
+      ),
+    );
+
+    expect(
+      plan.warnings.some((warning) =>
+        warning.includes("отключено Send Messages"),
+      ),
+    ).toBe(true);
+  });
+
+  it("@everyone без thread-прав — предупреждение только об ответах в форумах, без read-only примечания", () => {
+    const conservative =
+      PermissionFlagsBits.ViewChannel | PermissionFlagsBits.SendMessages;
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot([], [], {}, conservative),
+    );
+
+    const everyoneWarnings = plan.warnings.filter((warning) =>
+      warning.includes("@everyone"),
+    );
+    // Send Messages есть, thread-прав нет: остаётся единственное
+    // предупреждение об ответах в форумах; read-only примечание не нужно —
+    // треды уже закрыты отсутствием прав.
+    expect(everyoneWarnings).toHaveLength(1);
+    expect(everyoneWarnings[0]).toContain("Send Messages in Threads");
+    expect(plan.warnings.some((w) => w.includes("read-only каналы"))).toBe(
+      false,
     );
   });
 });
