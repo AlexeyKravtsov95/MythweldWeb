@@ -21,5 +21,8 @@ yarn-error.log*
 .vscode/*
 !.vscode/extensions.json
 
+# Local agent/security plugin state (not project content)
+.mimosa/
+
 # Test and coverage output
 coverage/
