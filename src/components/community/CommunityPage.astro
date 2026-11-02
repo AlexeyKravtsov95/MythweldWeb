@@ -1,0 +1,188 @@
+---
+/**
+ * Community page (DISCORD-M1), shared by `/community/` and `/ru/community/`:
+ * what the Mythweld Discord server is for, the one invite link from the
+ * site config, support sections for Forever Journey (with Book Creator) and
+ * TalentForge, and the community rules with a link to the full rules inside
+ * the server. Links only — no widgets, no Discord scripts or requests. The
+ * sections carry the ids the support strips of the product pages link to.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SectionHeading from "../product/SectionHeading.astro";
+import ProductAction from "../ui/ProductAction.astro";
+import { SITE } from "../../config/site";
+import { getDictionary, type Locale } from "../../i18n";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = getDictionary(locale).communityPage;
+---
+
+<BaseLayout
+  locale={locale}
+  path="/community/"
+  title={copy.meta.title}
+  description={copy.meta.description}
+>
+  <div class="container community" data-page="community">
+    <section class="hero" aria-labelledby="page-title">
+      <p class="kind">{copy.kind}</p>
+      <h1 id="page-title">{copy.heading}</h1>
+      <p class="lead">{copy.lead}</p>
+      <div class="actions">
+        <ProductAction
+          variant="primary"
+          label={copy.join}
+          href={SITE.links.discord}
+          locale={locale}
+          noreferrer
+        />
+      </div>
+    </section>
+
+    <section
+      class="section"
+      id="forever-journey"
+      aria-labelledby="forever-journey-support"
+    >
+      <SectionHeading
+        number="01"
+        id="forever-journey-support"
+        title={copy.foreverJourney.title}
+      />
+      <div class="panel" data-product="forever-journey">
+        <p>{copy.foreverJourney.text}</p>
+      </div>
+    </section>
+
+    <section
+      class="section"
+      id="talentforge"
+      aria-labelledby="talentforge-support"
+    >
+      <SectionHeading
+        number="02"
+        id="talentforge-support"
+        title={copy.talentforge.title}
+      />
+      <div class="panel" data-product="talentforge">
+        <p>{copy.talentforge.text}</p>
+      </div>
+    </section>
+
+    <section class="section" id="rules" aria-labelledby="community-rules">
+      <SectionHeading
+        number="03"
+        id="community-rules"
+        title={copy.rules.heading}
+      />
+      <div class="panel rules">
+        <p>{copy.rules.text}</p>
+        <ProductAction
+          variant="secondary"
+          label={copy.rules.link}
+          href={SITE.links.discord}
+          locale={locale}
+          noreferrer
+        />
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .community {
+    display: grid;
+    gap: var(--space-section);
+    padding-block: var(--space-9) var(--space-10);
+  }
+
+  .hero {
+    display: grid;
+    gap: var(--space-3);
+    max-width: 46rem;
+  }
+
+  .kind {
+    color: var(--color-text-subtle);
+    font-size: 0.9375rem;
+  }
+
+  h1 {
+    font-size: var(--font-size-h1-product);
+  }
+
+  .lead {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lead);
+    line-height: 1.45;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+  }
+
+  .section {
+    display: grid;
+    gap: var(--space-7);
+    padding-top: var(--space-section);
+    border-top: 1px solid var(--color-divider);
+  }
+
+  /* The support panels take the product's colour edge; the rules take bronze. */
+  .panel {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 46rem;
+    padding: var(--space-5) var(--space-6);
+    background: var(--color-surface);
+    box-shadow: inset var(--edge-product) 0 0 var(--panel-edge);
+  }
+
+  .panel[data-product="forever-journey"] {
+    --panel-edge: var(--color-fj-accent);
+  }
+
+  .panel[data-product="talentforge"] {
+    --panel-edge: var(--color-tf-accent);
+  }
+
+  .panel.rules {
+    --panel-edge: var(--color-brand-bronze);
+  }
+
+  .panel p {
+    color: var(--color-text-muted);
+  }
+
+  .rules .action {
+    justify-self: start;
+  }
+
+  @media (max-width: 900px) {
+    .community {
+      padding-block: var(--space-8) var(--space-9);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .community {
+      padding-top: var(--space-6);
+    }
+
+    .panel {
+      padding: var(--space-4);
+    }
+
+    /* ProductAction spans the full width on phones. */
+    .rules .action {
+      justify-self: stretch;
+    }
+  }
+</style>

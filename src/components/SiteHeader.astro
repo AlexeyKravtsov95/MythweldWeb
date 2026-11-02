@@ -1,9 +1,9 @@
 ---
 /**
- * Site header (v3.2 board, 07): logo, product links, Book Creator ↗ and
- * EN/RU. At ≤900 the links and EN/RU fold behind a 44×44 menu button.
- * Without JavaScript the button stays hidden and the links stay visible,
- * so the script below only enhances an already usable header.
+ * Site header (v3.2 board, 07): logo, product links, Community, Book
+ * Creator ↗ and EN/RU. At ≤900 the links and EN/RU fold behind a 44×44 menu
+ * button. Without JavaScript the button stays hidden and the links stay
+ * visible, so the script below only enhances an already usable header.
  */
 import { SITE } from "../config/site";
 import { getDictionary, localeRoot, localizePath, type Locale } from "../i18n";
@@ -22,6 +22,7 @@ const home = localeRoot(locale);
 const pages = [
   { path: "/talentforge/", label: products.talentforge.name },
   { path: "/forever-journey/", label: products.foreverJourney.name },
+  { path: "/community/", label: t.communityPage.nav },
 ].map((page) => ({
   ...page,
   href: localizePath(locale, page.path),

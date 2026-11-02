@@ -64,6 +64,12 @@ export interface Dictionary {
       heading: string;
       steps: Record<"plan" | "play" | "remember", FlowStep>;
     };
+    /** Invitation to the Community page below the product content. */
+    communityInvite: {
+      heading: string;
+      text: string;
+      action: string;
+    };
   };
   footer: {
     disclaimer: string;
@@ -116,6 +122,7 @@ export interface Dictionary {
   talentforgePage: TalentForgePageCopy;
   foreverJourneyPage: ForeverJourneyPageCopy;
   bookCreatorPage: BookCreatorPageCopy;
+  communityPage: CommunityPageCopy;
   talentforge: {
     /** Soft hyphens (U+00AD) allowed for long names in narrow tiles. */
     classNames: Record<ClassId, string>;
@@ -264,4 +271,35 @@ export interface BookCreatorPageCopy {
   };
   archive: string;
   next: NextProductCopy;
+}
+
+/**
+ * Community page. Every Discord link on the site is the one invite from
+ * `SITE.links.discord`; links to individual channels are never used.
+ */
+export interface CommunityPageCopy {
+  meta: PageMeta;
+  /** Short label of the header and footer navigation. */
+  nav: string;
+  /** Eyebrow above the h1. */
+  kind: string;
+  heading: string;
+  lead: string;
+  /** Primary CTA: the invite link. */
+  join: string;
+  /** Anchor targets of the support strips on the product pages. */
+  foreverJourney: InfoItem;
+  talentforge: InfoItem;
+  rules: {
+    heading: string;
+    text: string;
+    /** Second use of the same invite, to the rules inside the server. */
+    link: string;
+  };
+  /** Support strips on the TalentForge and Forever Journey pages. */
+  support: {
+    label: string;
+    talentforge: NextProductCopy;
+    foreverJourney: NextProductCopy;
+  };
 }

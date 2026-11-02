@@ -82,6 +82,11 @@ export const en = {
         },
       },
     },
+    communityInvite: {
+      heading: "Join the Mythweld community",
+      text: "Support for the tools, news and everyday talk live on our Discord server.",
+      action: "About the community",
+    },
   },
   footer: {
     disclaimer:
@@ -296,6 +301,42 @@ export const en = {
     next: {
       text: "The story starts with your in-game journal.",
       action: "About Forever Journey",
+    },
+  },
+  communityPage: {
+    meta: {
+      title: "Community — Mythweld Discord server · Mythweld",
+      description:
+        "The official Mythweld Discord server: support for the Forever Journey addon, Book Creator and the TalentForge app, news and community talk. One invite for everything.",
+    },
+    nav: "Community",
+    kind: "Official Discord server",
+    heading: "Mythweld community",
+    lead: "The Mythweld community lives on one Discord server: that is where Forever Journey, Book Creator and TalentForge are supported, where we post news and where the tools are discussed.",
+    join: "Join our Discord",
+    foreverJourney: {
+      title: "Forever Journey and Book Creator",
+      text: "Forever Journey has its own support forum: bug reports, questions and feature requests for the addon. Next to it, the Book Creator forum covers the web tool that turns the journal into a printable PDF.",
+    },
+    talentforge: {
+      title: "TalentForge",
+      text: "TalentForge has its own support forum: bug reports, questions about the app and feedback.",
+    },
+    rules: {
+      heading: "Community rules",
+      text: "Be respectful, stay on topic and keep the server free of spam and ads. The full rules are published inside the server — the same invite takes you there.",
+      link: "Read the rules on the server",
+    },
+    support: {
+      label: "Community",
+      talentforge: {
+        text: "A question about the app, a bug or an idea? TalentForge support lives on the Mythweld Discord.",
+        action: "Support on Discord",
+      },
+      foreverJourney: {
+        text: "Addon trouble, a bug report or a wish? Forever Journey and Book Creator support lives on the Mythweld Discord.",
+        action: "Support on Discord",
+      },
     },
   },
   talentforge: {

@@ -100,6 +100,25 @@ describe.each(LOCALES)("home page for %s", (locale) => {
     });
   });
 
+  it("invites to the community page after the product content", () => {
+    const invite = main.querySelector("[data-community-invite]");
+    expect(text(invite?.querySelector("h2#community-invite"))).toBe(
+      home.communityInvite.heading,
+    );
+    expect(text(invite)).toContain(home.communityInvite.text);
+    const link = invite?.querySelector(
+      `a[href="${localizePath(locale, "/community/")}"]`,
+    );
+    expect(text(link)).toContain(home.communityInvite.action);
+    // The invitation follows the product flow; the plates above it keep
+    // their own order and composition.
+    const sections = [...main.querySelectorAll("section")];
+    const flow = sections.findIndex(
+      (section) => section.getAttribute("aria-labelledby") === "flow-title",
+    );
+    expect(sections.indexOf(invite as HTMLElement)).toBeGreaterThan(flow);
+  });
+
   it("keeps a heading order without skipped levels", () => {
     const levels = doc
       .querySelectorAll("h1, h2, h3, h4, h5, h6")
