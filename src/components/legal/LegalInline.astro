@@ -1,0 +1,19 @@
+---
+import { localizeHref, type Locale } from "../../i18n";
+import type { LegalInline } from "../../i18n/legal";
+
+interface Props {
+  locale: Locale;
+  content: readonly LegalInline[];
+}
+
+const { locale, content } = Astro.props;
+---
+
+{content.map((part) =>
+  typeof part === "string" ? (
+    part
+  ) : (
+    <a href={localizeHref(locale, part.href)}>{part.label}</a>
+  ),
+)}

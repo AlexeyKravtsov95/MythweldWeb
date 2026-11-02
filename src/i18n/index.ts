@@ -5,6 +5,16 @@ import type { Dictionary } from "./types";
 
 export * from "./locales";
 export type {
+  LegalBlock,
+  LegalContactCopy,
+  LegalCopy,
+  LegalDocumentCopy,
+  LegalDocumentId,
+  LegalInline,
+  LegalPagesCopy,
+  LegalSection,
+} from "./legal";
+export type {
   Dictionary,
   FlowStep,
   ForeverJourneyPageCopy,

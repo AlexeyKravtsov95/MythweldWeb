@@ -1,0 +1,160 @@
+---
+/** Foundation only: no route imports this component before legal approval. */
+import { getDictionary, type Locale } from "../../i18n";
+import type { LegalDocumentId } from "../../i18n/legal";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import LegalBlocks from "./LegalBlocks.astro";
+
+interface Props {
+  locale: Locale;
+  document: LegalDocumentId;
+}
+
+const { locale, document } = Astro.props;
+const t = getDictionary(locale);
+const copy = t.legal.pages[document];
+if (copy === null) {
+  throw new Error(`No approved legal content: ${locale}/${document}`);
+}
+const effectiveDate = "effectiveDate" in copy ? copy.effectiveDate : undefined;
+if (
+  effectiveDate !== undefined &&
+  (!/^\d{4}-\d{2}-\d{2}$/.test(effectiveDate) ||
+    Number.isNaN(Date.parse(`${effectiveDate}T00:00:00Z`)) ||
+    new Date(`${effectiveDate}T00:00:00Z`).toISOString().slice(0, 10) !==
+      effectiveDate)
+) {
+  throw new Error("Invalid legal effective date: expected YYYY-MM-DD");
+}
+const email = "email" in copy ? copy.email : undefined;
+const formattedDate = effectiveDate
+  ? new Intl.DateTimeFormat(t.meta.dateLocale, {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    }).format(new Date(`${effectiveDate}T00:00:00Z`))
+  : undefined;
+const sections = copy.sections.map((section, index) => ({
+  ...section,
+  id: `legal-section-${index + 1}`,
+}));
+---
+
+<BaseLayout
+  locale={locale}
+  path={`/${document}/`}
+  title={copy.meta.title}
+  description={copy.meta.description}
+>
+  <div class="container">
+    <article class="legal-page" aria-labelledby="legal-title">
+      <header>
+        <h1 id="legal-title">{copy.heading}</h1>
+        {effectiveDate && (
+          <p class="date">
+            {t.legal.ui.effectiveDate}
+            {": "}
+            <time datetime={effectiveDate}>{formattedDate}</time>
+          </p>
+        )}
+      </header>
+      <LegalBlocks locale={locale} blocks={copy.introduction} />
+      {email && (
+        <address>
+          <span>
+            {t.legal.ui.email}
+            {": "}
+          </span>
+          <a href={`mailto:${email}`}>{email}</a>
+        </address>
+      )}
+      {sections.length > 0 && (
+        <nav aria-label={t.legal.ui.contents}>
+          <ul>
+            {sections.map((section) => (
+              <li>
+                <a href={`#${section.id}`}>{section.heading}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+      {sections.map((section) => (
+        <section aria-labelledby={section.id}>
+          <h2 id={section.id} tabindex="-1">
+            {section.heading}
+          </h2>
+          <LegalBlocks locale={locale} blocks={section.blocks} />
+        </section>
+      ))}
+    </article>
+  </div>
+</BaseLayout>
+
+<style>
+  .legal-page {
+    max-width: 46rem;
+    min-width: 0;
+    margin-inline: auto;
+    padding-block: var(--space-section);
+    overflow-wrap: anywhere;
+  }
+
+  h1 {
+    font-size: var(--font-size-h1-product);
+  }
+
+  h2 {
+    font-size: var(--font-size-h2);
+  }
+
+  .legal-page :global(p),
+  address {
+    margin-top: var(--space-5);
+    color: var(--color-text-muted);
+  }
+
+  .legal-page .date {
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-caption);
+  }
+
+  address {
+    font-style: normal;
+  }
+
+  nav,
+  section {
+    margin-top: var(--space-8);
+  }
+
+  .legal-page :global(ul),
+  .legal-page :global(ol) {
+    margin-top: var(--space-4);
+    padding-inline-start: var(--space-6);
+  }
+
+  .legal-page :global(li + li) {
+    margin-top: var(--space-2);
+  }
+
+  nav ul {
+    padding: 0;
+    list-style: none;
+  }
+
+  .legal-page :global(a) {
+    display: inline-block;
+    max-width: 100%;
+    min-width: var(--size-target-min);
+    min-height: var(--size-target-min);
+    padding-block: var(--space-2);
+    color: var(--color-text);
+    text-underline-offset: 0.2em;
+  }
+
+  .legal-page :global(a:hover) {
+    color: var(--color-action-primary-hover);
+  }
+</style>

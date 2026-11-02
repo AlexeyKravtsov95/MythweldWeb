@@ -7,6 +7,7 @@ import {
   isLocale,
   localeFromPath,
   localeRoot,
+  localizeHref,
   localizePath,
 } from "../src/i18n";
 
@@ -78,6 +79,17 @@ describe("routing helpers", () => {
     expect(isLocale("de")).toBe(false);
     expect(isLocale("")).toBe(false);
   });
+
+  it.each([
+    ["ru", "/privacy/#details", "/ru/privacy/#details"],
+    ["en", "/terms/?section=1#details", "/terms/?section=1#details"],
+    ["ru", "https://example.com/privacy/", "https://example.com/privacy/"],
+    ["ru", "//example.com/contact/", "//example.com/contact/"],
+    ["ru", "mailto:test@example.com", "mailto:test@example.com"],
+    ["ru", "#details", "#details"],
+  ] as const)("localizeHref(%s, %s) → %s", (locale, href, expected) => {
+    expect(localizeHref(locale, href)).toBe(expected);
+  });
 });
 
 describe("dictionaries", () => {
@@ -90,10 +102,19 @@ describe("dictionaries", () => {
   });
 
   it.each(LOCALES)("%s has no empty strings", (locale) => {
-    for (const value of leafValues(getDictionary(locale))) {
+    const { legal, ...copy } = getDictionary(locale);
+    for (const value of leafValues({ ...copy, legal: legal.ui })) {
       expect(typeof value).toBe("string");
       expect((value as string).trim()).not.toBe("");
     }
+  });
+
+  it.each(LOCALES)("%s keeps unapproved legal content absent", (locale) => {
+    expect(getDictionary(locale).legal.pages).toEqual({
+      privacy: null,
+      terms: null,
+      contact: null,
+    });
   });
 
   it.each(LOCALES)("%s declares its own html lang", (locale) => {

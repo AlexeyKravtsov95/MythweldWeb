@@ -28,6 +28,15 @@ export function localizePath(locale: Locale, path = "/"): string {
   return trimmed === "" ? root : `${root}${trimmed}/`;
 }
 
+/** Localize root-relative page links; preserve external, email and anchor links. */
+export function localizeHref(locale: Locale, href: string): string {
+  if (!href.startsWith("/") || href.startsWith("//")) return href;
+  const suffixAt = href.search(/[?#]/);
+  const path = suffixAt === -1 ? href : href.slice(0, suffixAt);
+  const suffix = suffixAt === -1 ? "" : href.slice(suffixAt);
+  return localizePath(locale, path) + suffix;
+}
+
 /** Detect the locale from a pathname such as `/ru/` or `/ru/page/`. */
 export function localeFromPath(pathname: string): Locale {
   const [first = ""] = pathname.split("/").filter(Boolean);

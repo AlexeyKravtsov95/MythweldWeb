@@ -1,0 +1,32 @@
+---
+import type { Locale } from "../../i18n";
+import type { LegalBlock } from "../../i18n/legal";
+import LegalInline from "./LegalInline.astro";
+
+interface Props {
+  locale: Locale;
+  blocks: readonly LegalBlock[];
+}
+
+const { locale, blocks } = Astro.props;
+---
+
+{blocks.map((block) => {
+  if (block.kind === "paragraph") {
+    return (
+      <p>
+        <LegalInline locale={locale} content={block.content} />
+      </p>
+    );
+  }
+  const List = block.ordered ? "ol" : "ul";
+  return (
+    <List>
+      {block.items.map((content) => (
+        <li>
+          <LegalInline locale={locale} content={content} />
+        </li>
+      ))}
+    </List>
+  );
+})}

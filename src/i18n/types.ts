@@ -1,12 +1,14 @@
 import type { ReleaseState, TalentForgeReleaseState } from "../config/release";
 import type { AddonShotId, ClassId, MediaGroup } from "../media/catalog";
 import type { Locale } from "./locales";
+import type { LegalCopy } from "./legal";
 
 /**
  * Shape of every locale dictionary. Each locale must provide every key;
  * missing or extra keys are a type error, so translations cannot drift.
  */
 export interface Dictionary {
+  legal: LegalCopy;
   meta: {
     /** BCP 47 tag used for `<html lang>` and `hreflang`. */
     htmlLang: string;
