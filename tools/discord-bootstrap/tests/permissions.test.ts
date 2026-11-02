@@ -160,7 +160,7 @@ describe("эффективные права @everyone в канале (channel-s
   it("канальный deny снимает право, разрешённое глобально", () => {
     const effective = applyEveryoneOverwrites(
       typicalEveryoneBits(),
-      [[overwrite(GUILD_ID, [], [PermissionFlagsBits.SendMessages])]],
+      [overwrite(GUILD_ID, [], [PermissionFlagsBits.SendMessages])],
       GUILD_ID,
     );
     expect(
@@ -172,7 +172,7 @@ describe("эффективные права @everyone в канале (channel-s
   it("канальный allow выдаёт право, отключённое глобально", () => {
     const effective = applyEveryoneOverwrites(
       typicalEveryoneBits() & ~PermissionFlagsBits.SendMessages,
-      [[overwrite(GUILD_ID, [PermissionFlagsBits.SendMessages])]],
+      [overwrite(GUILD_ID, [PermissionFlagsBits.SendMessages])],
       GUILD_ID,
     );
     expect(
@@ -181,23 +181,19 @@ describe("эффективные права @everyone в канале (channel-s
     ).toBe(true);
   });
 
-  it("канальный слой перекрывает категориальный по каждому биту", () => {
+  it("несколько оверрайтов @everyone применяются последовательно", () => {
     const effective = applyEveryoneOverwrites(
       typicalEveryoneBits(),
       [
-        // Категория закрыла отправку и треды…
-        [
-          overwrite(
-            GUILD_ID,
-            [],
-            [
-              PermissionFlagsBits.SendMessages,
-              PermissionFlagsBits.CreatePublicThreads,
-            ],
-          ),
-        ],
-        // …но канал снова разрешил отправку.
-        [overwrite(GUILD_ID, [PermissionFlagsBits.SendMessages])],
+        overwrite(
+          GUILD_ID,
+          [],
+          [
+            PermissionFlagsBits.SendMessages,
+            PermissionFlagsBits.CreatePublicThreads,
+          ],
+        ),
+        overwrite(GUILD_ID, [PermissionFlagsBits.SendMessages]),
       ],
       GUILD_ID,
     );
@@ -215,10 +211,8 @@ describe("эффективные права @everyone в канале (channel-s
     const effective = applyEveryoneOverwrites(
       typicalEveryoneBits(),
       [
-        [
-          overwrite("900000000000000111", [PermissionFlagsBits.Administrator]),
-          overwrite(BOT_USER_ID, [PermissionFlagsBits.Administrator]),
-        ],
+        overwrite("900000000000000111", [PermissionFlagsBits.Administrator]),
+        overwrite(BOT_USER_ID, [PermissionFlagsBits.Administrator]),
       ],
       GUILD_ID,
     );

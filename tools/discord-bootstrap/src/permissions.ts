@@ -144,7 +144,7 @@ export function permissionNames(bits: readonly bigint[]): readonly string[] {
 
 /**
  * Channel/category permission overwrite as captured in the guild snapshot.
- * Used to compute the *effective* @everyone access per channel — the guild
+ * Used to compute the *effective* @everyone access per entity — the guild
  * -wide bitfield alone is never treated as proof of actual channel access.
  */
 export interface SnapshotOverwrite {
@@ -155,25 +155,26 @@ export interface SnapshotOverwrite {
 }
 
 /**
- * Effective @everyone permissions: guild-wide role bitfield, then every
- * overwrite layer applied in order (parent category first, channel second).
- * Discord resolves channel access exactly this way for the @everyone role;
- * channel overwrites win over the category per bit. Overwrites that target
- * other roles or members are ignored here.
+ * Effective @everyone permissions in a channel (or a category audited on
+ * its own): the guild-wide role bitfield with that entity's OWN overwrites
+ * applied. Discord resolves channel access exactly this way — parent
+ * categories do not participate at runtime. Permission syncing is a copy:
+ * a synced channel simply carries the same overwrites as its category,
+ * while an unsynced one may differ, so each entity is always audited by
+ * its own overwrites only. Overwrites targeting other roles or members
+ * are ignored here.
  */
 export function applyEveryoneOverwrites(
   base: bigint,
-  layers: readonly (readonly SnapshotOverwrite[])[],
+  overwrites: readonly SnapshotOverwrite[],
   everyoneRoleId: string,
 ): bigint {
   let effective = base;
-  for (const layer of layers) {
-    for (const overwrite of layer) {
-      if (overwrite.id !== everyoneRoleId) {
-        continue;
-      }
-      effective = (effective & ~overwrite.deny) | overwrite.allow;
+  for (const overwrite of overwrites) {
+    if (overwrite.id !== everyoneRoleId) {
+      continue;
     }
+    effective = (effective & ~overwrite.deny) | overwrite.allow;
   }
   return effective;
 }
@@ -183,9 +184,10 @@ export type EveryoneOverwriteKind = "readOnly" | "forum" | "talk" | "staff";
 
 /**
  * Predicted effective @everyone permissions right after the bootstrap
- * creates the channel (same allow/deny sets the executor passes to Discord).
- * Used to audit channels that do not exist yet: no assumption beyond what
- * the tool itself guarantees.
+ * creates the channel: the guild-wide bitfield with EXACTLY the channel
+ * overwrites the executor sends to Discord (categories are created with
+ * their own overwrites and never participate in a channel's runtime
+ * permissions). No assumption beyond what the tool itself guarantees.
  */
 export function plannedEveryoneEffect(
   base: bigint,
@@ -272,9 +274,12 @@ export function forumAccessWarnings(
 }
 
 /**
- * STAFF visibility risk: an existing staff-only category/channel that is
- * still visible to @everyone is reported explicitly. Existing permissions
- * are never modified automatically — the owner fixes access manually.
+ * STAFF visibility risk: an existing staff-only category/channel where
+ * @everyone still has View Channel is reported explicitly. Categories and
+ * channels are audited independently against their OWN overwrites — a
+ * hidden category does not hide an unsynced channel inside it, and vice
+ * versa. Existing permissions are never modified automatically; the owner
+ * fixes access manually.
  */
 export function staffVisibilityWarning(
   entityLabel: string,

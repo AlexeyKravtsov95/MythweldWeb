@@ -270,7 +270,9 @@ describe("аудит существующих read-only каналов по фа
     expect(welcomeWarning).toContain("thread-права");
   });
 
-  it("deny на родительской категории закрывает канал без собственных оверрайтов", () => {
+  it("deny только на родительской категории НЕ закрывает несинхронизированный канал", () => {
+    // Discord использует permission syncing (копию), а не runtime-наследование:
+    // доступ в канале определяют только его собственные оверрайты.
     const plan = buildPlan(
       TARGET_CONFIG,
       STARTUP_MESSAGES,
@@ -280,18 +282,20 @@ describe("аудит существующих read-only каналов по фа
       ]),
     );
 
-    expect(
-      plan.accessAudit.filter((warning) => warning.includes("welcome")),
-    ).toHaveLength(0);
+    const welcomeWarning = plan.accessAudit.find((warning) =>
+      warning.includes("welcome"),
+    );
+    expect(welcomeWarning).toBeDefined();
+    expect(welcomeWarning).toContain("отправлять сообщения");
   });
 
-  it("канальный allow перекрывает категориальный deny (channel-specific allow/deny)", () => {
+  it("канальные оверрайты решают сами: allow Send Messages оставляет канал открытым", () => {
     const plan = buildPlan(
       TARGET_CONFIG,
       STARTUP_MESSAGES,
       snapshot([
         category("cat-info", "INFORMATION", [readOnlyDenied]),
-        // Владелец случайно разрешил отправку в самом канале.
+        // Категория закрыта, но канал не синхронизирован и разрешает отправку.
         chan("ch-welcome", "welcome", "text", "cat-info", [
           everyone([PermissionFlagsBits.SendMessages]),
         ]),
@@ -349,7 +353,26 @@ describe("аудит существующих форумов по фактиче
     expect(forumWarning).toContain("Send Messages in Threads");
   });
 
-  it("Send Messages закрыт на категории — предупреждение о создании постов", () => {
+  it("Send Messages закрыт в самом форуме — предупреждение о создании постов", () => {
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot([
+        category("cat-fj", "FOREVER JOURNEY"),
+        // Канал не синхронизирован и закрыт сам по себе.
+        chan("ch-fj", "fj-support", "forum", "cat-fj", [
+          everyone([], [PermissionFlagsBits.SendMessages]),
+        ]),
+      ]),
+    );
+
+    const forumWarning = plan.accessAudit.find((warning) =>
+      warning.includes("fj-support"),
+    );
+    expect(forumWarning).toContain("создавать посты");
+  });
+
+  it("deny Send Messages только на категории форум не закрывает", () => {
     const plan = buildPlan(
       TARGET_CONFIG,
       STARTUP_MESSAGES,
@@ -361,10 +384,9 @@ describe("аудит существующих форумов по фактиче
       ]),
     );
 
-    const forumWarning = plan.accessAudit.find((warning) =>
-      warning.includes("fj-support"),
-    );
-    expect(forumWarning).toContain("создавать посты");
+    expect(
+      plan.accessAudit.filter((warning) => warning.includes("fj-support")),
+    ).toHaveLength(0);
   });
 });
 
@@ -407,6 +429,55 @@ describe("аудит приватности существующих STAFF и mo
     expect(
       plan.accessAudit.filter((warning) => warning.includes("STAFF")),
     ).toHaveLength(0);
+    expect(
+      plan.accessAudit.filter((warning) => warning.includes("mod-log")),
+    ).toHaveLength(0);
+  });
+
+  it("скрытая STAFF-категория не скрывает несинхронизированный видимый mod-log (регрессия)", () => {
+    // Категория закрыта deny View Channel, но mod-log не синхронизирован
+    // и собственных deny не имеет — фактический доступ публичный, аудит
+    // обязан это обнаружить (syncing — копия, не наследование).
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot([
+        category("cat-staff", "STAFF", [
+          everyone([], [PermissionFlagsBits.ViewChannel]),
+        ]),
+        chan("ch-modlog", "mod-log", "text", "cat-staff"),
+      ]),
+    );
+
+    const modLogWarning = plan.accessAudit.find((warning) =>
+      warning.includes("mod-log"),
+    );
+    expect(modLogWarning).toBeDefined();
+    expect(modLogWarning).toContain("View Channel");
+    // Сама категория закрыта — риска по ней нет (предупреждение канала
+    // содержит "(STAFF)" в метке, поэтому фильтруем именно по категории).
+    expect(
+      plan.accessAudit.filter((warning) => warning.includes("Категория")),
+    ).toHaveLength(0);
+  });
+
+  it("публичная STAFF-категория при явно закрытом mod-log даёт риск только по категории", () => {
+    // Обратный сценарий: категория видима, но канал закрыт собственным
+    // deny — предупреждения о публичности самого канала быть не должно.
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot([
+        category("cat-staff", "STAFF"),
+        chan("ch-modlog", "mod-log", "text", "cat-staff", [
+          everyone([], [PermissionFlagsBits.ViewChannel]),
+        ]),
+      ]),
+    );
+
+    expect(
+      plan.accessAudit.some((warning) => warning.includes("Категория")),
+    ).toBe(true);
     expect(
       plan.accessAudit.filter((warning) => warning.includes("mod-log")),
     ).toHaveLength(0);

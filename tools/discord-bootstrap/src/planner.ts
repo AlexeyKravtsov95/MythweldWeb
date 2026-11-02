@@ -160,10 +160,12 @@ export function buildPlan(
 ): BootstrapPlan {
   const conflicts: PlanConflict[] = [];
   const warnings: string[] = [];
-  // Effective-access audit per channel: real channel/category overwrites
-  // for existing entities, planned overwrites for the ones to be created.
-  // The guild-wide @everyone bitfield alone is never treated as proof of
-  // actual channel access.
+  // Effective-access audit. Every existing channel/category is audited by
+  // its OWN overwrites on top of the guild-wide @everyone bitfield —
+  // Discord uses permission syncing (a copy), not runtime inheritance, so
+  // a parent category never contributes to a channel's permissions.
+  // Channels that will be created are audited against exactly the
+  // overwrites the executor will send for them.
   const accessAudit: string[] = [];
 
   const roles: PlannedRole[] = target.roles.map((role) => {
@@ -200,11 +202,13 @@ export function buildPlan(
     }
     if (resolution.existing !== null) {
       if (category.staffOnly) {
-        // An existing staff-only category that @everyone can still see is
-        // an explicit privacy risk; never auto-fixed.
+        // The category is audited on its own overwrites: an existing
+        // staff-only category that @everyone can still see is an explicit
+        // privacy risk; never auto-fixed. (A hidden category does not hide
+        // unsynced channels inside it — those are audited separately.)
         const effective = applyEveryoneOverwrites(
           snapshot.everyonePermissions,
-          [resolution.existing.permissionOverwrites],
+          resolution.existing.permissionOverwrites,
           snapshot.guildId,
         );
         const risk = staffVisibilityWarning(
@@ -320,24 +324,6 @@ export function buildPlan(
   };
 }
 
-function categoryEveryoneKind(
-  category: CategoryDefinition,
-): EveryoneOverwriteKind {
-  if (category.staffOnly) {
-    return "staff";
-  }
-  const channels = category.channels;
-  const allReadOnly =
-    channels.length > 0 && channels.every((channel) => channel.readOnly);
-  if (allReadOnly) {
-    return "readOnly";
-  }
-  if (channels.some((channel) => channel.kind === "forum")) {
-    return "forum";
-  }
-  return "talk";
-}
-
 function channelEveryoneKind(
   channel: ChannelDefinition,
 ): EveryoneOverwriteKind {
@@ -384,13 +370,11 @@ function planChannel(
       conflicts.push(conflict);
       return { ...base, action: "conflict", existingId: null, conflict };
     }
-    // Prediction for a channel the bootstrap will create: apply the same
-    // planned @everyone overwrites (category layer, then channel layer).
+    // Prediction for a channel the bootstrap will create: exactly the
+    // channel overwrites the executor sends to Discord (the category's own
+    // overwrites never join a channel's runtime permissions).
     const plannedEffective = plannedEveryoneEffect(
-      plannedEveryoneEffect(
-        snapshot.everyonePermissions,
-        categoryEveryoneKind(categoryResolution.definition),
-      ),
+      snapshot.everyonePermissions,
       channelEveryoneKind(channel),
     );
     if (channel.readOnly) {
@@ -431,13 +415,14 @@ function planChannel(
     return { ...base, action: "conflict", existingId: existing.id, conflict };
   }
 
-  // Existing channel: audit the real access from the actual overwrites
-  // (parent category layer first, then the channel itself). Warnings
-  // disappear once the owner closes the gaps manually — the report always
-  // matches the actual state.
+  // Existing channel: audit the real access from the channel's OWN
+  // overwrites on top of the guild bitfield. Syncing with the parent
+  // category is just a copy — an unsynced channel may differ, so the
+  // category never contributes here. Warnings disappear once the owner
+  // closes the gaps manually; the report always matches actual state.
   const effective = applyEveryoneOverwrites(
     snapshot.everyonePermissions,
-    [category.permissionOverwrites, existing.permissionOverwrites],
+    existing.permissionOverwrites,
     snapshot.guildId,
   );
   if (channel.readOnly) {
