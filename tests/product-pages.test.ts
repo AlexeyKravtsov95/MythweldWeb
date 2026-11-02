@@ -187,6 +187,33 @@ describe.each(
     expect(text(link)).toContain(copy.next.action);
   });
 
+  it("offers product support on the Community page, except Book Creator", () => {
+    const strip = main.querySelector("[data-community]");
+    if (path === "/book-creator/") {
+      expect(strip).toBeNull();
+      return;
+    }
+    const anchor = path === "/talentforge/" ? "talentforge" : "forever-journey";
+    const supportKey =
+      path === "/talentforge/" ? "talentforge" : "foreverJourney";
+    expect(strip?.getAttribute("data-community")).toBe(anchor);
+    expect(strip?.getAttribute("aria-label")).toBe(
+      t.communityPage.support.label,
+    );
+    expect(text(strip)).toContain(t.communityPage.support[supportKey].text);
+    const link = strip?.querySelector("a");
+    expect(link?.getAttribute("href")).toBe(
+      `${localizePath(locale, "/community/")}#${anchor}`,
+    );
+    expect(text(link)).toContain(t.communityPage.support[supportKey].action);
+    // The community strip stays above the closing product strip.
+    const closing = main.querySelector("[data-next]");
+    const siblings = strip?.parentNode?.childNodes ?? [];
+    expect(siblings.indexOf(closing as HTMLElement)).toBeGreaterThan(
+      siblings.indexOf(strip as HTMLElement),
+    );
+  });
+
   it("links only to existing pages and approved external resources", () => {
     for (const a of doc.querySelectorAll("a")) {
       const href = a.getAttribute("href") ?? "";

@@ -1,0 +1,83 @@
+---
+/**
+ * Support strip before the closing product strip of the TalentForge and
+ * Forever Journey pages (DISCORD-M1): one line about product support on the
+ * Mythweld Discord and a quiet link to the matching section of the Community
+ * page in the same locale. Bronze edge, no button — the closing product
+ * strip below keeps the only call to action.
+ */
+import { getDictionary, localizePath, type Locale } from "../../i18n";
+
+interface Props {
+  locale: Locale;
+  /** The product this page is about; also the anchor on the Community page. */
+  target: "talentforge" | "forever-journey";
+}
+
+const { locale, target } = Astro.props;
+const t = getDictionary(locale);
+const supportKey =
+  target === "forever-journey" ? "foreverJourney" : "talentforge";
+const copy = t.communityPage.support[supportKey];
+---
+
+<section
+  class="support"
+  data-community={target}
+  aria-label={t.communityPage.support.label}
+>
+  <div class="text">
+    <p class="label">{t.communityPage.support.label}</p>
+    <p class="line">{copy.text}</p>
+  </div>
+  <a href={`${localizePath(locale, "/community/")}#${target}`}>
+    {copy.action}
+    <span aria-hidden="true">→</span>
+  </a>
+</section>
+
+<style>
+  .support {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-6);
+    padding: var(--space-3) 0 var(--space-3) var(--space-5);
+    border-left: var(--edge-product) solid var(--color-brand-bronze);
+  }
+
+  .text {
+    display: grid;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+
+  .label {
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-caption);
+  }
+
+  .line {
+    max-width: 42rem;
+    color: var(--color-text-muted);
+    line-height: 1.45;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--size-target-min);
+    color: var(--color-text);
+    font-weight: var(--font-weight-label);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  a:hover {
+    color: var(--color-action-primary-hover);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+</style>

@@ -154,9 +154,11 @@ describe("site output", () => {
     expect(pages).toEqual([
       "404.html",
       "book-creator/index.html",
+      "community/index.html",
       "forever-journey/index.html",
       "index.html",
       "ru/book-creator/index.html",
+      "ru/community/index.html",
       "ru/forever-journey/index.html",
       "ru/index.html",
       "ru/talentforge/index.html",

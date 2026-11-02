@@ -4,7 +4,8 @@
  * 8 px cut; secondary has none. The cut is removed on focus so the outline
  * is not clipped. Without `href` the action renders as a disabled span with
  * aria-disabled and the reason on a second line: never an `<a>` without href.
- * External links get ↗, a new tab and rel="noopener".
+ * External links get ↗, a new tab and rel="noopener" (plus `noreferrer`
+ * when the `noreferrer` prop is set, e.g. for Discord links).
  */
 import { getDictionary, type Locale } from "../../i18n";
 
@@ -18,6 +19,8 @@ interface Props {
   pendingReason?: string;
   /** Adds → for internal "go to" actions. */
   forward?: boolean;
+  /** Extends the external link's rel to "noopener noreferrer". */
+  noreferrer?: boolean;
 }
 
 const {
@@ -27,6 +30,7 @@ const {
   locale,
   pendingReason,
   forward = false,
+  noreferrer = false,
 } = Astro.props;
 const t = getDictionary(locale);
 const external = href !== null && /^https?:\/\//.test(href);
@@ -47,7 +51,9 @@ if (href === null && !pendingReason) {
     data-variant={variant}
     href={href}
     target={external ? "_blank" : undefined}
-    rel={external ? "noopener" : undefined}
+    rel={
+      external ? (noreferrer ? "noopener noreferrer" : "noopener") : undefined
+    }
   >
     {label}
     {external && (

@@ -23,7 +23,7 @@ import { MEDIA } from "../src/media/catalog";
 
 const dist = fileURLToPath(new URL("../dist/", import.meta.url));
 
-/** The eight public pages: locale-neutral paths in every locale. */
+/** The public pages: locale-neutral paths in every locale. */
 const PAGES = LOCALES.flatMap((locale) =>
   PUBLIC_PATHS.map((path) => ({
     locale,
@@ -287,9 +287,9 @@ describe("sitemap", () => {
     xml = readFileSync(`${dist}sitemap.xml`, "utf8");
   });
 
-  it("lists exactly the eight public pages", () => {
+  it("lists exactly the public pages", () => {
     const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-    expect(locs).toHaveLength(8);
+    expect(locs).toHaveLength(PAGES.length);
     expect(locs.sort()).toEqual(
       PAGES.map((page) => `${ORIGIN}${page.url}`).sort(),
     );

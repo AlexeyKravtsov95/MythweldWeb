@@ -8,6 +8,8 @@ export const SITE = {
     bookCreator: "https://journal.mythweld.com/",
     /** Forever Journey addon page, checked on 2026-10-27. */
     curseforge: "https://www.curseforge.com/wow/addons/forever-journey",
+    /** The one Mythweld Discord invite, confirmed by the owner (DISCORD-M1). */
+    discord: "https://discord.gg/R96fQZHGRS",
   },
   /**
    * Share cards (Open Graph, Twitter), one per locale: the logo mark and

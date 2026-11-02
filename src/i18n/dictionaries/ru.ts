@@ -90,6 +90,11 @@ export const ru = {
         },
       },
     },
+    communityInvite: {
+      heading: "Присоединяйтесь к сообществу Mythweld",
+      text: "Поддержка инструментов, новости и общение живут на нашем сервере Discord.",
+      action: "Подробнее о сообществе",
+    },
   },
   footer: {
     disclaimer:
@@ -304,6 +309,42 @@ export const ru = {
     next: {
       text: "История начинается с дневника в игре.",
       action: "Подробнее о Forever Journey",
+    },
+  },
+  communityPage: {
+    meta: {
+      title: "Сообщество — сервер Mythweld в Discord · Mythweld",
+      description:
+        "Официальный сервер Mythweld в Discord: поддержка аддона Forever Journey, Book Creator и приложения TalentForge, новости и общение. Одно приглашение для всего.",
+    },
+    nav: "Сообщество",
+    kind: "Официальный сервер Discord",
+    heading: "Сообщество Mythweld",
+    lead: "Сообщество Mythweld живёт на одном сервере Discord: там поддерживают Forever Journey, Book Creator и TalentForge, публикуют новости и обсуждают инструменты.",
+    join: "Присоединиться к Discord",
+    foreverJourney: {
+      title: "Forever Journey и Book Creator",
+      text: "У Forever Journey есть свой форум поддержки: сообщения об ошибках, вопросы и пожелания к аддону. Рядом — форум Book Creator, веб-инструмента, который превращает дневник в книгу для печати.",
+    },
+    talentforge: {
+      title: "TalentForge",
+      text: "У TalentForge тоже есть форум поддержки: ошибки, вопросы о приложении и обратная связь.",
+    },
+    rules: {
+      heading: "Правила общения",
+      text: "Общайтесь уважительно, держитесь темы и не размещайте спам и рекламу. Полные правила опубликованы внутри сервера — то же приглашение ведёт к ним.",
+      link: "Прочитать правила на сервере",
+    },
+    support: {
+      label: "Сообщество",
+      talentforge: {
+        text: "Вопрос о приложении, ошибка или идея? Поддержка TalentForge живёт в Discord Mythweld.",
+        action: "Поддержка в Discord",
+      },
+      foreverJourney: {
+        text: "Проблема с аддоном, ошибка или пожелание? Поддержка Forever Journey и Book Creator живёт в Discord Mythweld.",
+        action: "Поддержка в Discord",
+      },
     },
   },
   talentforge: {

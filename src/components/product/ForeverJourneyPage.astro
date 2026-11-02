@@ -4,6 +4,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import FigureWithCaption from "../ui/FigureWithCaption.astro";
 import ProductAction from "../ui/ProductAction.astro";
 import StatusTag from "../ui/StatusTag.astro";
+import CommunityStrip from "./CommunityStrip.astro";
 import ProductNext from "./ProductNext.astro";
 import SectionHeading from "./SectionHeading.astro";
 import { RELEASE } from "../../config/release";
@@ -155,6 +156,7 @@ const stepItems = [steps.items.install, steps.items.play, steps.items.book];
   </section>
 
   <div class="container next-wrap">
+    <CommunityStrip locale={locale} target="forever-journey" />
     <ProductNext locale={locale} target="talentforge" copy={copy.next} />
   </div>
 </BaseLayout>
@@ -366,6 +368,8 @@ const stepItems = [steps.items.install, steps.items.play, steps.items.book];
   }
 
   .next-wrap {
+    display: grid;
+    gap: var(--space-5);
     padding-block: var(--space-section) var(--space-10);
   }
 

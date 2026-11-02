@@ -3,9 +3,10 @@
  * Site footer (v3.2 home): logo and the Blizzard fan disclaimer, then
  * Products, Get the tools and Site columns. Only existing resources are
  * links. A store without a public listing shows its release state, so the
- * footer never suggests a closed track is public. Legal pages appear one by
- * one as the owner approves them (`src/config/legal.ts`); until then the
- * Site column is one plain note, not a list of dead links.
+ * footer never suggests a closed track is public. The Site column leads
+ * with the Community page; legal pages appear one by one as the owner
+ * approves them (`src/config/legal.ts`) — until then the column keeps its
+ * single plain note instead of dead links.
  */
 import { LEGAL } from "../config/legal";
 import { RELEASE, type TalentForgeReleaseState } from "../config/release";
@@ -47,6 +48,14 @@ const legal: FooterLink[] = [
     href: localizeHref(locale, link.href),
   }));
 
+const siteColumn: FooterLink[] = [
+  {
+    label: t.communityPage.nav,
+    href: localizePath(locale, "/community/"),
+  },
+  ...legal,
+];
+
 const columns: { title: string; links: FooterLink[]; note?: string }[] = [
   {
     title: t.footer.products,
@@ -83,7 +92,7 @@ const columns: { title: string; links: FooterLink[]; note?: string }[] = [
   },
   {
     title: t.footer.site,
-    links: legal,
+    links: siteColumn,
     ...(legal.length === 0 && { note: t.footer.legalPending }),
   },
 ];

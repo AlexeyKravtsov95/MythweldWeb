@@ -62,6 +62,19 @@ describe("ProductAction", () => {
     expect(a?.text).toContain("→");
   });
 
+  it("adds noreferrer to an external link when asked", async () => {
+    const doc = await render(ProductAction, {
+      variant: "primary",
+      label: "Join our Discord",
+      href: "https://discord.gg/R96fQZHGRS",
+      locale: "en",
+      noreferrer: true,
+    });
+    expect(doc.querySelector("a")?.getAttribute("rel")).toBe(
+      "noopener noreferrer",
+    );
+  });
+
   it("renders a missing link as a disabled span with its reason", async () => {
     const doc = await render(ProductAction, {
       variant: "talentforge",
