@@ -13,6 +13,7 @@ import {
   GUILD_ID,
   securedExistingState,
   typicalEveryoneBits,
+  withAnnouncementChannel,
 } from "./helpers.js";
 
 const THREAD_RIGHTS = [
@@ -140,14 +141,14 @@ describe("buildPlan — планирование (сценарии 1, 3, 9, 12)"
     const plan = buildPlan(
       TARGET_CONFIG,
       STARTUP_MESSAGES,
-      snapshot([chan("1", "announcements", "announcement")]),
+      snapshot([chan("1", "welcome", "announcement")]),
     );
 
-    const announcements = plan.channels.find(
-      (channel) => channel.channelKey === "announcements",
+    const welcome = plan.channels.find(
+      (channel) => channel.channelKey === "welcome",
     );
-    expect(announcements?.action).toBe("conflict");
-    expect(announcements?.conflict?.kind).toBe("channel-type-mismatch");
+    expect(welcome?.action).toBe("conflict");
+    expect(welcome?.conflict?.kind).toBe("channel-type-mismatch");
   });
 
   it("12: сообщение не планируется повторно, когда маркер уже найден", () => {
@@ -534,5 +535,93 @@ describe("аудит каналов, которые будут созданы (�
         warning.includes("Форум"),
       ),
     ).toHaveLength(3);
+  });
+});
+
+describe("существующий #announcements типа GuildAnnouncement (DISCORD-M0.1)", () => {
+  it("в INFORMATION принимается и как announcement, и как text — без конфликта", () => {
+    for (const type of ["announcement", "text"] as const) {
+      const plan = buildPlan(
+        TARGET_CONFIG,
+        STARTUP_MESSAGES,
+        snapshot([
+          category("cat-info", "INFORMATION"),
+          chan("ch-annc", "announcements", type, "cat-info"),
+        ]),
+      );
+
+      const announcements = plan.channels.find(
+        (channel) => channel.channelKey === "announcements",
+      );
+      expect(announcements?.action).toBe("exists");
+      expect(announcements?.existingId).toBe("ch-annc");
+      expect(announcements?.conflict).toBeNull();
+      expect(plan.conflicts).toHaveLength(0);
+      // Стартовое сообщение планируется в уже существующий канал.
+      expect(
+        plan.messages.find((message) => message.channelKey === "announcements")
+          ?.action,
+      ).toBe("send");
+    }
+  });
+
+  it("идемпотентность: полностью существующий сервер с announcement-каналом не создаёт и не отправляет ничего", () => {
+    const state = withAnnouncementChannel(fullExistingState());
+    const probes = {
+      welcome: "sent",
+      rules: "sent",
+      announcements: "sent",
+      "fj-support": "sent",
+      "book-creator": "sent",
+      "talentforge-support": "sent",
+    } as const;
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot(state.channels, state.roles, probes),
+    );
+
+    expect(plan.conflicts).toHaveLength(0);
+    expect(plan.channels.every((channel) => channel.action === "exists")).toBe(
+      true,
+    );
+    expect(
+      plan.categories.every((category) => category.action === "exists"),
+    ).toBe(true);
+    expect(plan.messages.every((message) => message.action === "skip")).toBe(
+      true,
+    );
+  });
+
+  it("найденный маркер в announcement-канале подавляет повторную отправку", () => {
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot(
+        [
+          category("cat-info", "INFORMATION"),
+          chan("ch-annc", "announcements", "announcement", "cat-info"),
+        ],
+        [],
+        { announcements: "sent" },
+      ),
+    );
+
+    expect(
+      plan.messages.find((message) => message.channelKey === "announcements")
+        ?.action,
+    ).toBe("skip");
+  });
+
+  it("securedExistingState с announcement-каналом остаётся без предупреждений аудита", () => {
+    const state = withAnnouncementChannel(securedExistingState());
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot(state.channels, state.roles),
+    );
+
+    expect(plan.conflicts).toHaveLength(0);
+    expect(plan.accessAudit).toHaveLength(0);
   });
 });

@@ -118,6 +118,23 @@ export function expectedSnapshotType(kind: ChannelKind): SnapshotChannelType {
   return kind;
 }
 
+/**
+ * Snapshot types an existing channel may have without a type conflict.
+ * Every channel must match its configured kind exactly, with a single
+ * exception: `#announcements` may already exist as a GuildAnnouncement
+ * channel. Discord models announcement channels as text channels (same
+ * history reads and embed sends), and the tool never converts or moves an
+ * existing channel — so both types simply mean "already in place".
+ */
+export function acceptedSnapshotTypes(
+  channel: ChannelDefinition,
+): readonly SnapshotChannelType[] {
+  if (channel.key === "announcements" && channel.kind === "text") {
+    return ["text", "announcement"];
+  }
+  return [expectedSnapshotType(channel.kind)];
+}
+
 interface CategoryResolution {
   readonly definition: CategoryDefinition;
   readonly existing: SnapshotChannel | null;
@@ -388,7 +405,7 @@ function planChannel(
     return { ...base, action: "create", existingId: null, conflict: null };
   }
 
-  if (existing.type !== expectedSnapshotType(channel.kind)) {
+  if (!acceptedSnapshotTypes(channel).includes(existing.type)) {
     const conflict: PlanConflict = {
       kind: "channel-type-mismatch",
       message:

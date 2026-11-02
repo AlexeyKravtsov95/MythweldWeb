@@ -244,6 +244,28 @@ export function fullExistingState(): {
   return { channels, roles };
 }
 
+/**
+ * Variant of an existing-state snapshot where #announcements is a real
+ * GuildAnnouncement channel (snapshot type "announcement") — the state the
+ * real-guild dry-run discovered before DISCORD-M0.1.
+ */
+export function withAnnouncementChannel(state: {
+  readonly channels: SnapshotChannel[];
+  readonly roles: SnapshotRole[];
+}): {
+  readonly channels: SnapshotChannel[];
+  readonly roles: SnapshotRole[];
+} {
+  return {
+    roles: [...state.roles],
+    channels: state.channels.map((channel) =>
+      channel.name === "announcements"
+        ? { ...channel, type: "announcement" as const }
+        : channel,
+    ),
+  };
+}
+
 const SECURED_TARGETS: PermissionTargets = {
   everyoneRoleId: GUILD_ID,
   roleIdByKey: { moderator: "900000000000000111" },

@@ -207,6 +207,9 @@ export function createDiscordConnection(
       return probeForumChannel(channel, channelKey);
     }
     if (channel.isTextBased() && !channel.isThread()) {
+      // GuildAnnouncement channels (NewsChannel) take this path too: they
+      // extend the same BaseGuildTextChannel as TextChannel, so paginated
+      // history reads and footer-marker detection work identically.
       return probeTextChannel(channel as TextChannel, channelKey);
     }
     return "unknown";
@@ -343,6 +346,8 @@ export function createDiscordConnection(
         return;
       }
       if (channel.isTextBased() && !channel.isThread()) {
+        // Text and GuildAnnouncement channels share this branch — both
+        // accept embed messages, the announcement type needs no crosspost.
         const text = channel as TextChannel;
         await text.send({ embeds });
         return;

@@ -6,6 +6,7 @@ import {
   allRequiredBotBits,
   fullExistingState,
   securedExistingState,
+  withAnnouncementChannel,
 } from "./helpers.js";
 
 const TEST_TOKEN = "test-secret-bot-token-do-not-print";
@@ -121,6 +122,47 @@ describe("runApply — успешное применение (сценарии 2
       fake.sentMessages.map((sent) => sent.message.channelKey),
     ).not.toContain("welcome");
     expect(fake.sentMessages).toHaveLength(5);
+  });
+
+  it("M0.1: существующий #announcements типа announcement не создаётся, сообщение публикуется один раз", async () => {
+    const state = withAnnouncementChannel(fullExistingState());
+    const fake = new FakeDiscordApi();
+    fake.channels = [...state.channels];
+    fake.roles = [...state.roles];
+    // Все маркеры найдены, кроме announcements.
+    fake.messageProbes = {
+      welcome: "sent",
+      rules: "sent",
+      "fj-support": "sent",
+      "book-creator": "sent",
+      "talentforge-support": "sent",
+    };
+
+    const first = await runApply(fake, options(true));
+
+    expect(first.status).toBe("applied");
+    expect(fake.createdChannels.map((input) => input.channelKey)).not.toContain(
+      "announcements",
+    );
+    const sentToAnnouncements = fake.sentMessages.filter(
+      (sent) => sent.message.channelKey === "announcements",
+    );
+    expect(sentToAnnouncements).toHaveLength(1);
+    // Сообщение ушло ровно в существующий announcement-канал.
+    expect(sentToAnnouncements[0]?.channelId).toBe("chan-announcements");
+
+    // Повторный запуск не дублирует сообщение и не трогает канал.
+    const second = await runApply(fake, options(true));
+    expect(second.status).toBe("applied");
+    expect(
+      fake.sentMessages.filter(
+        (sent) => sent.message.channelKey === "announcements",
+      ),
+    ).toHaveLength(1);
+    expect(
+      fake.channels.filter((channel) => channel.name === "announcements"),
+    ).toHaveLength(1);
+    expect(fake.createdChannels).toHaveLength(0);
   });
 });
 
