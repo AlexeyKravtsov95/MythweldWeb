@@ -1,6 +1,14 @@
 import type { Dictionary } from "../types";
 
 export const en = {
+  legal: {
+    ui: {
+      contents: "On this page",
+      effectiveDate: "Effective date",
+      email: "Email",
+    },
+    pages: { privacy: null, terms: null, contact: null },
+  },
   meta: {
     htmlLang: "en",
     ogLocale: "en_US",

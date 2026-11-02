@@ -10,7 +10,12 @@
 import { LEGAL } from "../config/legal";
 import { RELEASE, type TalentForgeReleaseState } from "../config/release";
 import { SITE } from "../config/site";
-import { getDictionary, localizePath, type Locale } from "../i18n";
+import {
+  getDictionary,
+  localizeHref,
+  localizePath,
+  type Locale,
+} from "../i18n";
 import LogoMark from "./LogoMark.astro";
 import StatusTag from "./ui/StatusTag.astro";
 
@@ -35,7 +40,12 @@ const legal: FooterLink[] = [
   { label: t.footer.pages.privacy, href: LEGAL.privacy },
   { label: t.footer.pages.terms, href: LEGAL.terms },
   { label: t.footer.pages.contact, href: LEGAL.contact },
-].filter((link) => link.href !== null);
+]
+  .filter((link): link is { label: string; href: string } => link.href !== null)
+  .map((link) => ({
+    ...link,
+    href: localizeHref(locale, link.href),
+  }));
 
 const columns: { title: string; links: FooterLink[]; note?: string }[] = [
   {

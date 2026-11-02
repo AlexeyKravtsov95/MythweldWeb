@@ -5,7 +5,7 @@
  * honest store states and robots.txt closed until the WEB-M0.6 launch.
  */
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { parse, type HTMLElement } from "node-html-parser";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -200,6 +200,60 @@ describe("owner-confirmed release facts (2026-11-01)", () => {
 });
 
 describe("legal configuration", () => {
+  const futureLegalPaths = ["privacy", "terms", "contact"];
+
+  it.each(LOCALES)("publishes no unapproved legal route in %s", (locale) => {
+    const sitemap = readFileSync(`${dist}sitemap.xml`, "utf8");
+    for (const document of futureLegalPaths) {
+      const path = localizePath(locale, `/${document}/`);
+      expect(existsSync(`${dist}${path.slice(1)}index.html`), path).toBe(false);
+      expect(sitemap).not.toContain(`${ORIGIN}${path}`);
+    }
+  });
+
+  it("exports no legal draft text, internal decisions or test fixtures in any file", () => {
+    const draftDir = new URL("../docs/legal-drafts/", import.meta.url);
+    const draftFiles = [
+      "privacy-policy.en.md",
+      "privacy-policy.ru.md",
+      "terms.en.md",
+      "terms.ru.md",
+      "contact-copy.en.md",
+      "contact-copy.ru.md",
+    ];
+    const normalize = (body: string) =>
+      body.replace(/[`*_]/g, "").replace(/\s+/g, " ").trim();
+    // Also catch substantive copy exported after removing the draft banner.
+    const draftExcerpts = draftFiles.flatMap((file) => {
+      const paragraphs = readFileSync(new URL(file, draftDir), "utf8").split(
+        /\n\s*\n/,
+      );
+      const excerpts = paragraphs
+        .filter((p) => !/^[#>\[|]|OWNER DECISION|РЕШЕНИЕ ВЛАДЕЛЬЦА/.test(p))
+        .map(normalize)
+        .filter((p) => p.length >= 100);
+      expect(excerpts.length, file).toBeGreaterThan(0);
+      return excerpts;
+    });
+    const files = readdirSync(dist, {
+      recursive: true,
+      encoding: "utf8",
+    }).filter((file) => statSync(`${dist}${file}`).isFile());
+    for (const file of files) {
+      expect(file).not.toMatch(
+        /legal-drafts|owner-decisions|publication-plan|contact-copy|privacy-policy|terms\.(en|ru)|legalFixtures/,
+      );
+      const body = readFileSync(`${dist}${file}`, "utf8");
+      expect(body, file).not.toMatch(
+        /\bDRAFT\b|ЧЕРНОВИК|OWNER DECISION|РЕШЕНИЕ ВЛАДЕЛЬЦА|\[\[VERIFIED_CONTACT_ADDRESS_[^\]]*\]\]|\bOD-\d{2}\b|\b(?:RKN|LEGAL)-01\b|mythweld@mythweld\.com|Alexey Kravtsov|Алексей Кравцов|long-test-address-|long-test-path-/i,
+      );
+      const text = normalize(file.endsWith(".html") ? parse(body).text : body);
+      for (const excerpt of draftExcerpts) {
+        expect(text, `${file}: legal draft excerpt`).not.toContain(excerpt);
+      }
+    }
+  });
+
   it("keeps every legal address null until the owner approves it", () => {
     expect(LEGAL).toEqual({ privacy: null, terms: null, contact: null });
   });

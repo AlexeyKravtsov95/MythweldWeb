@@ -1,6 +1,14 @@
 import type { Dictionary } from "../types";
 
 export const ru = {
+  legal: {
+    ui: {
+      contents: "На этой странице",
+      effectiveDate: "Дата вступления в силу",
+      email: "Электронная почта",
+    },
+    pages: { privacy: null, terms: null, contact: null },
+  },
   meta: {
     htmlLang: "ru",
     ogLocale: "ru_RU",
