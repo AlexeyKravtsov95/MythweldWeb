@@ -11,6 +11,7 @@ import { parse, type HTMLElement } from "node-html-parser";
 import { beforeAll, describe, expect, it } from "vitest";
 import { LEGAL } from "../src/config/legal";
 import { PUBLIC_PATHS } from "../src/config/pages";
+import { RELEASE } from "../src/config/release";
 import { SITE } from "../src/config/site";
 import {
   DEFAULT_LOCALE,
@@ -22,7 +23,7 @@ import { MEDIA } from "../src/media/catalog";
 
 const dist = fileURLToPath(new URL("../dist/", import.meta.url));
 
-/** The six public pages: locale-neutral paths in every locale. */
+/** The eight public pages: locale-neutral paths in every locale. */
 const PAGES = LOCALES.flatMap((locale) =>
   PUBLIC_PATHS.map((path) => ({
     locale,
@@ -51,6 +52,52 @@ describe.each(PAGES)("public page $url", ({ locale, path, url }) => {
 
   beforeAll(() => {
     doc = load(url);
+  });
+
+  it("shows owner-confirmed store states without public store links", () => {
+    const labels =
+      locale === "ru"
+        ? { android: "Закрытое тестирование", ios: "Ожидает проверки Apple" }
+        : { android: "Closed testing", ios: "Awaiting Apple review" };
+    const footer = doc.querySelector("footer");
+    expect(text(footer?.querySelector('[data-state="testing"]'))).toBe(
+      labels.android,
+    );
+    expect(text(footer?.querySelector('[data-state="awaiting_review"]'))).toBe(
+      labels.ios,
+    );
+    expect(
+      doc.querySelectorAll(
+        'a[href*="play.google.com"], a[href*="apps.apple.com"]',
+      ),
+    ).toHaveLength(0);
+
+    if (path === "/") {
+      const plate = doc.querySelector("article[aria-labelledby='talentforge']");
+      expect(text(plate?.querySelector('[data-state="testing"]'))).toBe(
+        `Android: ${labels.android.toLocaleLowerCase()}`,
+      );
+      expect(text(plate?.querySelector('[data-state="awaiting_review"]'))).toBe(
+        locale === "ru"
+          ? "iOS: ожидает проверки Apple"
+          : "iOS: awaiting Apple review",
+      );
+    }
+    if (path === "/talentforge/") {
+      const panel = doc.querySelector(
+        "section[aria-labelledby='release-status']",
+      );
+      expect(text(panel?.querySelector('[data-state="testing"]'))).toBe(
+        labels.android,
+      );
+      expect(text(panel?.querySelector('[data-state="awaiting_review"]'))).toBe(
+        labels.ios,
+      );
+      expect(panel?.querySelector("time")?.getAttribute("datetime")).toBe(
+        "2026-11-01",
+      );
+      expect(panel?.querySelectorAll('[aria-disabled="true"]')).toHaveLength(2);
+    }
   });
 
   it("shows no unapproved placeholder", () => {
@@ -136,8 +183,19 @@ describe.each(PAGES)("public page $url", ({ locale, path, url }) => {
   });
 
   it("gives the journal steps the command from the addon's own page", () => {
-    if (!url.endsWith("/forever-journey/")) return;
+    if (!url.endsWith("/book-creator/")) return;
     expect(text(doc.querySelector("main"))).toContain("/fj open");
+  });
+});
+
+describe("owner-confirmed release facts (2026-11-01)", () => {
+  it("keeps both stores unpublished and preserves the addon release", () => {
+    expect(RELEASE.checked).toBe("2026-11-01");
+    expect(RELEASE.talentforge.android).toBe("testing");
+    expect(RELEASE.talentforge.ios).toBe("awaiting_review");
+    expect(RELEASE.talentforge.googlePlay).toBeNull();
+    expect(RELEASE.talentforge.appStore).toBeNull();
+    expect(RELEASE.foreverJourney.curseforge).toBe("available");
   });
 });
 
@@ -175,8 +233,9 @@ describe("sitemap", () => {
     xml = readFileSync(`${dist}sitemap.xml`, "utf8");
   });
 
-  it("lists exactly the six public pages", () => {
+  it("lists exactly the eight public pages", () => {
     const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+    expect(locs).toHaveLength(8);
     expect(locs.sort()).toEqual(
       PAGES.map((page) => `${ORIGIN}${page.url}`).sort(),
     );
@@ -192,6 +251,26 @@ describe("sitemap", () => {
   it("links every page to its alternates", () => {
     const alternates = xml.match(/<xhtml:link /g) ?? [];
     expect(alternates).toHaveLength(PAGES.length * (LOCALES.length + 1));
+    const entries = [...xml.matchAll(/<url>([\s\S]*?)<\/url>/g)];
+    for (const page of PAGES) {
+      const entry = entries.find(([, body]) =>
+        body?.includes(`<loc>${ORIGIN}${page.url}</loc>`),
+      );
+      expect(entry, page.url).toBeDefined();
+      const links = parse(entry?.[1] ?? "").querySelectorAll("[hreflang]");
+      expect(
+        links.map((link) => [
+          link.getAttribute("hreflang"),
+          link.getAttribute("href"),
+        ]),
+      ).toEqual([
+        ...LOCALES.map((locale) => [
+          locale,
+          `${ORIGIN}${localizePath(locale, page.path)}`,
+        ]),
+        ["x-default", `${ORIGIN}${localizePath(DEFAULT_LOCALE, page.path)}`],
+      ]);
+    }
   });
 });
 

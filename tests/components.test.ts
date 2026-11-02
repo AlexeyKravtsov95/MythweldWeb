@@ -89,7 +89,7 @@ describe("ProductAction", () => {
 });
 
 describe("StatusTag", () => {
-  it.each(["available", "testing", "prep"] as const)(
+  it.each(["available", "testing", "prep", "awaiting_review"] as const)(
     "%s shows a dot next to the text",
     async (state) => {
       const doc = await render(StatusTag, { state, label: "Label" });

@@ -5,13 +5,15 @@
  * the talent data version matches the TalentForge class picker screenshot.
  */
 export type ReleaseState = "available" | "testing" | "prep";
+/** Waiting for review to start; does not imply an active Apple review. */
+export type TalentForgeReleaseState = ReleaseState | "awaiting_review";
 
 export interface Release {
   /** ISO date the values below were last confirmed. */
   checked: string;
   talentforge: {
     android: ReleaseState;
-    ios: ReleaseState;
+    ios: TalentForgeReleaseState;
     /** `null` until the store listing is public. */
     googlePlay: string | null;
     appStore: string | null;
@@ -24,10 +26,10 @@ export interface Release {
 }
 
 export const RELEASE = {
-  checked: "2026-10-26",
+  checked: "2026-11-01",
   talentforge: {
     android: "testing",
-    ios: "prep",
+    ios: "awaiting_review",
     googlePlay: null,
     appStore: null,
     dataVersion: "1.60.1",

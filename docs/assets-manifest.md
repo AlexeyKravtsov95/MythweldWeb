@@ -149,6 +149,13 @@ Upstream: Google Fonts (`google/fonts`), Geologica v5, JetBrains Mono v24. Fallb
 - **Forever Journey** (`/forever-journey/`, `/ru/forever-journey/`): placeholder «In-game addon screenshot» (B1) на первом экране; в разделе Book Creator — EN-образец `bc-sample-cover/chapter` на обеих локалях, на RU с подписью «… пример на английском» (B4). Скриншоты интерфейса Book Creator (`bc-app-*`) не показаны: EN-снимка нет (B3), а RU-снимок не подменяет EN.
 - Путь «журнал → книга» описан по `ForeverJourneyWeb/src/i18n.ts` и `README.md`: код `FJBOOK1` (`/fj` → Export Book) или файл `ForeverJourney.lua` из SavedVariables; книга собирается в браузере, на сервер ничего не загружается. Архив персонажа подписан как исторический снимок.
 
+## Book Creator — отдельная страница (WEB-M0.7)
+
+- `/book-creator/` и `/ru/book-creator/` используют только `bc-sample-cover/chapter`, `en`: обложку и главу одного демонстрационного PDF. На телефонах страницы показаны одна под другой, целиком; пиксели не меняются.
+- Подпись явно отличает страницы PDF от интерфейса инструмента; в RU указано «демонстрационная книга на английском языке». RU sample со Straider по-прежнему исключён из сборки (B4).
+- Возможности проверены read-only на `https://journal.mythweld.com/` 2026-11-01: код `FJBOOK1:`, файл SavedVariables, демо-журнал, действия Download PDF и Print; обработка в браузере подтверждается интерфейсом продукта и ранее проверенными источниками выше. Обещания серверного хранения или удаления данных не добавлены.
+- На странице Forever Journey оставлена краткая связь и внутренняя ссылка на обзор; прямой запуск внешнего инструмента в hero, шапке и на главной сохранён.
+
 ## Share-карточки (Open Graph, Twitter) — WEB-M0.5
 
 `public/og/mythweld-en.png` и `public/og/mythweld-ru.png`, 1200×630 PNG. Собраны на этом сайте: знак `LogoMark` (те же два path), слово «Mythweld» и строка `home.eyebrow` шрифтом Geologica, названия трёх продуктов с цветами из токенов, фон `--color-bg`. **Игровых изображений, скриншотов и интерфейсов нет.** Способ: разметка карточки вставлена в страницу `astro preview` (шрифты сайта уже загружены), снимок Chrome DevTools 1200×630 при DPR 1, без последующей обработки. Подключены в `BaseLayout` через `SITE.shareImage` (`og:image`, `twitter:image`, alt — `meta.shareImageAlt`).

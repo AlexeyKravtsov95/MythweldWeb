@@ -1,24 +1,28 @@
 # Mythweld — Terms of Use and Disclaimer
 
-> **DRAFT — NOT PUBLISHED, NOT LEGALLY APPROVED.** Owner review: WEB-M0.6B.1A / B7. Resolve the `[OWNER DECISION: …]` markers and approve both languages before publication. IDs refer to `owner-decisions.md`. Warranty, liability and governing-law provisions require owner confirmation and legal review.
+> **DRAFT — NOT PUBLISHED, NOT LEGALLY APPROVED.** Owner review: WEB-M0.6B.2 / Issue #21 / B7. Resolve the `[OWNER DECISION: …]` markers and approve both languages before publication. IDs refer to `owner-decisions.md`. OD-01/02/03 are confirmed for name/country, contact and the choice of Russian law without exclusive jurisdiction. Enforceability requires legal review. [OWNER DECISION: OD-11 — approve the specific EN/RU versions.]
 
 **Effective date:** [OWNER DECISION: OD-04 — date of these terms]
 
 ## About the site
 
-mythweld.com is an information site about TalentForge, Forever Journey and Book Creator. It is run by [OWNER DECISION: OD-01 — name of the person or legal entity and country]. Contact: [OWNER DECISION: OD-02 — approved public contact and person responsible for requests].
+mythweld.com is an information site about TalentForge, Forever Journey and Book Creator. The operator is **Alexey Kravtsov / Алексей Кравцов**, an individual in the **Russian Federation**. Official contact: **mythweld@mythweld.com**.
+
+[OWNER DECISION: OD-01 — name/country confirmed; review the required scope of address information and how to provide it lawfully. Do not invent particulars.]
+
+[OWNER DECISION: OD-02 — contact confirmed; personally test sending/receipt before publication.]
 
 The site itself provides no accounts, purchases, forms or file uploads. Products and services reached through links are separate from the portal.
 
 ## Fan project disclaimer
 
-Mythweld is an independent fan project. It is not affiliated with or endorsed by Blizzard Entertainment. World of Warcraft and related names and images are trademarks of Blizzard Entertainment, Inc.
+Mythweld is an independent fan project. It is not affiliated with or endorsed by Blizzard Entertainment. World of Warcraft is a trademark of Blizzard Entertainment, Inc. Rights to game materials, images and related marks belong to Blizzard and the respective rights holders. These terms grant no licence to those materials; a fan project disclaimer does not itself authorise their use.
 
 ## Content of the site
 
 - The site presents product descriptions and release states. Availability may change; a status is not a promise of a future release or store listing. Use the verification date shown on the page when assessing release information.
 - Screenshots illustrate the products' interfaces. Some captures include third-party game materials; addon gallery captions identify images that may show an older version.
-- [OWNER DECISION: OD-05 — approve the copyright notice, rights holder and reuse terms for the site's own content; distinguish third-party game names, artwork and other materials. Do not grant rights the operator does not hold.]
+- [OWNER DECISION: OD-05 — proposed limited notice “© [approved year] Alexey Kravtsov” for original authored content only within confirmed rights. This text grants no separate reuse licence; uses permitted by law remain available. Approve the year, scope of rights and final wording. Do not extend this notice to Blizzard, third-party assets or licensed components.]
 
 ## Products and other services
 
@@ -30,7 +34,9 @@ The portal links to the Forever Journey addon on CurseForge and Book Creator at 
 
 ## Applicable law
 
-[OWNER DECISION: OD-03 — proposed provision; owner confirmation and legal review required: select applicable law and any jurisdiction clause, taking account of mandatory user protections. No country, court or enforceability is assumed in this draft.]
+These terms are governed by the law of the **Russian Federation**. No exclusive jurisdiction clause is established. Visitors' mandatory rights and statutory rules for bringing proceedings remain available.
+
+[LEGAL REVIEW: OD-03 — the owner's choice is confirmed; review the enforceability of this wording in light of visitors' mandatory rights. Do not add exclusive jurisdiction.]
 
 ## Changes
 

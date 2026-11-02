@@ -28,7 +28,8 @@ const platforms = [
   { channel: t.release.channels.android, state: tf.android },
   { channel: t.release.channels.ios, state: tf.ios },
 ] as const;
-const lower = (text: string) => text.toLocaleLowerCase(t.meta.htmlLang);
+const lower = (text: string) =>
+  text.charAt(0).toLocaleLowerCase(t.meta.htmlLang) + text.slice(1);
 const editor = pickMedia("tf-editor", locale);
 ---
 

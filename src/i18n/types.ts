@@ -1,4 +1,4 @@
-import type { ReleaseState } from "../config/release";
+import type { ReleaseState, TalentForgeReleaseState } from "../config/release";
 import type { AddonShotId, ClassId, MediaGroup } from "../media/catalog";
 import type { Locale } from "./locales";
 
@@ -83,7 +83,7 @@ export interface Dictionary {
     heading: string;
     /** Followed by the localized check date. */
     updated: string;
-    states: Record<ReleaseState, string>;
+    states: Record<TalentForgeReleaseState, string>;
     channels: {
       android: string;
       ios: string;
@@ -115,6 +115,7 @@ export interface Dictionary {
   };
   talentforgePage: TalentForgePageCopy;
   foreverJourneyPage: ForeverJourneyPageCopy;
+  bookCreatorPage: BookCreatorPageCopy;
   talentforge: {
     /** Soft hyphens (U+00AD) allowed for long names in narrow tiles. */
     classNames: Record<ClassId, string>;
@@ -244,17 +245,23 @@ export interface ForeverJourneyPageCopy {
     label: string;
     heading: string;
     text: string;
-    points: Record<"browser" | "account" | "upload", string>;
-    sampleCaption: string;
+    action: string;
   };
-  journal: {
+  next: NextProductCopy;
+}
+
+/** Book Creator overview; the sample is the registered synthetic EN PDF. */
+export interface BookCreatorPageCopy {
+  meta: PageMeta;
+  kind: string;
+  lead: string;
+  open: string;
+  local: string;
+  sampleCaption: string;
+  steps: {
     heading: string;
-    text: string;
-    exportCode: { title: string; steps: readonly string[] };
-    savedVariables: { title: string; steps: readonly string[] };
-    privacy: string;
-    /** SavedVariables snapshots are history, not current character stats. */
-    archive: string;
+    items: Record<"journal" | "import" | "pdf", InfoItem>;
   };
+  archive: string;
   next: NextProductCopy;
 }

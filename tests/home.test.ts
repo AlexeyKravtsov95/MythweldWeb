@@ -139,7 +139,8 @@ describe.each(LOCALES)("home page for %s", (locale) => {
     const tfPlate = text(
       main.querySelector("article[aria-labelledby='talentforge']"),
     );
-    const lower = (s: string) => s.toLocaleLowerCase(t.meta.htmlLang);
+    const lower = (s: string) =>
+      s.charAt(0).toLocaleLowerCase(t.meta.htmlLang) + s.slice(1);
     expect(tfPlate).toContain(
       `${t.release.channels.android}: ${lower(t.release.states[tf.android])}`,
     );
