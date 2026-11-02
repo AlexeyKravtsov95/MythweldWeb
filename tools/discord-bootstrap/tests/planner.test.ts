@@ -1,9 +1,25 @@
 import { describe, expect, it } from "vitest";
 import { PermissionFlagsBits } from "discord.js";
-import { buildPlan, type GuildSnapshot } from "../src/planner.js";
+import {
+  buildPlan,
+  type GuildSnapshot,
+  type SnapshotChannel,
+} from "../src/planner.js";
 import { TARGET_CONFIG } from "../src/config.js";
 import { STARTUP_MESSAGES } from "../src/messages.js";
-import { fullExistingState, GUILD_ID, typicalEveryoneBits } from "./helpers.js";
+import type { SnapshotOverwrite } from "../src/permissions.js";
+import {
+  fullExistingState,
+  GUILD_ID,
+  securedExistingState,
+  typicalEveryoneBits,
+} from "./helpers.js";
+
+const THREAD_RIGHTS = [
+  PermissionFlagsBits.CreatePublicThreads,
+  PermissionFlagsBits.CreatePrivateThreads,
+  PermissionFlagsBits.SendMessagesInThreads,
+];
 
 function snapshot(
   channels: GuildSnapshot["channels"],
@@ -17,6 +33,36 @@ function snapshot(
     channels,
     roles,
     messageProbes: probes,
+  };
+}
+
+function chan(
+  id: string,
+  name: string,
+  type: SnapshotChannel["type"],
+  parentId: string | null = null,
+  overwrites: readonly SnapshotOverwrite[] = [],
+): SnapshotChannel {
+  return { id, name, type, parentId, permissionOverwrites: overwrites };
+}
+
+function category(
+  id: string,
+  name: string,
+  overwrites: readonly SnapshotOverwrite[] = [],
+): SnapshotChannel {
+  return chan(id, name, "category", null, overwrites);
+}
+
+/** @everyone overwrite shorthand (allow/deny bits are OR-ed). */
+function everyone(
+  allow: readonly bigint[] = [],
+  deny: readonly bigint[] = [],
+): SnapshotOverwrite {
+  return {
+    id: GUILD_ID,
+    allow: allow.reduce((acc, bit) => acc | bit, 0n),
+    deny: deny.reduce((acc, bit) => acc | bit, 0n),
   };
 }
 
@@ -61,7 +107,7 @@ describe("buildPlan — планирование (сценарии 1, 3, 9, 12)"
     const plan = buildPlan(
       TARGET_CONFIG,
       STARTUP_MESSAGES,
-      snapshot([{ id: "1", name: "welcome", type: "voice", parentId: null }]),
+      snapshot([chan("1", "welcome", "voice")]),
     );
 
     const welcome = plan.channels.find(
@@ -80,10 +126,7 @@ describe("buildPlan — планирование (сценарии 1, 3, 9, 12)"
     const plan = buildPlan(
       TARGET_CONFIG,
       STARTUP_MESSAGES,
-      snapshot([
-        { id: "cat", name: "COMMUNITY", type: "category", parentId: null },
-        { id: "ch", name: "general", type: "text", parentId: null },
-      ]),
+      snapshot([category("cat", "COMMUNITY"), chan("ch", "general", "text")]),
     );
 
     const general = plan.channels.find(
@@ -97,14 +140,7 @@ describe("buildPlan — планирование (сценарии 1, 3, 9, 12)"
     const plan = buildPlan(
       TARGET_CONFIG,
       STARTUP_MESSAGES,
-      snapshot([
-        {
-          id: "1",
-          name: "announcements",
-          type: "announcement",
-          parentId: null,
-        },
-      ]),
+      snapshot([chan("1", "announcements", "announcement")]),
     );
 
     const announcements = plan.channels.find(
@@ -141,7 +177,7 @@ describe("buildPlan — планирование (сценарии 1, 3, 9, 12)"
     ).toBe("blocked");
   });
 
-  it("существующие read-only и staff-каналы получают предупреждения о ручной проверке", () => {
+  it("существующие каналы без настроек дают точные предупреждения доступа", () => {
     const state = fullExistingState();
     const plan = buildPlan(
       TARGET_CONFIG,
@@ -149,34 +185,270 @@ describe("buildPlan — планирование (сценарии 1, 3, 9, 12)"
       snapshot(state.channels, state.roles),
     );
 
-    expect(plan.warnings.some((warning) => warning.includes("welcome"))).toBe(
+    // welcome (read-only) фактически доступен на запись.
+    expect(
+      plan.accessAudit.some(
+        (warning) =>
+          warning.includes("welcome") && warning.includes("отправлять"),
+      ),
+    ).toBe(true);
+    // STAFF-категория и mod-log видимы — явные риски.
+    expect(plan.accessAudit.some((warning) => warning.includes("STAFF"))).toBe(
       true,
     );
-    expect(plan.warnings.some((warning) => warning.includes("mod-log"))).toBe(
-      true,
-    );
+    expect(
+      plan.accessAudit.some((warning) => warning.includes("mod-log")),
+    ).toBe(true);
+    // Предупреждение о существующей роли сохраняется.
     expect(plan.warnings.some((warning) => warning.includes("Moderator"))).toBe(
       true,
     );
+    // Аудит доступа зеркалится в warnings (dry-run печатает их).
+    for (const entry of plan.accessAudit) {
+      expect(plan.warnings).toContain(entry);
+    }
   });
 });
 
-describe("предупреждения по фактическим правам @everyone (dry-run)", () => {
-  it("типичные права — предупреждение о read-only тредах, которые бот не может запретить", () => {
-    const plan = buildPlan(TARGET_CONFIG, STARTUP_MESSAGES, snapshot([]));
+describe("аудит существующих read-only каналов по фактическим оверрайтам", () => {
+  const readOnlyDenied = everyone(
+    [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
+    [PermissionFlagsBits.SendMessages, ...THREAD_RIGHTS],
+  );
+
+  it("после ручного запрета Send Messages и thread-прав предупреждений нет", () => {
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot([
+        category("cat-info", "INFORMATION"),
+        chan("ch-welcome", "welcome", "text", "cat-info", [readOnlyDenied]),
+      ]),
+    );
 
     expect(
-      plan.warnings.some((warning) => warning.includes("read-only каналы")),
-    ).toBe(true);
-    // read-only примечание само упоминает thread-права, но предупреждения
-    // «отключено …» о нехватке прав форумов быть не должно.
-    expect(plan.warnings.some((warning) => warning.includes("отключено"))).toBe(
-      false,
-    );
+      plan.accessAudit.filter((warning) => warning.includes("welcome")),
+    ).toHaveLength(0);
   });
 
-  it("отключённый Send Messages in Threads — предупреждение об ответах в форумах", () => {
+  it("deny только Send Messages — предупреждение ровно про остаточные thread-права", () => {
     const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot([
+        category("cat-info", "INFORMATION"),
+        chan("ch-welcome", "welcome", "text", "cat-info", [
+          everyone([], [PermissionFlagsBits.SendMessages]),
+        ]),
+      ]),
+    );
+
+    const welcomeWarnings = plan.accessAudit.filter((warning) =>
+      warning.includes("welcome"),
+    );
+    expect(welcomeWarnings).toHaveLength(1);
+    expect(welcomeWarnings[0]).toContain("thread-права");
+    expect(welcomeWarnings[0]).toContain("Send Messages in Threads");
+    expect(welcomeWarnings[0]).not.toContain("отправлять сообщения");
+  });
+
+  it("канал без оверрайтов — предупреждение и про отправку, и про треды", () => {
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot([
+        category("cat-info", "INFORMATION"),
+        chan("ch-welcome", "welcome", "text", "cat-info"),
+      ]),
+    );
+
+    const welcomeWarning = plan.accessAudit.find((warning) =>
+      warning.includes("welcome"),
+    );
+    expect(welcomeWarning).toBeDefined();
+    expect(welcomeWarning).toContain("отправлять сообщения");
+    expect(welcomeWarning).toContain("thread-права");
+  });
+
+  it("deny на родительской категории закрывает канал без собственных оверрайтов", () => {
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot([
+        category("cat-info", "INFORMATION", [readOnlyDenied]),
+        chan("ch-welcome", "welcome", "text", "cat-info"),
+      ]),
+    );
+
+    expect(
+      plan.accessAudit.filter((warning) => warning.includes("welcome")),
+    ).toHaveLength(0);
+  });
+
+  it("канальный allow перекрывает категориальный deny (channel-specific allow/deny)", () => {
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot([
+        category("cat-info", "INFORMATION", [readOnlyDenied]),
+        // Владелец случайно разрешил отправку в самом канале.
+        chan("ch-welcome", "welcome", "text", "cat-info", [
+          everyone([PermissionFlagsBits.SendMessages]),
+        ]),
+      ]),
+    );
+
+    const welcomeWarning = plan.accessAudit.find((warning) =>
+      warning.includes("welcome"),
+    );
+    expect(welcomeWarning).toContain("отправлять сообщения");
+  });
+});
+
+describe("аудит существующих форумов по фактическим оверрайтам", () => {
+  const forumAllow = everyone([
+    PermissionFlagsBits.ViewChannel,
+    PermissionFlagsBits.ReadMessageHistory,
+    PermissionFlagsBits.SendMessages,
+  ]);
+
+  it("форум с нужными правами (Send Messages + глобальный Send Messages in Threads) — без предупреждений", () => {
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot([
+        category("cat-fj", "FOREVER JOURNEY"),
+        chan("ch-fj", "fj-support", "forum", "cat-fj", [forumAllow]),
+      ]),
+    );
+
+    expect(
+      plan.accessAudit.filter((warning) => warning.includes("fj-support")),
+    ).toHaveLength(0);
+  });
+
+  it("глобально выключенный Send Messages in Threads — предупреждение об ответах с именем форума", () => {
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot(
+        [
+          category("cat-fj", "FOREVER JOURNEY"),
+          chan("ch-fj", "fj-support", "forum", "cat-fj", [forumAllow]),
+        ],
+        [],
+        {},
+        typicalEveryoneBits() & ~PermissionFlagsBits.SendMessagesInThreads,
+      ),
+    );
+
+    const forumWarning = plan.accessAudit.find((warning) =>
+      warning.includes("fj-support"),
+    );
+    expect(forumWarning).toContain("отвечать");
+    expect(forumWarning).toContain("Send Messages in Threads");
+  });
+
+  it("Send Messages закрыт на категории — предупреждение о создании постов", () => {
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot([
+        category("cat-fj", "FOREVER JOURNEY", [
+          everyone([], [PermissionFlagsBits.SendMessages]),
+        ]),
+        chan("ch-fj", "fj-support", "forum", "cat-fj"),
+      ]),
+    );
+
+    const forumWarning = plan.accessAudit.find((warning) =>
+      warning.includes("fj-support"),
+    );
+    expect(forumWarning).toContain("создавать посты");
+  });
+});
+
+describe("аудит приватности существующих STAFF и mod-log", () => {
+  it("видимые STAFF-категория и mod-log дают отдельные предупреждения-риски", () => {
+    const state = fullExistingState();
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot(state.channels, state.roles),
+    );
+
+    const staffWarnings = plan.accessAudit.filter((warning) =>
+      warning.includes("STAFF"),
+    );
+    expect(staffWarnings.length).toBeGreaterThanOrEqual(1);
+    expect(
+      plan.accessAudit.some((warning) => warning.includes("mod-log")),
+    ).toBe(true);
+    for (const warning of staffWarnings) {
+      expect(warning).toContain("View Channel");
+    }
+  });
+
+  it("скрытые STAFF-категория и mod-log не дают предупреждений", () => {
+    const state = fullExistingState();
+    const hidden = everyone([], [PermissionFlagsBits.ViewChannel]);
+    const channels = state.channels.map((channel) =>
+      channel.name === "STAFF" || channel.name === "mod-log"
+        ? { ...channel, permissionOverwrites: [hidden] }
+        : channel,
+    );
+
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot(channels, state.roles),
+    );
+
+    expect(
+      plan.accessAudit.filter((warning) => warning.includes("STAFF")),
+    ).toHaveLength(0);
+    expect(
+      plan.accessAudit.filter((warning) => warning.includes("mod-log")),
+    ).toHaveLength(0);
+  });
+
+  it("полностью настроенный сервер (securedExistingState) — аудит доступа пуст", () => {
+    const state = securedExistingState();
+    const plan = buildPlan(
+      TARGET_CONFIG,
+      STARTUP_MESSAGES,
+      snapshot(state.channels, state.roles),
+    );
+
+    expect(plan.accessAudit).toHaveLength(0);
+  });
+});
+
+describe("аудит каналов, которые будут созданы (прогноз)", () => {
+  it("создаваемый read-only канал — предупреждение про остаточные thread-права", () => {
+    const plan = buildPlan(TARGET_CONFIG, STARTUP_MESSAGES, snapshot([]));
+
+    const welcomeWarning = plan.accessAudit.find((warning) =>
+      warning.includes("welcome"),
+    );
+    expect(welcomeWarning).toBeDefined();
+    expect(welcomeWarning).toContain("thread-права");
+    // Отправку сообщений бот закрывает сам — предупреждения об этом нет.
+    expect(welcomeWarning).not.toContain("отправлять сообщения");
+  });
+
+  it("создаваемые форумы обеспечены Send Messages; ответы зависят от глобальных прав", () => {
+    const plan = buildPlan(TARGET_CONFIG, STARTUP_MESSAGES, snapshot([]));
+    expect(
+      plan.accessAudit.filter(
+        (warning) =>
+          warning.includes("fj-support") ||
+          warning.includes("book-creator") ||
+          warning.includes("talentforge-support"),
+      ),
+    ).toHaveLength(0);
+
+    const withoutThreadReplies = buildPlan(
       TARGET_CONFIG,
       STARTUP_MESSAGES,
       snapshot(
@@ -186,52 +458,10 @@ describe("предупреждения по фактическим правам 
         typicalEveryoneBits() & ~PermissionFlagsBits.SendMessagesInThreads,
       ),
     );
-
     expect(
-      plan.warnings.some((warning) =>
-        warning.includes("Send Messages in Threads"),
+      withoutThreadReplies.accessAudit.filter((warning) =>
+        warning.includes("Форум"),
       ),
-    ).toBe(true);
-  });
-
-  it("отключённый Send Messages — предупреждение о постах в форумах и #general", () => {
-    const plan = buildPlan(
-      TARGET_CONFIG,
-      STARTUP_MESSAGES,
-      snapshot(
-        [],
-        [],
-        {},
-        typicalEveryoneBits() & ~PermissionFlagsBits.SendMessages,
-      ),
-    );
-
-    expect(
-      plan.warnings.some((warning) =>
-        warning.includes("отключено Send Messages"),
-      ),
-    ).toBe(true);
-  });
-
-  it("@everyone без thread-прав — предупреждение только об ответах в форумах, без read-only примечания", () => {
-    const conservative =
-      PermissionFlagsBits.ViewChannel | PermissionFlagsBits.SendMessages;
-    const plan = buildPlan(
-      TARGET_CONFIG,
-      STARTUP_MESSAGES,
-      snapshot([], [], {}, conservative),
-    );
-
-    const everyoneWarnings = plan.warnings.filter((warning) =>
-      warning.includes("@everyone"),
-    );
-    // Send Messages есть, thread-прав нет: остаётся единственное
-    // предупреждение об ответах в форумах; read-only примечание не нужно —
-    // треды уже закрыты отсутствием прав.
-    expect(everyoneWarnings).toHaveLength(1);
-    expect(everyoneWarnings[0]).toContain("Send Messages in Threads");
-    expect(plan.warnings.some((w) => w.includes("read-only каналы"))).toBe(
-      false,
-    );
+    ).toHaveLength(3);
   });
 });

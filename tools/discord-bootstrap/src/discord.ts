@@ -94,6 +94,17 @@ export function createDiscordConnection(
     name: channel.name,
     type: mapChannelType(channel.type),
     parentId: channel.parentId,
+    // Real overwrites power the effective-access audit; the @everyone
+    // overwrite is the one carrying allow/deny bits for everyone here.
+    // Threads are listed separately by the forum probes, not by the guild
+    // channel cache — they carry no channel-level overwrites anyway.
+    permissionOverwrites: channel.isThread()
+      ? []
+      : [...channel.permissionOverwrites.cache.values()].map((overwrite) => ({
+          id: overwrite.id,
+          allow: overwrite.allow.bitfield,
+          deny: overwrite.deny.bitfield,
+        })),
   });
 
   const toOverwrites = (overwrites: readonly OverwriteSpec[]) =>

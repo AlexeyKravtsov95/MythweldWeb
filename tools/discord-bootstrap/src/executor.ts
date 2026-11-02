@@ -18,7 +18,6 @@ import {
   type TargetConfig,
 } from "./config.js";
 import {
-  auditEveryonePermissions,
   categoryOverwrites,
   channelOverwrites,
   missingBotPermissions,
@@ -140,18 +139,17 @@ export async function runApply(
     return { status: "aborted", plan, steps };
   }
 
-  // 3. Audit the actual @everyone permissions (forum participation and
-  // read-only thread gaps that the bot cannot fix automatically).
-  const everyoneWarnings = auditEveryonePermissions(
-    snapshot.everyonePermissions,
-  );
+  // 3. Effective-access audit from the plan: per-channel @everyone rights
+  // computed from the real channel/category overwrites (planned ones for
+  // channels that will be created), plus STAFF visibility risks. Warnings
+  // never block creation — they document what only the owner can fix.
   steps.push({
-    label: "Проверка роли @everyone",
-    status: everyoneWarnings.length === 0 ? "ok" : "warning",
+    label: "Аудит прав доступа @everyone",
+    status: plan.accessAudit.length === 0 ? "ok" : "warning",
     detail:
-      everyoneWarnings.length === 0
-        ? "проблемных настроек не найдено"
-        : everyoneWarnings.join(" • "),
+      plan.accessAudit.length === 0
+        ? "фактический доступ соответствует целевой конфигурации"
+        : plan.accessAudit.join(" • "),
   });
 
   // 4. Roles.

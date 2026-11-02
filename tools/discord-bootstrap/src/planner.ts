@@ -11,7 +11,15 @@ import type {
   TargetConfig,
 } from "./config.js";
 import type { StartupMessageDefinition } from "./messages.js";
-import { auditEveryonePermissions } from "./permissions.js";
+import {
+  applyEveryoneOverwrites,
+  forumAccessWarnings,
+  plannedEveryoneEffect,
+  readOnlyAccessWarnings,
+  staffVisibilityWarning,
+  type EveryoneOverwriteKind,
+  type SnapshotOverwrite,
+} from "./permissions.js";
 
 export type SnapshotChannelType =
   "category" | "text" | "forum" | "voice" | "announcement" | "other";
@@ -21,6 +29,8 @@ export interface SnapshotChannel {
   readonly name: string;
   readonly type: SnapshotChannelType;
   readonly parentId: string | null;
+  /** Actual channel overwrites; used for the effective-access audit. */
+  readonly permissionOverwrites: readonly SnapshotOverwrite[];
 }
 
 export interface SnapshotRole {
@@ -91,6 +101,13 @@ export interface BootstrapPlan {
   readonly messages: readonly PlannedMessage[];
   readonly conflicts: readonly PlanConflict[];
   readonly warnings: readonly string[];
+  /**
+   * Effective-access audit: per-channel @everyone warnings computed from
+   * the real channel/category overwrites (or the planned ones for channels
+   * that will be created). Mirrored into `warnings` for dry-run output;
+   * the executor surfaces it as a dedicated report step.
+   */
+  readonly accessAudit: readonly string[];
 }
 
 function normalizeName(name: string): string {
@@ -142,11 +159,12 @@ export function buildPlan(
   snapshot: GuildSnapshot,
 ): BootstrapPlan {
   const conflicts: PlanConflict[] = [];
-  // Runtime audit of the actual @everyone permissions: forum participation
-  // and read-only thread gaps are never assumed — see auditEveryonePermissions.
-  const warnings: string[] = [
-    ...auditEveryonePermissions(snapshot.everyonePermissions),
-  ];
+  const warnings: string[] = [];
+  // Effective-access audit per channel: real channel/category overwrites
+  // for existing entities, planned overwrites for the ones to be created.
+  // The guild-wide @everyone bitfield alone is never treated as proof of
+  // actual channel access.
+  const accessAudit: string[] = [];
 
   const roles: PlannedRole[] = target.roles.map((role) => {
     const existing =
@@ -181,6 +199,22 @@ export function buildPlan(
       throw new Error(`No resolution for category ${category.key}`);
     }
     if (resolution.existing !== null) {
+      if (category.staffOnly) {
+        // An existing staff-only category that @everyone can still see is
+        // an explicit privacy risk; never auto-fixed.
+        const effective = applyEveryoneOverwrites(
+          snapshot.everyonePermissions,
+          [resolution.existing.permissionOverwrites],
+          snapshot.guildId,
+        );
+        const risk = staffVisibilityWarning(
+          `Категория "${category.name}" (STAFF)`,
+          effective,
+        );
+        if (risk !== null) {
+          accessAudit.push(risk);
+        }
+      }
       return {
         action: "exists",
         categoryKey: category.key,
@@ -222,7 +256,7 @@ export function buildPlan(
     }
     for (const channel of category.channels) {
       channels.push(
-        planChannel(channel, resolution, snapshot, conflicts, warnings),
+        planChannel(channel, resolution, snapshot, conflicts, accessAudit),
       );
     }
   }
@@ -274,6 +308,7 @@ export function buildPlan(
     };
   });
 
+  warnings.push(...accessAudit);
   return {
     roles,
     categories,
@@ -281,7 +316,41 @@ export function buildPlan(
     messages: plannedMessages,
     conflicts,
     warnings,
+    accessAudit,
   };
+}
+
+function categoryEveryoneKind(
+  category: CategoryDefinition,
+): EveryoneOverwriteKind {
+  if (category.staffOnly) {
+    return "staff";
+  }
+  const channels = category.channels;
+  const allReadOnly =
+    channels.length > 0 && channels.every((channel) => channel.readOnly);
+  if (allReadOnly) {
+    return "readOnly";
+  }
+  if (channels.some((channel) => channel.kind === "forum")) {
+    return "forum";
+  }
+  return "talk";
+}
+
+function channelEveryoneKind(
+  channel: ChannelDefinition,
+): EveryoneOverwriteKind {
+  if (channel.staffOnly) {
+    return "staff";
+  }
+  if (channel.readOnly) {
+    return "readOnly";
+  }
+  if (channel.kind === "forum") {
+    return "forum";
+  }
+  return "talk";
 }
 
 function planChannel(
@@ -289,7 +358,7 @@ function planChannel(
   categoryResolution: CategoryResolution,
   snapshot: GuildSnapshot,
   conflicts: PlanConflict[],
-  warnings: string[],
+  accessAudit: string[],
 ): PlannedChannel {
   const base = {
     channelKey: channel.key,
@@ -314,6 +383,23 @@ function planChannel(
       };
       conflicts.push(conflict);
       return { ...base, action: "conflict", existingId: null, conflict };
+    }
+    // Prediction for a channel the bootstrap will create: apply the same
+    // planned @everyone overwrites (category layer, then channel layer).
+    const plannedEffective = plannedEveryoneEffect(
+      plannedEveryoneEffect(
+        snapshot.everyonePermissions,
+        categoryEveryoneKind(categoryResolution.definition),
+      ),
+      channelEveryoneKind(channel),
+    );
+    if (channel.readOnly) {
+      accessAudit.push(
+        ...readOnlyAccessWarnings(channel.name, plannedEffective),
+      );
+    }
+    if (channel.kind === "forum") {
+      accessAudit.push(...forumAccessWarnings(channel.name, plannedEffective));
     }
     return { ...base, action: "create", existingId: null, conflict: null };
   }
@@ -345,15 +431,29 @@ function planChannel(
     return { ...base, action: "conflict", existingId: existing.id, conflict };
   }
 
+  // Existing channel: audit the real access from the actual overwrites
+  // (parent category layer first, then the channel itself). Warnings
+  // disappear once the owner closes the gaps manually — the report always
+  // matches the actual state.
+  const effective = applyEveryoneOverwrites(
+    snapshot.everyonePermissions,
+    [category.permissionOverwrites, existing.permissionOverwrites],
+    snapshot.guildId,
+  );
   if (channel.readOnly) {
-    warnings.push(
-      `Канал "${channel.name}" уже существует — проверьте вручную, что @everyone не может отправлять сообщения.`,
-    );
+    accessAudit.push(...readOnlyAccessWarnings(channel.name, effective));
+  }
+  if (channel.kind === "forum") {
+    accessAudit.push(...forumAccessWarnings(channel.name, effective));
   }
   if (channel.staffOnly) {
-    warnings.push(
-      `Канал "${channel.name}" уже существует — проверьте вручную, что он скрыт от обычных участников.`,
+    const risk = staffVisibilityWarning(
+      `Канал #${channel.name} (STAFF)`,
+      effective,
     );
+    if (risk !== null) {
+      accessAudit.push(risk);
+    }
   }
   return { ...base, action: "exists", existingId: existing.id, conflict: null };
 }

@@ -143,67 +143,151 @@ export function permissionNames(bits: readonly bigint[]): readonly string[] {
 }
 
 /**
- * Audit of the actual @everyone permissions read from the guild snapshot.
- *
- * Two independent checks, per the current Discord API docs:
- * 1. Forum participation: creating a post in a forum requires SEND_MESSAGES
- *    (the docs state CREATE_PUBLIC_THREADS is ignored for forum posts) and
- *    replying in threads/posts requires SEND_MESSAGES_IN_THREADS. These are
- *    defaults on a fresh server, but defaults are never assumed — the real
- *    bitfield is checked and a missing permission becomes a warning with a
- *    manual fix instruction.
- * 2. Read-only channels: per the docs ("Only permissions your bot has in
- *    the guild ... can be allowed/denied"), the bot cannot deny
- *    CREATE_PUBLIC_THREADS / CREATE_PRIVATE_THREADS /
- *    SEND_MESSAGES_IN_THREADS without holding them itself — and the bot's
- *    permissions stay limited to the six invite permissions on principle.
- *    So whenever @everyone still holds any thread permission, the residual
- *    thread activity in read-only channels is flagged as a manual step.
+ * Channel/category permission overwrite as captured in the guild snapshot.
+ * Used to compute the *effective* @everyone access per channel — the guild
+ * -wide bitfield alone is never treated as proof of actual channel access.
  */
-export function auditEveryonePermissions(
-  everyonePermissions: bigint,
+export interface SnapshotOverwrite {
+  /** Role or member snowflake the overwrite applies to. */
+  readonly id: string;
+  readonly allow: bigint;
+  readonly deny: bigint;
+}
+
+/**
+ * Effective @everyone permissions: guild-wide role bitfield, then every
+ * overwrite layer applied in order (parent category first, channel second).
+ * Discord resolves channel access exactly this way for the @everyone role;
+ * channel overwrites win over the category per bit. Overwrites that target
+ * other roles or members are ignored here.
+ */
+export function applyEveryoneOverwrites(
+  base: bigint,
+  layers: readonly (readonly SnapshotOverwrite[])[],
+  everyoneRoleId: string,
+): bigint {
+  let effective = base;
+  for (const layer of layers) {
+    for (const overwrite of layer) {
+      if (overwrite.id !== everyoneRoleId) {
+        continue;
+      }
+      effective = (effective & ~overwrite.deny) | overwrite.allow;
+    }
+  }
+  return effective;
+}
+
+/** The @everyone overwrite shapes the bootstrap itself would create. */
+export type EveryoneOverwriteKind = "readOnly" | "forum" | "talk" | "staff";
+
+/**
+ * Predicted effective @everyone permissions right after the bootstrap
+ * creates the channel (same allow/deny sets the executor passes to Discord).
+ * Used to audit channels that do not exist yet: no assumption beyond what
+ * the tool itself guarantees.
+ */
+export function plannedEveryoneEffect(
+  base: bigint,
+  kind: EveryoneOverwriteKind,
+): bigint {
+  let effective = base;
+  const planned =
+    kind === "readOnly"
+      ? { allow: READ_ONLY_EVERYONE_ALLOW, deny: READ_ONLY_EVERYONE_DENY }
+      : kind === "forum"
+        ? { allow: FORUM_EVERYONE_ALLOW, deny: [] }
+        : kind === "staff"
+          ? { allow: [], deny: STAFF_EVERYONE_DENY }
+          : { allow: TALK_EVERYONE_ALLOW, deny: [] };
+  for (const bit of planned.deny) {
+    effective &= ~bit;
+  }
+  for (const bit of planned.allow) {
+    effective |= bit;
+  }
+  return effective;
+}
+
+const THREAD_RIGHTS: ReadonlyArray<readonly [bigint, string]> = [
+  [PermissionFlagsBits.CreatePublicThreads, "Create Public Threads"],
+  [PermissionFlagsBits.CreatePrivateThreads, "Create Private Threads"],
+  [PermissionFlagsBits.SendMessagesInThreads, "Send Messages in Threads"],
+];
+
+/**
+ * Read-only channel audit against the *effective* @everyone access.
+ * Returns an empty list when the channel is already fully locked (Send
+ * Messages denied and no thread rights left) — after the owner completes
+ * the manual thread-permission step the warning disappears instead of
+ * lingering as a generic reminder.
+ */
+export function readOnlyAccessWarnings(
+  channelName: string,
+  effective: bigint,
+): readonly string[] {
+  const gaps: string[] = [];
+  if (hasPermission(effective, PermissionFlagsBits.SendMessages)) {
+    gaps.push("может отправлять сообщения (Send Messages)");
+  }
+  const threadRights = THREAD_RIGHTS.filter(([bit]) =>
+    hasPermission(effective, bit),
+  ).map(([, label]) => label);
+  if (threadRights.length > 0) {
+    gaps.push(`сохраняет thread-права: ${threadRights.join(", ")}`);
+  }
+  if (gaps.length === 0) {
+    return [];
+  }
+  return [
+    `Канал "${channelName}" (read-only): @everyone фактически ${gaps.join("; ")} — ` +
+      "бот не может закрыть эти права автоматически (оврайты ограничены шестью правами бота); " +
+      "закройте их для @everyone вручную",
+  ];
+}
+
+/**
+ * Forum audit against the effective @everyone access: creating a post needs
+ * SEND_MESSAGES (docs: CREATE_PUBLIC_THREADS is ignored for forum posts),
+ * replying needs SEND_MESSAGES_IN_THREADS.
+ */
+export function forumAccessWarnings(
+  channelName: string,
+  effective: bigint,
 ): readonly string[] {
   const warnings: string[] = [];
-  const canSendMessages = hasPermission(
-    everyonePermissions,
-    PermissionFlagsBits.SendMessages,
-  );
-  const canSendInThreads = hasPermission(
-    everyonePermissions,
-    PermissionFlagsBits.SendMessagesInThreads,
-  );
-  const canCreatePublicThreads = hasPermission(
-    everyonePermissions,
-    PermissionFlagsBits.CreatePublicThreads,
-  );
-  const canCreatePrivateThreads = hasPermission(
-    everyonePermissions,
-    PermissionFlagsBits.CreatePrivateThreads,
-  );
-
-  if (!canSendMessages) {
+  if (!hasPermission(effective, PermissionFlagsBits.SendMessages)) {
     warnings.push(
-      "у роли @everyone отключено Send Messages: участники не смогут писать в #general " +
-        "и создавать посты в форумах (создание поста регулируется именно Send Messages) — " +
-        "включите его вручную (Server Settings → Roles → @everyone)",
+      `Форум "${channelName}": @everyone не сможет создавать посты — Send Messages закрыт; ` +
+        "включите право для @everyone вручную",
     );
   }
-  if (!canSendInThreads) {
+  if (!hasPermission(effective, PermissionFlagsBits.SendMessagesInThreads)) {
     warnings.push(
-      "у роли @everyone отключено Send Messages in Threads: участники не смогут отвечать " +
-        "в постах форумов и других тредах — включите его вручную (Server Settings → Roles → @everyone)",
-    );
-  }
-  if (canSendInThreads || canCreatePublicThreads || canCreatePrivateThreads) {
-    warnings.push(
-      "read-only каналы: бот может запрещать в оверрайтах только те права, которые есть у него " +
-        "самого (шесть прав invite), поэтому Create Public Threads, Create Private Threads и " +
-        "Send Messages in Threads он запретить для @everyone не может. Если участники не должны " +
-        "создавать треды и отвечать в них в welcome/rules/announcements — запретите эти права " +
-        "для @everyone вручную в настройках каждого канала",
+      `Форум "${channelName}": @everyone не сможет отвечать в постах — Send Messages in Threads закрыт; ` +
+        "включите право для @everyone вручную",
     );
   }
   return warnings;
+}
+
+/**
+ * STAFF visibility risk: an existing staff-only category/channel that is
+ * still visible to @everyone is reported explicitly. Existing permissions
+ * are never modified automatically — the owner fixes access manually.
+ */
+export function staffVisibilityWarning(
+  entityLabel: string,
+  effective: bigint,
+): string | null {
+  if (!hasPermission(effective, PermissionFlagsBits.ViewChannel)) {
+    return null;
+  }
+  return (
+    `${entityLabel} виден(а) обычным участникам (@everyone имеет View Channel) — ` +
+    "публичный доступ к приватной зоне STAFF; закройте View Channel для @everyone вручную. " +
+    "Существующие разрешения инструмент не меняет"
+  );
 }
 
 export interface OverwriteSpec {

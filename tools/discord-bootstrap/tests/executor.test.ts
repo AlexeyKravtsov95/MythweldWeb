@@ -5,7 +5,7 @@ import {
   FakeDiscordApi,
   allRequiredBotBits,
   fullExistingState,
-  typicalEveryoneBits,
+  securedExistingState,
 } from "./helpers.js";
 
 const TEST_TOKEN = "test-secret-bot-token-do-not-print";
@@ -157,6 +157,7 @@ describe("runApply — защита (сценарии 8, 9, 10, 11)", () => {
       name: "welcome",
       type: "voice",
       parentId: null,
+      permissionOverwrites: [],
     });
 
     const outcome = await runApply(fake, options(true));
@@ -271,8 +272,8 @@ describe("права ролей в пределах фактических пр�
   });
 });
 
-describe("аудит прав @everyone в отчёте Apply (завершение проверки прав каналов)", () => {
-  function everyoneStep(outcome: {
+describe("аудит фактического доступа в отчёте Apply (канальные оверрайты и STAFF)", () => {
+  function auditStep(outcome: {
     readonly steps: readonly {
       readonly label: string;
       readonly status: string;
@@ -280,45 +281,86 @@ describe("аудит прав @everyone в отчёте Apply (завершен�
     }[];
   }) {
     return outcome.steps.find(
-      (step) => step.label === "Проверка роли @everyone",
+      (step) => step.label === "Аудит прав доступа @everyone",
     );
   }
 
-  it("типичные thread-права @everyone — шаг warning про read-only, применение продолжается", async () => {
+  it("свежий сервер: шаг warning про остаточные thread-права read-only, применение продолжается", async () => {
     const fake = new FakeDiscordApi(); // everyonePermissions = typicalEveryoneBits
     const outcome = await runApply(fake, options(true));
 
     expect(outcome.status).toBe("applied");
-    const step = everyoneStep(outcome);
+    const step = auditStep(outcome);
     expect(step?.status).toBe("warning");
-    expect(step?.detail).toContain("read-only каналы");
+    expect(step?.detail).toContain("welcome");
+    expect(step?.detail).toContain("thread-права");
     expect(step?.detail).toContain("вручную");
-    // Предупреждение носит информационный характер: создание продолжено.
     expect(fake.createdChannels).toHaveLength(8);
     expect(fake.sentMessages).toHaveLength(6);
   });
 
-  it("нет Send Messages in Threads у @everyone — предупреждение об ответах в форумах", async () => {
-    const fake = new FakeDiscordApi({
-      everyonePermissions:
-        typicalEveryoneBits() & ~PermissionFlagsBits.SendMessagesInThreads,
-    });
+  it("сервер с завершёнными ручными шагами — шаг ok, предупреждений нет", async () => {
+    const fake = new FakeDiscordApi();
+    const state = securedExistingState();
+    fake.channels = [...state.channels];
+    fake.roles = [...state.roles];
+    fake.messageProbes = {
+      welcome: "sent",
+      rules: "sent",
+      announcements: "sent",
+      "fj-support": "sent",
+      "book-creator": "sent",
+      "talentforge-support": "sent",
+      general: "sent",
+      "mod-log": "sent",
+    };
+
     const outcome = await runApply(fake, options(true));
 
     expect(outcome.status).toBe("applied");
-    const step = everyoneStep(outcome);
-    expect(step?.status).toBe("warning");
-    expect(step?.detail).toContain("Send Messages in Threads");
+    const step = auditStep(outcome);
+    expect(step?.status).toBe("ok");
+    expect(step?.detail).toContain("соответствует");
   });
 
-  it("dry-run отражает те же предупреждения через plan.warnings, без мутаций", async () => {
+  it("видимый STAFF и mod-log на существующем сервере — шаг warning с рисками, права не меняются", async () => {
+    const fake = new FakeDiscordApi();
+    const state = fullExistingState(); // без оверрайтов: STAFF и mod-log видимы
+    fake.channels = [...state.channels];
+    fake.roles = [...state.roles];
+    fake.messageProbes = {
+      welcome: "sent",
+      rules: "sent",
+      announcements: "sent",
+      "fj-support": "sent",
+      "book-creator": "sent",
+      "talentforge-support": "sent",
+      general: "sent",
+      "mod-log": "sent",
+    };
+
+    const outcome = await runApply(fake, options(true));
+
+    expect(outcome.status).toBe("applied");
+    const step = auditStep(outcome);
+    expect(step?.status).toBe("warning");
+    expect(step?.detail).toContain("STAFF");
+    expect(step?.detail).toContain("mod-log");
+    expect(step?.detail).toContain("View Channel");
+    // Существующие разрешения автоматически не меняются.
+    expect(fake.createdCategoryRecords).toHaveLength(0);
+    expect(fake.createdChannels).toHaveLength(0);
+  });
+
+  it("dry-run отражает те же предупреждения через plan.accessAudit/warnings, без мутаций", async () => {
     const fake = new FakeDiscordApi();
     const plan = await runDryRun(fake);
 
     expect(fake.mutations).toBe(0);
-    expect(plan.warnings.some((w) => w.includes("read-only каналы"))).toBe(
-      true,
-    );
+    expect(plan.accessAudit.length).toBeGreaterThan(0);
+    for (const entry of plan.accessAudit) {
+      expect(plan.warnings).toContain(entry);
+    }
   });
 
   it("при недостаточных правах бота шаг аудита не выполняется", async () => {
@@ -328,7 +370,7 @@ describe("аудит прав @everyone в отчёте Apply (завершен�
     const outcome = await runApply(fake, options(true));
 
     expect(outcome.status).toBe("permission-denied");
-    expect(everyoneStep(outcome)).toBeUndefined();
+    expect(auditStep(outcome)).toBeUndefined();
   });
 });
 

@@ -17,6 +17,13 @@ import type {
   SnapshotRole,
 } from "../src/planner.js";
 import { TARGET_CONFIG } from "../src/config.js";
+import {
+  categoryOverwrites,
+  channelOverwrites,
+  type OverwriteSpec,
+  type PermissionTargets,
+  type SnapshotOverwrite,
+} from "../src/permissions.js";
 import type { StartupMessageDefinition } from "../src/messages.js";
 
 export const GUILD_ID = "100000000000000001";
@@ -60,6 +67,17 @@ let idCounter = 300000000000000000n;
 function nextId(): string {
   idCounter += 1n;
   return idCounter.toString();
+}
+
+/** Converts the executor's overwrite specs into snapshot overwrite records. */
+export function toSnapshotOverwrites(
+  specs: readonly OverwriteSpec[],
+): SnapshotOverwrite[] {
+  return specs.map((spec) => ({
+    id: spec.id,
+    allow: spec.allow.reduce((acc, bit) => acc | bit, 0n),
+    deny: spec.deny.reduce((acc, bit) => acc | bit, 0n),
+  }));
 }
 
 export interface FakeApiOptions {
@@ -158,6 +176,7 @@ export class FakeDiscordApi implements DiscordApi {
       name: input.name,
       type: "category",
       parentId: null,
+      permissionOverwrites: toSnapshotOverwrites(input.overwrites),
     });
     return { id };
   }
@@ -173,6 +192,7 @@ export class FakeDiscordApi implements DiscordApi {
       name: input.name,
       type: input.kind === "forum" ? "forum" : "text",
       parentId: input.parentId,
+      permissionOverwrites: toSnapshotOverwrites(input.overwrites),
     });
     return { id };
   }
@@ -188,7 +208,11 @@ export class FakeDiscordApi implements DiscordApi {
   }
 }
 
-/** Snapshot state in which the whole target layout already exists. */
+/**
+ * Snapshot state in which the whole target layout already exists with NO
+ * overwrites (a neutral pre-existing server): read-only channels stay
+ * writable and STAFF stays visible — the audit must flag both.
+ */
 export function fullExistingState(): {
   channels: SnapshotChannel[];
   roles: SnapshotRole[];
@@ -205,6 +229,7 @@ export function fullExistingState(): {
       name: category.name,
       type: "category",
       parentId: null,
+      permissionOverwrites: [],
     });
     for (const channel of category.channels) {
       channels.push({
@@ -212,8 +237,68 @@ export function fullExistingState(): {
         name: channel.name,
         type: channel.kind,
         parentId: categoryId,
+        permissionOverwrites: [],
       });
     }
   }
   return { channels, roles };
+}
+
+const SECURED_TARGETS: PermissionTargets = {
+  everyoneRoleId: GUILD_ID,
+  roleIdByKey: { moderator: "900000000000000111" },
+  botUserId: BOT_USER_ID,
+};
+
+/** Extra thread denies the owner adds by hand in read-only channels. */
+const MANUAL_THREAD_DENY = [
+  PermissionFlagsBits.CreatePublicThreads,
+  PermissionFlagsBits.CreatePrivateThreads,
+  PermissionFlagsBits.SendMessagesInThreads,
+];
+
+/**
+ * Snapshot state where the layout exists AND the owner completed every
+ * manual access step: read-only channels also deny thread permissions,
+ * STAFF is hidden, forums carry the intended allow set. The effective
+ * access audit must come back empty for this state.
+ */
+export function securedExistingState(): {
+  channels: SnapshotChannel[];
+  roles: SnapshotRole[];
+} {
+  const state = fullExistingState();
+  const updated: SnapshotChannel[] = [];
+  for (const category of TARGET_CONFIG.categories) {
+    const categoryId = `cat-${category.key}`;
+    updated.push({
+      id: categoryId,
+      name: category.name,
+      type: "category",
+      parentId: null,
+      permissionOverwrites: toSnapshotOverwrites(
+        categoryOverwrites(category, SECURED_TARGETS),
+      ),
+    });
+    for (const channel of category.channels) {
+      const baseSpecs = channelOverwrites(channel, SECURED_TARGETS);
+      // For read-only channels the owner manually extended the bot's deny
+      // with the thread rights.
+      const specs = channel.readOnly
+        ? baseSpecs.map((spec) =>
+            spec.id === GUILD_ID
+              ? { ...spec, deny: [...spec.deny, ...MANUAL_THREAD_DENY] }
+              : spec,
+          )
+        : baseSpecs;
+      updated.push({
+        id: `chan-${channel.key}`,
+        name: channel.name,
+        type: channel.kind,
+        parentId: categoryId,
+        permissionOverwrites: toSnapshotOverwrites(specs),
+      });
+    }
+  }
+  return { channels: updated, roles: state.roles };
 }
