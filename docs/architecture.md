@@ -1,6 +1,6 @@
 # Карта архитектуры MythweldWeb
 
-Карта проверена по `main` на **2026-10-31** в [Issue #16](https://github.com/AlexeyKravtsov95/MythweldWeb/issues/16).
+Карта актуализирована по `main` (`62299c5`) на **2026-11-03** в [Issue #32](https://github.com/AlexeyKravtsov95/MythweldWeb/issues/32).
 Начинать с текущей Issue и [AGENTS.md](../AGENTS.md); эта карта помогает выбрать файлы,
 а не требует прочитать их все. Статус инфраструктуры и release gates — в [current-state.md](current-state.md).
 
@@ -26,12 +26,14 @@ src/pages/ (маршрут + locale)
 | Главная EN/RU                                | [src/pages/index.astro](../src/pages/index.astro), [src/pages/ru/index.astro](../src/pages/ru/index.astro) → [HomePage](../src/components/home/HomePage.astro); блоки в `src/components/home/`                                      |
 | TalentForge EN/RU                            | `src/pages/{ru/,}talentforge/index.astro` → [TalentForgePage](../src/components/product/TalentForgePage.astro)                                                                                                                      |
 | Forever Journey EN/RU                        | `src/pages/{ru/,}forever-journey/index.astro` → [ForeverJourneyPage](../src/components/product/ForeverJourneyPage.astro)                                                                                                            |
+| Book Creator EN/RU                           | `src/pages/{ru/,}book-creator/index.astro` → [BookCreatorPage](../src/components/product/BookCreatorPage.astro)                                                                                                                     |
+| Community EN/RU                              | `src/pages/{ru/,}community/index.astro` → [CommunityPage](../src/components/community/CommunityPage.astro); якоря поддержки `forever-journey`, `talentforge`, `rules`                                                               |
 | Общая разметка, SEO, меню, подвал            | [BaseLayout](../src/layouts/BaseLayout.astro), `src/components/{SiteHeader,SiteFooter,LanguageSwitcher}.astro`                                                                                                                      |
 | Тексты и локализация                         | [Dictionary](../src/i18n/types.ts), `src/i18n/dictionaries/{en,ru}.ts`; [locales.ts](../src/i18n/locales.ts): `LOCALES`, `localizePath`, `localeFromPath`; [index.ts](../src/i18n/index.ts): `getDictionary`                        |
 | Статусы, магазины, дата проверки             | [RELEASE](../src/config/release.ts); B6, только после подтверждения владельца                                                                                                                                                       |
 | Существующие внешние ссылки и share-карточки | [SITE](../src/config/site.ts)                                                                                                                                                                                                       |
-| Privacy, Terms, Contact                      | [LEGAL](../src/config/legal.ts); B7, пока `null`; неутверждённые черновики — `docs/legal-drafts/`                                                                                                                                   |
-| Список основных страниц и sitemap            | [PUBLIC_PATHS](../src/config/pages.ts) → [sitemap.xml.ts](../src/pages/sitemap.xml.ts); три нейтральных пути × две локали = шесть URL                                                                                               |
+| Privacy, Terms, Contact                      | [LEGAL](../src/config/legal.ts); B7 = NO-GO, `LEGAL` и `legal.pages.*` — `null`; каркас PR #30 в `src/components/legal/` без шести маршрутов; черновики — `docs/legal-drafts/`                                                      |
+| Список основных страниц и sitemap            | [PUBLIC_PATHS](../src/config/pages.ts) → [sitemap.xml.ts](../src/pages/sitemap.xml.ts); пять нейтральных путей × две локали = 10 URL; после отдельного legal approval и реализации — 16                                             |
 | 404 и dev-preview                            | [404.astro](../src/pages/404.astro) → `dist/404.html` с EN/RU и `noindex`; [dev/components/[locale].astro](../src/pages/dev/components/[locale].astro) не создаёт production-маршрутов                                              |
 | Повторяемые элементы                         | `src/components/ui/`: `ProductPlate`, `ProductAction`, `ReleaseStatus`, `StatusTag`, `FigureWithCaption`, `MediaGrid`, `ClassArtworkGrid`, `AssetPlaceholder`                                                                       |
 | Медиа                                        | [catalog.ts](../src/media/catalog.ts): `MEDIA`, `CLASS_ARTWORK`, `ADDON_SCREENSHOTS`, `pickMedia`; [images.ts](../src/media/images.ts): `imageFor`; оригиналы в `src/assets/media/`, происхождение в [manifest](assets-manifest.md) |
@@ -75,7 +77,9 @@ Workflow и скрипты проверены в репозитории; све�
 и только реально опубликованные URL; локализованные названия статусов — в словарях.
 Legal отдельно: утверждённые EN/RU документы и контакт → `src/config/legal.ts`.
 Снятие `Disallow: /` — отдельное release approval; связанные проверки и защита перечислены
-в [release-readiness.md](release-readiness.md). В Issue #16 эти файлы не меняются.
+в [release-readiness.md](release-readiness.md). В Issue #32 эти файлы не меняются.
+
+**QA #32:** матрица 10 × 4, результаты HTTPS и owner-only checklist — [отчёт](qa/issue-32/README.md).
 
 **Деплой:** согласованная Issue → проверки и план → ручной workflow владельца для
 проверенного коммита из `main` → smoke и запись результатов. Merge выполняет владелец.
