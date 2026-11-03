@@ -15,7 +15,7 @@ export const en = {
             "How mythweld.com handles technical requests, which infrastructure services deliver its pages, and what visitors should know about their personal data rights.",
         },
         heading: "Privacy Policy",
-        effectiveDate: null,
+        effectiveDate: "2026-11-04",
         introduction: [
           {
             kind: "paragraph",

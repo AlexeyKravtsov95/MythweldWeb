@@ -112,11 +112,16 @@ describe("dictionaries", () => {
   });
 
   it.each(LOCALES)(
-    "%s contains Privacy only, with publication date awaiting review",
+    "%s contains Privacy only, with the owner-approved calendar date",
     (locale) => {
       const pages = getDictionary(locale).legal.pages;
       expect(pages.privacy).not.toBeNull();
-      expect(pages.privacy?.effectiveDate).toBeNull();
+      const date = pages.privacy?.effectiveDate ?? "";
+      expect(date).toBe("2026-11-04");
+      expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10)).toBe(
+        date,
+      );
       expect(pages.terms).toBeNull();
       expect(pages.contact).toBeNull();
     },

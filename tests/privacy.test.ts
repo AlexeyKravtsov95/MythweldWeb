@@ -44,10 +44,18 @@ describe.each(LOCALES)("Privacy (%s)", (locale) => {
     }
   });
 
-  it("does not fabricate an effective date before owner approval", () => {
-    expect(t.legal.pages.privacy?.effectiveDate).toBeNull();
-    expect(article?.querySelector("time, .date")).toBeNull();
-    expect(article?.text).not.toMatch(/2026-11-04|4 ноября|4 November/);
+  it("renders the owner-approved effective date in the current locale", () => {
+    const date = t.legal.pages.privacy?.effectiveDate;
+    expect(date).toBe("2026-11-04");
+    expect(article?.querySelectorAll(".date time")).toHaveLength(1);
+    const time = article?.querySelector(".date time");
+    expect(time?.getAttribute("datetime")).toBe(date);
+    expect(time?.text).toBe(
+      locale === "ru" ? "4 ноября 2026 г." : "4 November 2026",
+    );
+    expect(article?.querySelector(".date")?.text).toContain(
+      t.legal.ui.effectiveDate,
+    );
   });
 
   it("contains the confirmed operator and the limited technical scope", () => {

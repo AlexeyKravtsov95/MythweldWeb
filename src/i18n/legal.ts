@@ -31,8 +31,8 @@ interface LegalPageCopy {
 }
 
 export interface LegalDocumentCopy extends LegalPageCopy {
-  /** ISO calendar date (YYYY-MM-DD); null while publication awaits owner review. */
-  effectiveDate: string | null;
+  /** Owner-approved ISO calendar date (YYYY-MM-DD); required for publication. */
+  effectiveDate: string;
 }
 
 export interface LegalContactCopy extends LegalPageCopy {
