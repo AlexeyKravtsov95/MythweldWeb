@@ -7,6 +7,9 @@ import type { LegalDocumentId } from "../src/i18n/legal";
 import { legalFixtures, testEmail, testUrl } from "./fixtures/legal";
 
 let container: AstroContainer;
+const originalPages = Object.fromEntries(
+  LOCALES.map((locale) => [locale, { ...getDictionary(locale).legal.pages }]),
+);
 const documentIds = [
   "privacy",
   "terms",
@@ -19,11 +22,7 @@ beforeAll(async () => {
 
 afterEach(() => {
   for (const locale of LOCALES) {
-    Object.assign(getDictionary(locale).legal.pages, {
-      privacy: null,
-      terms: null,
-      contact: null,
-    });
+    Object.assign(getDictionary(locale).legal.pages, originalPages[locale]);
   }
 });
 
@@ -45,6 +44,7 @@ describe.each(LOCALES)("legal page foundation (%s)", (locale) => {
   it.each(documentIds)(
     "refuses %s without approved dictionary content",
     async (document) => {
+      getDictionary(locale).legal.pages[document] = null;
       await expect(
         container.renderToString(LegalPage, { props: { locale, document } }),
       ).rejects.toThrow(/No approved legal content/);

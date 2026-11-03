@@ -1,7 +1,7 @@
 /**
- * Legal pages and contact of the Mythweld site (blocker B7). Every value is
- * `null` until the owner approves the document, its address and who answers
- * the contact; the footer shows only the addresses that exist.
+ * Legal routes of this site. Issue #34 prepares Privacy for owner review;
+ * Terms and Contact remain absent. Merge and publication are owner decisions.
+ * The footer shows only addresses backed by existing pages.
  *
  * `legal.mythweld.com` hosts the TalentForge app documents (privacy.html,
  * terms.html, checked 2026-10-27). They describe the Android app, not this
@@ -16,7 +16,7 @@ export interface LegalLinks {
 }
 
 export const LEGAL: LegalLinks = {
-  privacy: null,
+  privacy: "/privacy/",
   terms: null,
   contact: null,
 };

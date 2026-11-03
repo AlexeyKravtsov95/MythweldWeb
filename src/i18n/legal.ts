@@ -31,8 +31,8 @@ interface LegalPageCopy {
 }
 
 export interface LegalDocumentCopy extends LegalPageCopy {
-  /** Owner-approved ISO calendar date (YYYY-MM-DD); never defaults to today. */
-  effectiveDate: string;
+  /** ISO calendar date (YYYY-MM-DD); null while publication awaits owner review. */
+  effectiveDate: string | null;
 }
 
 export interface LegalContactCopy extends LegalPageCopy {
@@ -52,6 +52,6 @@ export interface LegalCopy {
     effectiveDate: string;
     email: string;
   };
-  /** Populate only with the specific EN/RU texts approved in a separate issue. */
+  /** Specific EN/RU copy; publication requires owner approval of text and date. */
   pages: LegalPagesCopy;
 }

@@ -7,7 +7,205 @@ export const en = {
       effectiveDate: "Effective date",
       email: "Email",
     },
-    pages: { privacy: null, terms: null, contact: null },
+    pages: {
+      privacy: {
+        meta: {
+          title: "Privacy Policy — Mythweld",
+          description:
+            "How mythweld.com handles technical requests, which infrastructure services deliver its pages, and what visitors should know about their personal data rights.",
+        },
+        heading: "Privacy Policy",
+        effectiveDate: null,
+        introduction: [
+          {
+            kind: "paragraph",
+            content: [
+              "This policy describes personal data processing when you visit the static pages of mythweld.com. It provides information about that processing and does not itself constitute consent.",
+            ],
+          },
+        ],
+        sections: [
+          {
+            heading: "Operator and scope",
+            blocks: [
+              {
+                kind: "paragraph",
+                content: [
+                  "The operator of mythweld.com is Alexey Kravtsov (Алексей Кравцов), an individual in the Russian Federation.",
+                ],
+              },
+              {
+                kind: "paragraph",
+                content: [
+                  "This policy covers this website only. It does not cover the TalentForge app, the Forever Journey addon, CurseForge, or Book Creator at journal.mythweld.com. The app documents at legal.mythweld.com do not replace this policy.",
+                ],
+              },
+              {
+                kind: "paragraph",
+                content: [
+                  "Personal data is information relating to a directly or indirectly identifiable person. Processing includes receiving, using, storing and deleting such information.",
+                ],
+              },
+            ],
+          },
+          {
+            heading: "What the website does",
+            blocks: [
+              {
+                kind: "paragraph",
+                content: [
+                  "The website serves static information pages. There are no accounts, sign-in, purchase facilities, forms, comments or file uploads on these pages. The website code contains no web analytics, advertising pixels or tracking scripts.",
+                ],
+              },
+              {
+                kind: "paragraph",
+                content: [
+                  "The code does not set cookies or write to browser storage. Fonts and images are served by the website, without loading third-party scripts. These statements describe the website code; they do not establish that infrastructure providers never use cookies or logs.",
+                ],
+              },
+            ],
+          },
+          {
+            heading: "Technical data when you visit",
+            blocks: [
+              {
+                kind: "paragraph",
+                content: [
+                  "Delivering a page involves technical requests through VK Cloud Object Storage and a CDN. The delivery chain may process your IP address, request time, requested URL, User-Agent and TLS connection parameters when HTTPS is used. Such data may relate to an identifiable person; it is not automatically anonymous.",
+                ],
+              },
+              {
+                kind: "paragraph",
+                content: [
+                  "The CDN handles the visitor connection, while the origin may receive a forwarded request. The same fields are not necessarily available at every step. Technical information may be retained in logs after a response. The exact logged fields, retention periods and provider access arrangements have not been confirmed.",
+                ],
+              },
+            ],
+          },
+          {
+            heading: "Purposes and legal basis",
+            blocks: [
+              {
+                kind: "paragraph",
+                content: [
+                  "Technical requests are processed to deliver the pages and resources you request and to protect the availability and integrity of the service.",
+                ],
+              },
+              {
+                kind: "paragraph",
+                content: [
+                  "The intended legal basis for necessary processing for these purposes is Article 6, part 1, point 7 of Russian Federal Law No. 152-FZ: the legitimate interests of the operator or third parties, provided that visitors’ rights and freedoms are not infringed. This basis does not justify excessive data collection, tracking or every possible use of logs by a provider.",
+                ],
+              },
+            ],
+          },
+          {
+            heading: "Infrastructure and recipients",
+            blocks: [
+              {
+                kind: "paragraph",
+                content: [
+                  "VK Cloud Object Storage and the CDN participate in delivering the website. Cloudflare provides DNS only, separately from the HTTP delivery chain. That DNS role does not itself mean that the website sends Cloudflare the URLs or content of HTTP requests; a DNS request may come from a resolver rather than directly from a visitor.",
+                ],
+              },
+              {
+                kind: "paragraph",
+                content: [
+                  "The providers’ contractual legal entities, processing roles, access conditions and locations of processing or copies remain to be confirmed. Their technical involvement does not automatically make each service a processor acting on the operator’s instructions.",
+                ],
+              },
+              {
+                kind: "paragraph",
+                content: [
+                  "The available information does not establish whether cross-border transfers occur or whether all processing takes place in Russia. Disclosure to competent authorities requires an applicable lawful basis.",
+                ],
+              },
+            ],
+          },
+          {
+            heading: "Retention and deletion",
+            blocks: [
+              {
+                kind: "paragraph",
+                content: [
+                  "The exact retention periods and deletion arrangements for infrastructure logs are not known. This policy does not set a fixed CDN log retention period or promise immediate deletion after a page is delivered.",
+                ],
+              },
+              {
+                kind: "paragraph",
+                content: [
+                  "Personal data must not be kept longer than required by its lawful processing purposes, unless a different period is required by law or another applicable lawful basis. Cessation, blocking and deletion are subject to the grounds and time limits of applicable law, including Articles 20 and 21 of Law No. 152-FZ. No unverified ability to search or delete provider logs is promised; limitations of access do not remove the operator’s statutory duties.",
+                ],
+              },
+            ],
+          },
+          {
+            heading: "Cookies",
+            blocks: [
+              {
+                kind: "paragraph",
+                content: [
+                  "The website code does not install cookies. This does not rule out cookies used by infrastructure services under particular conditions. A lack of cookies in the code is also not evidence that technical requests are never logged.",
+                ],
+              },
+            ],
+          },
+          {
+            heading: "Your rights and requests",
+            blocks: [
+              {
+                kind: "paragraph",
+                content: [
+                  "Under applicable law, you may obtain information about processing and access your personal data; request correction, blocking, destruction or cessation of processing where the statutory grounds apply; withdraw consent if processing relied on it; and challenge the operator’s actions before Roskomnadzor or a court. Another lawful basis may require continued retention of particular data.",
+                ],
+              },
+              {
+                kind: "paragraph",
+                content: [
+                  "A public contact channel is temporarily not listed while the mail service is being restored. This limits the practical ability to send a request directly to the operator and does not remove visitors’ rights or the operator’s legal duties. Contact information will be added after the channel is restored and checked.",
+                ],
+              },
+              {
+                kind: "paragraph",
+                content: [
+                  "Do not post identity documents, passwords or other sensitive personal data in public Discord or GitHub discussions. Those discussions are not a private channel for personal data requests.",
+                ],
+              },
+            ],
+          },
+          {
+            heading: "Available protections and their limits",
+            blocks: [
+              {
+                kind: "paragraph",
+                content: [
+                  "HTTPS is available for this website and protects data in transit when used. HTTP is also accessible, so encrypted transport is not guaranteed for every visit.",
+                ],
+              },
+              {
+                kind: "paragraph",
+                content: [
+                  "The absence of forms and tracking scripts in the website code limits collection through the pages themselves. This policy does not claim that unverified access controls, encryption of stored data or other provider security measures have been implemented.",
+                ],
+              },
+            ],
+          },
+          {
+            heading: "Changes to this policy",
+            blocks: [
+              {
+                kind: "paragraph",
+                content: [
+                  "An updated version will be published on this page with its effective date after approval. A change to this policy does not itself create consent to new processing purposes.",
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      terms: null,
+      contact: null,
+    },
   },
   meta: {
     htmlLang: "en",
