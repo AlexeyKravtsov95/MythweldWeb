@@ -1,0 +1,443 @@
+{
+  "results": [
+    {
+      "path": "/",
+      "started": "2026-11-03T06:59:25.170Z",
+      "get": 200,
+      "head": 200,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=0, s-maxage=300, must-revalidate",
+        "last-modified": "Mon, 02 Nov 2026 15:02:53 GMT",
+        "etag": "W/\"38acdb814093b2549a0c16a29004ed3b\"",
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "lang": "en",
+      "title": "Mythweld — independent tools for World of Warcraft: Forever",
+      "canonical": "https://mythweld.com/",
+      "brand404": false,
+      "noindex": false,
+      "sameAsLocal": true
+    },
+    {
+      "path": "/talentforge/",
+      "started": "2026-11-03T06:59:25.205Z",
+      "get": 200,
+      "head": 200,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=0, s-maxage=300, must-revalidate",
+        "last-modified": "Mon, 02 Nov 2026 15:02:56 GMT",
+        "etag": "W/\"5f2455ec5e5496590240894f06ff4bdb\"",
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "lang": "en",
+      "title": "TalentForge — talent build planner for WoW: Forever · Mythweld",
+      "canonical": "https://mythweld.com/talentforge/",
+      "brand404": false,
+      "noindex": false,
+      "sameAsLocal": true
+    },
+    {
+      "path": "/forever-journey/",
+      "started": "2026-11-03T06:59:25.205Z",
+      "get": 200,
+      "head": 200,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=0, s-maxage=300, must-revalidate",
+        "last-modified": "Mon, 02 Nov 2026 15:02:53 GMT",
+        "etag": "W/\"5197581c177d4655a97c6278f1001488\"",
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "lang": "en",
+      "title": "Forever Journey — journal addon for WoW: Forever · Mythweld",
+      "canonical": "https://mythweld.com/forever-journey/",
+      "brand404": false,
+      "noindex": false,
+      "sameAsLocal": true
+    },
+    {
+      "path": "/book-creator/",
+      "started": "2026-11-03T06:59:25.205Z",
+      "get": 200,
+      "head": 200,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=0, s-maxage=300, must-revalidate",
+        "last-modified": "Mon, 02 Nov 2026 15:02:53 GMT",
+        "etag": "W/\"2954a793445462a6d585e33b20808e06\"",
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "lang": "en",
+      "title": "Book Creator — turn your journal into a PDF · Mythweld",
+      "canonical": "https://mythweld.com/book-creator/",
+      "brand404": false,
+      "noindex": false,
+      "sameAsLocal": true
+    },
+    {
+      "path": "/community/",
+      "started": "2026-11-03T06:59:25.206Z",
+      "get": 200,
+      "head": 200,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=0, s-maxage=300, must-revalidate",
+        "last-modified": "Mon, 02 Nov 2026 15:02:52 GMT",
+        "etag": "W/\"d8769a3fc1d1d5bafd18f13655ad0299\"",
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "lang": "en",
+      "title": "Community — Mythweld Discord server · Mythweld",
+      "canonical": "https://mythweld.com/community/",
+      "brand404": false,
+      "noindex": false,
+      "sameAsLocal": true
+    },
+    {
+      "path": "/ru/",
+      "started": "2026-11-03T06:59:25.207Z",
+      "get": 200,
+      "head": 200,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=0, s-maxage=300, must-revalidate",
+        "last-modified": "Mon, 02 Nov 2026 15:02:55 GMT",
+        "etag": "W/\"ccc6398c2405ae64c9cf977769dc8890\"",
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "lang": "ru",
+      "title": "Mythweld — независимые инструменты для World of Warcraft: Forever",
+      "canonical": "https://mythweld.com/ru/",
+      "brand404": false,
+      "noindex": false,
+      "sameAsLocal": true
+    },
+    {
+      "path": "/ru/talentforge/",
+      "started": "2026-11-03T06:59:25.207Z",
+      "get": 200,
+      "head": 200,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=0, s-maxage=300, must-revalidate",
+        "last-modified": "Mon, 02 Nov 2026 15:02:55 GMT",
+        "etag": "W/\"2b2f9b2f1e60d816e50e567663ff4813\"",
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "lang": "ru",
+      "title": "TalentForge — планировщик талантов для WoW: Forever · Mythweld",
+      "canonical": "https://mythweld.com/ru/talentforge/",
+      "brand404": false,
+      "noindex": false,
+      "sameAsLocal": true
+    },
+    {
+      "path": "/ru/forever-journey/",
+      "started": "2026-11-03T06:59:25.207Z",
+      "get": 200,
+      "head": 200,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=0, s-maxage=300, must-revalidate",
+        "last-modified": "Mon, 02 Nov 2026 15:02:54 GMT",
+        "etag": "W/\"019abdfae9f9408ff40f8e637f766db7\"",
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "lang": "ru",
+      "title": "Forever Journey — аддон-дневник для WoW: Forever · Mythweld",
+      "canonical": "https://mythweld.com/ru/forever-journey/",
+      "brand404": false,
+      "noindex": false,
+      "sameAsLocal": true
+    },
+    {
+      "path": "/ru/book-creator/",
+      "started": "2026-11-03T06:59:25.207Z",
+      "get": 200,
+      "head": 200,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=0, s-maxage=300, must-revalidate",
+        "last-modified": "Mon, 02 Nov 2026 15:02:54 GMT",
+        "etag": "W/\"5ac01487bf69bed715c372495215f7c2\"",
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "lang": "ru",
+      "title": "Book Creator — из дневника в PDF-книгу · Mythweld",
+      "canonical": "https://mythweld.com/ru/book-creator/",
+      "brand404": false,
+      "noindex": false,
+      "sameAsLocal": true
+    },
+    {
+      "path": "/ru/community/",
+      "started": "2026-11-03T06:59:25.208Z",
+      "get": 200,
+      "head": 200,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=0, s-maxage=300, must-revalidate",
+        "last-modified": "Mon, 02 Nov 2026 15:02:54 GMT",
+        "etag": "W/\"111c974aef1a0d5ef1b25889c25e0eae\"",
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "lang": "ru",
+      "title": "Сообщество — сервер Mythweld в Discord · Mythweld",
+      "canonical": "https://mythweld.com/ru/community/",
+      "brand404": false,
+      "noindex": false,
+      "sameAsLocal": true
+    },
+    {
+      "path": "/robots.txt",
+      "started": "2026-11-03T06:59:25.208Z",
+      "get": 200,
+      "head": 200,
+      "headers": {
+        "content-type": "text/plain; charset=utf-8",
+        "cache-control": "public, max-age=0, s-maxage=300, must-revalidate",
+        "last-modified": "Mon, 02 Nov 2026 15:02:53 GMT",
+        "etag": "W/\"15dbbb886bdfcf5d6da147e46c0a636e\"",
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "brand404": false,
+      "noindex": false,
+      "sameAsLocal": true,
+      "body": "# Mythweld main website — release candidate (WEB-M0.5).\n# Indexing stays closed until the public launch (WEB-M0.6). At launch:\n# replace \"Disallow: /\" with \"Allow: /\" and add\n# \"Sitemap: https://mythweld.com/sitemap.xml\" (see docs/release-readiness.md).\nUser-agent: *\nDisallow: /\n"
+    },
+    {
+      "path": "/sitemap.xml",
+      "started": "2026-11-03T06:59:25.208Z",
+      "get": 200,
+      "head": 200,
+      "headers": {
+        "content-type": "application/xml; charset=utf-8",
+        "cache-control": "public, max-age=0, s-maxage=300, must-revalidate",
+        "last-modified": "Mon, 02 Nov 2026 15:02:55 GMT",
+        "etag": "W/\"6229f65bdf4a864fb800180451f6db42\"",
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "brand404": false,
+      "noindex": false,
+      "sameAsLocal": true,
+      "locs": [
+        "https://mythweld.com/",
+        "https://mythweld.com/ru/",
+        "https://mythweld.com/talentforge/",
+        "https://mythweld.com/ru/talentforge/",
+        "https://mythweld.com/forever-journey/",
+        "https://mythweld.com/ru/forever-journey/",
+        "https://mythweld.com/book-creator/",
+        "https://mythweld.com/ru/book-creator/",
+        "https://mythweld.com/community/",
+        "https://mythweld.com/ru/community/"
+      ]
+    },
+    {
+      "path": "/404.html",
+      "started": "2026-11-03T06:59:25.208Z",
+      "get": 200,
+      "head": 200,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=0, s-maxage=300, must-revalidate",
+        "last-modified": "Mon, 02 Nov 2026 15:02:56 GMT",
+        "etag": "W/\"2b782cc8f5fd076143d2048d92e81aef\"",
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "lang": "en",
+      "title": "Page not found · Страница не найдена — Mythweld",
+      "brand404": true,
+      "noindex": true,
+      "sameAsLocal": true
+    },
+    {
+      "path": "/qa-issue-32-missing/",
+      "started": "2026-11-03T06:59:25.209Z",
+      "get": 403,
+      "head": 403,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": null,
+        "last-modified": null,
+        "etag": null,
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "lang": "en",
+      "title": "Page not found · Страница не найдена — Mythweld",
+      "brand404": true,
+      "noindex": true,
+      "sameAsLocal": null
+    },
+    {
+      "path": "/privacy/",
+      "started": "2026-11-03T06:59:25.209Z",
+      "get": 403,
+      "head": 403,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": null,
+        "last-modified": null,
+        "etag": null,
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "lang": "en",
+      "title": "Page not found · Страница не найдена — Mythweld",
+      "brand404": true,
+      "noindex": true,
+      "sameAsLocal": null
+    },
+    {
+      "path": "/terms/",
+      "started": "2026-11-03T06:59:25.209Z",
+      "get": 403,
+      "head": 403,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": null,
+        "last-modified": null,
+        "etag": null,
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "lang": "en",
+      "title": "Page not found · Страница не найдена — Mythweld",
+      "brand404": true,
+      "noindex": true,
+      "sameAsLocal": null
+    },
+    {
+      "path": "/contact/",
+      "started": "2026-11-03T06:59:25.209Z",
+      "get": 403,
+      "head": 403,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": null,
+        "last-modified": null,
+        "etag": null,
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "lang": "en",
+      "title": "Page not found · Страница не найдена — Mythweld",
+      "brand404": true,
+      "noindex": true,
+      "sameAsLocal": null
+    },
+    {
+      "path": "/ru/privacy/",
+      "started": "2026-11-03T06:59:25.209Z",
+      "get": 403,
+      "head": 403,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": null,
+        "last-modified": null,
+        "etag": null,
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "lang": "en",
+      "title": "Page not found · Страница не найдена — Mythweld",
+      "brand404": true,
+      "noindex": true,
+      "sameAsLocal": null
+    },
+    {
+      "path": "/ru/terms/",
+      "started": "2026-11-03T06:59:25.209Z",
+      "get": 403,
+      "head": 403,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": null,
+        "last-modified": null,
+        "etag": null,
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "lang": "en",
+      "title": "Page not found · Страница не найдена — Mythweld",
+      "brand404": true,
+      "noindex": true,
+      "sameAsLocal": null
+    },
+    {
+      "path": "/ru/contact/",
+      "started": "2026-11-03T06:59:25.209Z",
+      "get": 403,
+      "head": 403,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": null,
+        "last-modified": null,
+        "etag": null,
+        "location": null,
+        "strict-transport-security": null
+      },
+      "setCookie": false,
+      "lang": "en",
+      "title": "Page not found · Страница не найдена — Mythweld",
+      "brand404": true,
+      "noindex": true,
+      "sameAsLocal": null
+    }
+  ],
+  "external": [
+    {
+      "url": "https://journal.mythweld.com/",
+      "status": 200,
+      "final": "https://journal.mythweld.com/",
+      "title": "Forever Journey — Book Creator"
+    },
+    {
+      "url": "https://www.curseforge.com/wow/addons/forever-journey",
+      "status": 403,
+      "final": "https://www.curseforge.com/wow/addons/forever-journey",
+      "title": "Just a moment..."
+    },
+    {
+      "url": "https://discord.gg/R96fQZHGRS",
+      "status": 200,
+      "final": "https://discord.com/invite/R96fQZHGRS",
+      "title": "Mythweld"
+    }
+  ]
+}
