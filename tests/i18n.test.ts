@@ -103,19 +103,29 @@ describe("dictionaries", () => {
 
   it.each(LOCALES)("%s has no empty strings", (locale) => {
     const { legal, ...copy } = getDictionary(locale);
-    for (const value of leafValues({ ...copy, legal: legal.ui })) {
+    for (const value of leafValues({ ...copy, legal }).filter(
+      (v) => v !== null,
+    )) {
       expect(typeof value).toBe("string");
       expect((value as string).trim()).not.toBe("");
     }
   });
 
-  it.each(LOCALES)("%s keeps unapproved legal content absent", (locale) => {
-    expect(getDictionary(locale).legal.pages).toEqual({
-      privacy: null,
-      terms: null,
-      contact: null,
-    });
-  });
+  it.each(LOCALES)(
+    "%s contains Privacy only, with the owner-approved calendar date",
+    (locale) => {
+      const pages = getDictionary(locale).legal.pages;
+      expect(pages.privacy).not.toBeNull();
+      const date = pages.privacy?.effectiveDate ?? "";
+      expect(date).toBe("2026-11-04");
+      expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10)).toBe(
+        date,
+      );
+      expect(pages.terms).toBeNull();
+      expect(pages.contact).toBeNull();
+    },
+  );
 
   it.each(LOCALES)("%s declares its own html lang", (locale) => {
     expect(getDictionary(locale).meta.htmlLang).toBe(locale);

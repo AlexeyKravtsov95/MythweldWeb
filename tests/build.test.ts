@@ -157,10 +157,12 @@ describe("site output", () => {
       "community/index.html",
       "forever-journey/index.html",
       "index.html",
+      "privacy/index.html",
       "ru/book-creator/index.html",
       "ru/community/index.html",
       "ru/forever-journey/index.html",
       "ru/index.html",
+      "ru/privacy/index.html",
       "ru/talentforge/index.html",
       "talentforge/index.html",
     ]);

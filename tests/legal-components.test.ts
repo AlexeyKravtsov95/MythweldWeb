@@ -7,6 +7,9 @@ import type { LegalDocumentId } from "../src/i18n/legal";
 import { legalFixtures, testEmail, testUrl } from "./fixtures/legal";
 
 let container: AstroContainer;
+const originalPages = Object.fromEntries(
+  LOCALES.map((locale) => [locale, { ...getDictionary(locale).legal.pages }]),
+);
 const documentIds = [
   "privacy",
   "terms",
@@ -19,21 +22,24 @@ beforeAll(async () => {
 
 afterEach(() => {
   for (const locale of LOCALES) {
-    Object.assign(getDictionary(locale).legal.pages, {
-      privacy: null,
-      terms: null,
-      contact: null,
-    });
+    Object.assign(getDictionary(locale).legal.pages, originalPages[locale]);
   }
 });
 
 describe.each(LOCALES)("legal page foundation (%s)", (locale) => {
-  it.each(["", "not-a-date", "2000-02-30", "2000-13-01"])(
+  it.each([undefined, null, 0, "", "not-a-date", "2000-02-30", "2000-13-01"])(
     "refuses an invalid effective date: %s",
     async (effectiveDate) => {
       const copy = legalFixtures[locale].privacy;
       if (copy === null) throw new Error("Missing privacy test fixture");
-      getDictionary(locale).legal.pages.privacy = { ...copy, effectiveDate };
+      const invalidCopy = { ...copy };
+      // Deliberately malformed runtime input, including a missing field.
+      if (effectiveDate === undefined) {
+        Reflect.deleteProperty(invalidCopy, "effectiveDate");
+      } else {
+        Reflect.set(invalidCopy, "effectiveDate", effectiveDate);
+      }
+      getDictionary(locale).legal.pages.privacy = invalidCopy;
       await expect(
         container.renderToString(LegalPage, {
           props: { locale, document: "privacy" },
@@ -45,6 +51,7 @@ describe.each(LOCALES)("legal page foundation (%s)", (locale) => {
   it.each(documentIds)(
     "refuses %s without approved dictionary content",
     async (document) => {
+      getDictionary(locale).legal.pages[document] = null;
       await expect(
         container.renderToString(LegalPage, { props: { locale, document } }),
       ).rejects.toThrow(/No approved legal content/);

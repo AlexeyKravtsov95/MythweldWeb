@@ -17,6 +17,7 @@ import {
   DEFAULT_LOCALE,
   LOCALES,
   getDictionary,
+  localizeHref,
   localizePath,
 } from "../src/i18n";
 import { MEDIA } from "../src/media/catalog";
@@ -112,7 +113,7 @@ describe.each(PAGES)("public page $url", ({ locale, path, url }) => {
     expect(doc.querySelectorAll("[role='img']")).toHaveLength(0);
   });
 
-  it("links legal pages only once they are approved (B7)", () => {
+  it("links only the configured legal routes (B7)", () => {
     const footer = doc.querySelector("footer");
     const labels = footer?.querySelectorAll("a").map(text) ?? [];
     const pages = [
@@ -122,6 +123,12 @@ describe.each(PAGES)("public page $url", ({ locale, path, url }) => {
     ] as const;
     for (const [label, href] of pages) {
       expect(labels.includes(label)).toBe(href !== null);
+      if (href !== null) {
+        expect(
+          footer?.querySelector(`a[href='${localizeHref(locale, href)}']`)
+            ?.text,
+        ).toBe(label);
+      }
     }
     const anyApproved = pages.some(([, href]) => href !== null);
     expect(text(footer).includes(t.footer.legalPending)).toBe(!anyApproved);
@@ -200,9 +207,9 @@ describe("owner-confirmed release facts (2026-11-01)", () => {
 });
 
 describe("legal configuration", () => {
-  const futureLegalPaths = ["privacy", "terms", "contact"];
+  const futureLegalPaths = ["terms", "contact"];
 
-  it.each(LOCALES)("publishes no unapproved legal route in %s", (locale) => {
+  it.each(LOCALES)("keeps Terms and Contact unpublished in %s", (locale) => {
     const sitemap = readFileSync(`${dist}sitemap.xml`, "utf8");
     for (const document of futureLegalPaths) {
       const path = localizePath(locale, `/${document}/`);
@@ -211,7 +218,7 @@ describe("legal configuration", () => {
     }
   });
 
-  it("exports no legal draft text, internal decisions or test fixtures in any file", () => {
+  it("exports no internal drafts, decisions, private contact or test fixtures", () => {
     const draftDir = new URL("../docs/legal-drafts/", import.meta.url);
     const draftFiles = [
       "privacy-policy.en.md",
@@ -245,8 +252,11 @@ describe("legal configuration", () => {
       );
       const body = readFileSync(`${dist}${file}`, "utf8");
       expect(body, file).not.toMatch(
-        /\bDRAFT\b|ЧЕРНОВИК|OWNER DECISION|РЕШЕНИЕ ВЛАДЕЛЬЦА|\[\[VERIFIED_CONTACT_ADDRESS_[^\]]*\]\]|\bOD-\d{2}\b|\b(?:RKN|LEGAL)-01\b|mythweld@mythweld\.com|Alexey Kravtsov|Алексей Кравцов|long-test-address-|long-test-path-/i,
+        /\bDRAFT\b|ЧЕРНОВИК|OWNER DECISION|РЕШЕНИЕ ВЛАДЕЛЬЦА|\[\[VERIFIED_CONTACT_ADDRESS_[^\]]*\]\]|\bOD-\d{2}\b|\b(?:RKN|LEGAL)-01\b|mythweld@mythweld\.com|long-test-address-|long-test-path-/i,
       );
+      if (!["privacy/index.html", "ru/privacy/index.html"].includes(file)) {
+        expect(body, file).not.toMatch(/Alexey Kravtsov|Алексей Кравцов/);
+      }
       const text = normalize(file.endsWith(".html") ? parse(body).text : body);
       for (const excerpt of draftExcerpts) {
         expect(text, `${file}: legal draft excerpt`).not.toContain(excerpt);
@@ -254,8 +264,8 @@ describe("legal configuration", () => {
     }
   });
 
-  it("keeps every legal address null until the owner approves it", () => {
-    expect(LEGAL).toEqual({ privacy: null, terms: null, contact: null });
+  it("configures only the two localized Privacy routes", () => {
+    expect(LEGAL).toEqual({ privacy: "/privacy/", terms: null, contact: null });
   });
 
   it("has drafts in docs only, marked as not approved", () => {

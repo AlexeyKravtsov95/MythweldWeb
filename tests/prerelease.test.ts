@@ -15,6 +15,7 @@ const paths = [
   "/forever-journey/",
   "/book-creator/",
   "/community/",
+  "/privacy/",
 ] as const;
 const pages = LOCALES.flatMap((locale) =>
   paths.map((path) => ({ locale, path, url: localizePath(locale, path) })),
@@ -22,13 +23,13 @@ const pages = LOCALES.flatMap((locale) =>
 const load = (url: string) =>
   parse(readFileSync(`${dist}${url.slice(1)}index.html`, "utf8"));
 
-it("keeps all five page pairs in the public registry and sitemap", () => {
+it("keeps all six page pairs in the public registry and sitemap", () => {
   expect(PUBLIC_PATHS).toEqual(paths);
   const xml = readFileSync(`${dist}sitemap.xml`, "utf8");
   expect(
     [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]).sort(),
   ).toEqual(pages.map((p) => `${SITE.url}${p.url}`).sort());
-  expect(pages).toHaveLength(10);
+  expect(pages).toHaveLength(12);
 });
 
 describe.each(pages)("QA contract $url", ({ locale, path, url }) => {

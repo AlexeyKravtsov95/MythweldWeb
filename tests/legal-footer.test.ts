@@ -63,6 +63,7 @@ describe.each(LOCALES)("future legal footer (%s)", (locale) => {
   });
 
   it("keeps the current note and no legal links while all addresses are null", async () => {
+    Object.assign(LEGAL, { privacy: null, terms: null, contact: null });
     const doc = parse(
       await container.renderToString(SiteFooter, { props: { locale } }),
     );
