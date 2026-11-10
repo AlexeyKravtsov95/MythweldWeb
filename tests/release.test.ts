@@ -65,14 +65,20 @@ describe.each(PAGES)("public page $url", ({ locale, path, url }) => {
     expect(text(footer?.querySelector('[data-state="awaiting_review"]'))).toBe(
       labels.ios,
     );
+    // The live listing is linked from the footer on every page, opening
+    // in a new tab; a vanished link must fail the test, not pass it.
+    const footerPlay = footer?.querySelector(
+      `a[href="${RELEASE.talentforge.googlePlay}"]`,
+    );
+    expect(footerPlay).not.toBeNull();
+    expect(footerPlay?.getAttribute("target")).toBe("_blank");
+    expect(footerPlay?.getAttribute("rel")).toBe("noopener");
+    // Every Play link on the page is the same universal URL, without a
+    // locale override such as `&hl=ru`.
     const play = doc.querySelectorAll('a[href*="play.google.com"]');
-    // The universal listing URL on every page, without a locale override.
     expect(
       [...play].every(
-        (a) =>
-          a.getAttribute("href") === RELEASE.talentforge.googlePlay &&
-          a.getAttribute("target") === "_blank" &&
-          a.getAttribute("rel") === "noopener",
+        (a) => a.getAttribute("href") === RELEASE.talentforge.googlePlay,
       ),
     ).toBe(true);
     expect(doc.querySelectorAll('a[href*="apps.apple.com"]')).toHaveLength(0);
@@ -102,6 +108,15 @@ describe.each(PAGES)("public page $url", ({ locale, path, url }) => {
         "2026-11-10",
       );
       expect(panel?.querySelectorAll('[aria-disabled="true"]')).toHaveLength(1);
+      // The Google Play action is the active button: a real external link,
+      // never a disabled placeholder span.
+      const action = [...(panel?.querySelectorAll(".stores > *") ?? [])].find(
+        (el) => text(el).startsWith(t.release.channels.googlePlay),
+      );
+      expect(action?.tagName).toBe("A");
+      expect(action?.getAttribute("href")).toBe(RELEASE.talentforge.googlePlay);
+      expect(action?.getAttribute("target")).toBe("_blank");
+      expect(action?.getAttribute("rel")).toBe("noopener");
     }
   });
 
