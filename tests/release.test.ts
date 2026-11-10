@@ -2,7 +2,8 @@
  * Release gates of WEB-M0.5 on the production build in `dist/` (run
  * `npm run build` first): no unapproved placeholder on public pages, legal
  * addresses only once approved, the Russian sample book never published,
- * honest store states and robots.txt closed until the WEB-M0.6 launch.
+ * honest store states (Google Play live since 2026-11-10, the App Store
+ * still unreviewed) and robots.txt closed until the WEB-M0.6 launch.
  */
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
@@ -55,27 +56,36 @@ describe.each(PAGES)("public page $url", ({ locale, path, url }) => {
     doc = load(url);
   });
 
-  it("shows owner-confirmed store states without public store links", () => {
+  it("shows owner-confirmed store states with the live Google Play listing", () => {
     const labels =
       locale === "ru"
-        ? { android: "Закрытое тестирование", ios: "Ожидает проверки Apple" }
-        : { android: "Closed testing", ios: "Awaiting Apple review" };
+        ? { android: "Доступно", ios: "Ожидает проверки Apple" }
+        : { android: "Available", ios: "Awaiting Apple review" };
     const footer = doc.querySelector("footer");
-    expect(text(footer?.querySelector('[data-state="testing"]'))).toBe(
-      labels.android,
-    );
     expect(text(footer?.querySelector('[data-state="awaiting_review"]'))).toBe(
       labels.ios,
     );
+    // The live listing is linked from the footer on every page, opening
+    // in a new tab; a vanished link must fail the test, not pass it.
+    const footerPlay = footer?.querySelector(
+      `a[href="${RELEASE.talentforge.googlePlay}"]`,
+    );
+    expect(footerPlay).not.toBeNull();
+    expect(footerPlay?.getAttribute("target")).toBe("_blank");
+    expect(footerPlay?.getAttribute("rel")).toBe("noopener");
+    // Every Play link on the page is the same universal URL, without a
+    // locale override such as `&hl=ru`.
+    const play = doc.querySelectorAll('a[href*="play.google.com"]');
     expect(
-      doc.querySelectorAll(
-        'a[href*="play.google.com"], a[href*="apps.apple.com"]',
+      [...play].every(
+        (a) => a.getAttribute("href") === RELEASE.talentforge.googlePlay,
       ),
-    ).toHaveLength(0);
+    ).toBe(true);
+    expect(doc.querySelectorAll('a[href*="apps.apple.com"]')).toHaveLength(0);
 
     if (path === "/") {
       const plate = doc.querySelector("article[aria-labelledby='talentforge']");
-      expect(text(plate?.querySelector('[data-state="testing"]'))).toBe(
+      expect(text(plate?.querySelector('[data-state="available"]'))).toBe(
         `Android: ${labels.android.toLocaleLowerCase()}`,
       );
       expect(text(plate?.querySelector('[data-state="awaiting_review"]'))).toBe(
@@ -88,16 +98,25 @@ describe.each(PAGES)("public page $url", ({ locale, path, url }) => {
       const panel = doc.querySelector(
         "section[aria-labelledby='release-status']",
       );
-      expect(text(panel?.querySelector('[data-state="testing"]'))).toBe(
+      expect(text(panel?.querySelector('[data-state="available"]'))).toBe(
         labels.android,
       );
       expect(text(panel?.querySelector('[data-state="awaiting_review"]'))).toBe(
         labels.ios,
       );
       expect(panel?.querySelector("time")?.getAttribute("datetime")).toBe(
-        "2026-11-01",
+        "2026-11-10",
       );
-      expect(panel?.querySelectorAll('[aria-disabled="true"]')).toHaveLength(2);
+      expect(panel?.querySelectorAll('[aria-disabled="true"]')).toHaveLength(1);
+      // The Google Play action is the active button: a real external link,
+      // never a disabled placeholder span.
+      const action = [...(panel?.querySelectorAll(".stores > *") ?? [])].find(
+        (el) => text(el).startsWith(t.release.channels.googlePlay),
+      );
+      expect(action?.tagName).toBe("A");
+      expect(action?.getAttribute("href")).toBe(RELEASE.talentforge.googlePlay);
+      expect(action?.getAttribute("target")).toBe("_blank");
+      expect(action?.getAttribute("rel")).toBe("noopener");
     }
   });
 
@@ -195,13 +214,16 @@ describe.each(PAGES)("public page $url", ({ locale, path, url }) => {
   });
 });
 
-describe("owner-confirmed release facts (2026-11-01)", () => {
-  it("keeps both stores unpublished and preserves the addon release", () => {
-    expect(RELEASE.checked).toBe("2026-11-01");
-    expect(RELEASE.talentforge.android).toBe("testing");
+describe("owner-confirmed release facts (2026-11-10)", () => {
+  it("publishes Google Play and keeps the App Store unreviewed", () => {
+    expect(RELEASE.checked).toBe("2026-11-10");
+    expect(RELEASE.talentforge.android).toBe("available");
     expect(RELEASE.talentforge.ios).toBe("awaiting_review");
-    expect(RELEASE.talentforge.googlePlay).toBeNull();
+    expect(RELEASE.talentforge.googlePlay).toBe(
+      "https://play.google.com/store/apps/details?id=io.github.alexeykravtsov95.talentforge",
+    );
     expect(RELEASE.talentforge.appStore).toBeNull();
+    expect(RELEASE.talentforge.dataVersion).toBe("1.60.1");
     expect(RELEASE.foreverJourney.curseforge).toBe("available");
   });
 });
