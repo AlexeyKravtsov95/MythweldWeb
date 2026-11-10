@@ -8,6 +8,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { parse, type HTMLElement } from "node-html-parser";
 import { beforeAll, describe, expect, it } from "vitest";
+import { RELEASE } from "../src/config/release";
 import { SITE } from "../src/config/site";
 import { LOCALES, getDictionary, localizePath, type Locale } from "../src/i18n";
 
@@ -150,7 +151,14 @@ describe.each(LOCALES)("community page for %s", (locale) => {
   });
 
   it("uses the single Discord invite from the config for every external link", () => {
-    const allowed = new Set<string>(Object.values(SITE.links));
+    const storeLinks: (string | null)[] = [
+      RELEASE.talentforge.googlePlay,
+      RELEASE.talentforge.appStore,
+    ];
+    const allowed = new Set<string>([
+      ...Object.values(SITE.links),
+      ...storeLinks.filter((href): href is string => href !== null),
+    ]);
     const external = doc.querySelectorAll("a[href^='http']");
     expect(external.length).toBeGreaterThanOrEqual(2);
     for (const a of external) {

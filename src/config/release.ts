@@ -26,11 +26,12 @@ export interface Release {
 }
 
 export const RELEASE = {
-  checked: "2026-11-01",
+  checked: "2026-11-10",
   talentforge: {
-    android: "testing",
+    android: "available",
     ios: "awaiting_review",
-    googlePlay: null,
+    googlePlay:
+      "https://play.google.com/store/apps/details?id=io.github.alexeykravtsov95.talentforge",
     appStore: null,
     dataVersion: "1.60.1",
   },
