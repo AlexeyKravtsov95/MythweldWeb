@@ -143,6 +143,18 @@ describe.each(LOCALES)("ReleaseStatus (%s)", (locale) => {
     );
   });
 
+  it("shows one row per store, without separate platform rows", async () => {
+    const doc = await render(ReleaseStatus, { locale, id: "release" });
+    const rows = [...doc.querySelectorAll(".rows > div")].map(
+      (div) => div.querySelector("dt")?.text,
+    );
+    expect(rows).toEqual([
+      t.release.channels.googlePlay,
+      t.release.channels.appStore,
+      t.release.channels.talentData,
+    ]);
+  });
+
   it("shows store buttons as disabled until links exist", async () => {
     const doc = await render(ReleaseStatus, { locale, id: "release" });
     const stores = [

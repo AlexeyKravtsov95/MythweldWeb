@@ -18,6 +18,18 @@ export interface Release {
     googlePlay: string | null;
     appStore: string | null;
     dataVersion: string;
+    /** App features that exist in the repository but are not public yet. */
+    upcoming: {
+      /**
+       * TalentForge 1.2 (W1.04): copy a saved build to newer talent data.
+       * The page section and its screenshots render only once the owner
+       * confirms the public rollout by setting `released` to `true`.
+       */
+      buildMigration: {
+        version: "1.2";
+        released: boolean;
+      };
+    };
   };
   foreverJourney: {
     /** State of the addon listing on CurseForge (`SITE.links.curseforge`). */
@@ -34,6 +46,12 @@ export const RELEASE = {
       "https://play.google.com/store/apps/details?id=io.github.alexeykravtsov95.talentforge",
     appStore: null,
     dataVersion: "1.60.1",
+    upcoming: {
+      buildMigration: {
+        version: "1.2",
+        released: false,
+      },
+    },
   },
   foreverJourney: {
     curseforge: "available",

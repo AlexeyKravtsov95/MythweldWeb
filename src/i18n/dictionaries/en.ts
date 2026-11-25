@@ -341,12 +341,20 @@ export const en = {
   },
   talentforgePage: {
     meta: {
-      title: "TalentForge — talent build planner for WoW: Forever · Mythweld",
+      title: "TalentForge — WoW Forever talent calculator & planner · Mythweld",
       description:
-        "TalentForge is a mobile app for planning World of Warcraft: Forever talent builds for all nine classes in the real specialization trees. Builds stay on your phone and planning works offline.",
+        "Free WoW Forever talent calculator and planner: all nine classes in the real specialization trees, offline planning on your phone, and builds you can share as text codes.",
     },
     kind: "Mobile app · Android and iOS",
-    lead: "Plan talent builds for all nine classes of World of Warcraft: Forever in the real specialization trees. Builds stay on your phone.",
+    lead: "A free talent planner for World of Warcraft: Forever. Plan builds for all nine classes in the real specialization trees — offline, right on your phone.",
+    install: {
+      googlePlay: "Install on Google Play",
+      facts: {
+        free: "Free",
+        classes: "All nine classes",
+        offline: "Works offline",
+      },
+    },
     dataVersionNote:
       "Talent data is the version of the World of Warcraft: Forever talent data the app plans on, not the app version.",
     classes: {
@@ -394,6 +402,14 @@ export const en = {
           title: "Saves as you edit",
           text: "Every change is kept at once. There is no Save button: close the app and the build is still there.",
         },
+        library: {
+          title: "Your build library",
+          text: "Every build lives in one list on your phone. Continue where you stopped, or start a new build for any class.",
+        },
+        organize: {
+          title: "Search, sort and favorites",
+          text: "Find a build by name or class, sort the list, and mark the builds you come back to.",
+        },
         offline: {
           title: "Works offline",
           text: "Trees, icons and builds live on the phone. Planning needs no connection.",
@@ -403,15 +419,59 @@ export const en = {
           text: "The app follows your phone's language. In Russian, talent names and most descriptions come from the game's own Russian text; the rest is shown in English.",
         },
         share: {
-          title: "Import and share builds",
+          title: "Import and export build codes",
           text: "Send a build as a short text code through any messenger, or import a code you were given.",
         },
-        dataVersions: {
-          title: "Builds keep their data",
-          text: "A saved build always opens on the talent data version it was made with.",
+        dataUpdates: {
+          title: "Talent data updates",
+          text: "In OTA-enabled builds, new talent data can be downloaded when you are online, without reinstalling the app. A saved build still opens on the talent data version it was made with.",
         },
       },
       notShown: "Not shown in the screenshots on this page.",
+    },
+    upcoming: {
+      label: "Coming in TalentForge 1.2",
+      heading: "Keep your builds across game updates",
+      text: "Create a copy of your build using newer talent data. TalentForge checks which ranks can be transferred and keeps your original build unchanged.",
+    },
+    faq: {
+      heading: "FAQ",
+      items: {
+        what: {
+          question: "What is TalentForge?",
+          answer:
+            "A free mobile talent planner for World of Warcraft: Forever. It shows the talent trees of all nine classes, checks the game's rules while you spend points, and keeps every build on your phone.",
+        },
+        foreverOrRetail: {
+          question: "Is it for WoW: Forever or Retail?",
+          answer:
+            "For WoW: Forever only. The trees are built from the Forever client's own data, so they are not the Retail or Classic trees.",
+        },
+        internet: {
+          question: "Does it need an internet connection?",
+          answer:
+            "No. Planning works fully offline: the trees, talent descriptions and your builds are stored on the phone. Only OTA-enabled builds use the internet, to download talent data updates.",
+        },
+        storage: {
+          question: "Where are my builds stored?",
+          answer:
+            "On your phone only. There is no account and no server storage; nothing is sent anywhere.",
+        },
+        share: {
+          question: "Can I share a build?",
+          answer:
+            "Yes. Export a build as a short text code and send it through any messenger; the other person imports the code into their app.",
+        },
+        russian: {
+          question: "Does the app support Russian?",
+          answer:
+            "Yes. The app follows your phone's language; in Russian, talent names and most descriptions come from the game's own Russian text.",
+        },
+        account: {
+          question: "Do I need to create an account?",
+          answer: "No. Install the app and plan — no sign-up, no accounts.",
+        },
+      },
     },
     next: {
       text: "Then play it. Forever Journey records the run.",
@@ -572,6 +632,10 @@ export const en = {
       "tf-build-library": {
         alt: "TalentForge home screen on iPhone: a Paladin build to continue editing and recent Priest, Druid and Mage builds",
         caption: "Saved builds · app screenshot, iPhone",
+      },
+      "tf-build-migration": {
+        alt: "TalentForge build transfer screen: an original Holy Paladin build on talent data 1.60.1 (70959), newer talent data 1.60.1 (71037) available, and a preview saying all 51 of 51 ranks will be transferred",
+        caption: "Transfer preview · capture of the app's shared UI",
       },
       "bc-sample-cover": {
         alt: "Sample book cover: My Journey, Aelirien, Night Elf Druid, level 80",

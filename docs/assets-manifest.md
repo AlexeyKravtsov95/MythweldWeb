@@ -13,7 +13,7 @@
 5. Типы не подменяют друг друга:
    - **class artwork** — оригинальные иллюстрации классов TalentForge (118×118). Только они используются для плиток классов.
    - **game talent icons** — иконки талантов из игры. Отдельными файлами **не импортируются**; видны только внутри скриншотов редактора (`containsGameTalentIcons: true`).
-   - **app screenshot** — снимки приложения TalentForge. Все текущие — **iOS (iPhone 17 Pro, симулятор)**; называть их Android-скриншотами нельзя.
+   - **app screenshot** — снимки приложения TalentForge. Большинство — **iOS (iPhone 17 Pro, симулятор)**; называть их Android-скриншотами нельзя. Исключение — `tf-build-migration`: кадры **общего интерфейса Compose** (платформа каталога `compose`), подписанные как снимок общего интерфейса.
    - **Book Creator sample** — страницы PDF, созданного Book Creator. Это не интерфейс аддона.
    - **Book Creator screenshot** — снимки веб-приложения Book Creator. Это не игровые скриншоты.
    - **addon screenshot** — скриншот аддона Forever Journey в игре (Overview, Chronicle). Не Book Creator и не книга.
@@ -21,10 +21,11 @@
 
 ## Источники
 
-| Репозиторий                          | Ветка | Commit                                     |
-| ------------------------------------ | ----- | ------------------------------------------ |
-| `AlexeyKravtsov95/TalentForge`       | main  | `69e2dde5560eb12fd24066c5ed5f7ad29d4756a3` |
-| `AlexeyKravtsov95/ForeverJourneyWeb` | main  | `ceea82d456d7f04aeee4164b3ef088947e743349` |
+| Репозиторий                                                  | Ветка | Commit                                                            |
+| ------------------------------------------------------------ | ----- | ----------------------------------------------------------------- |
+| `AlexeyKravtsov95/TalentForge`                               | main  | `69e2dde5560eb12fd24066c5ed5f7ad29d4756a3`                        |
+| `AlexeyKravtsov95/TalentForge` (только `tf-build-migration`) | main  | `29d0429e5d8bab59f5f2a3770b14bd7c3fc0a330` (merge PR #162, W1.04) |
+| `AlexeyKravtsov95/ForeverJourneyWeb`                         | main  | `ceea82d456d7f04aeee4164b3ef088947e743349`                        |
 
 Оба репозитория только читались; в них ничего не менялось.
 
@@ -62,6 +63,17 @@
 | `tf-build-library` | ru   | `src/assets/media/talentforge/screenshots/ru/iphone-04-build-library.png` | `docs/release/apple-appstore/submission/screenshots/ru/iphone-6.3/04-build-library.png`    | `3920d270ce90b7a02d50342c5e9892b1659b6782c58f10259998de53ce9b11a7` | то же на русском                                                            |
 
 Подпись: «… · app screenshot, iPhone» / «… · скриншот приложения, iPhone».
+
+### TalentForge · build migration captures (общий Compose-интерфейс, EN / RU) — W1.06
+
+Источник: `docs/screenshots/w1-04-build-migration/` коммита `29d0429e5d8bab59f5f2a3770b14bd7c3fc0a330` (merge PR #162, W1.04 — безопасный перенос билда на новый патч), копия байт-в-байт. 780×1688 PNG (390×844 dp, масштаб 2). Сняты задачей скриншотов `BuildMigrationUiTest` с **общего интерфейса Compose** (не iPhone и не Android-эмулятор — поэтому платформа каталога `compose`, а подпись говорит «capture of the app's shared UI» / «снимок общего интерфейса приложения»). Это реальные кадры интерфейса приложения, снятые его собственным кодом рендеринга; внутри — игровые иконки талантов. Личных данных нет: демо-билд «Holy Paladin build» на данных 1.60.1 (70959) с полным переносом 51/51 рангов на 1.60.1 (71037).
+
+Функция ещё не выпущена публично (TalentForge 1.2): изображения и секция страницы рендерятся только после включения `RELEASE.talentforge.upcoming.buildMigration.released` во `src/config/release.ts`. До этого файлы лежат в реестре, но не попадают в `dist/`.
+
+| Группа               | Язык | Файл                                                                 | Источник (TalentForge)                                          | SHA-256                                                            | Содержимое                                               |
+| -------------------- | ---- | -------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------- |
+| `tf-build-migration` | en   | `src/assets/media/talentforge/screenshots/en/en-03-full-preview.png` | `docs/screenshots/w1-04-build-migration/en-03-full-preview.png` | `4d8db4fd07e2787d176b3d99a2a56c766bf333dedbdaea6382769ab3cc543ad1` | экран Transfer build: полный предпросмотр переноса 51/51 |
+| `tf-build-migration` | ru   | `src/assets/media/talentforge/screenshots/ru/ru-03-full-preview.png` | `docs/screenshots/w1-04-build-migration/ru-03-full-preview.png` | `59cf6d8a8859a693443f97bddf923e70fd2f7af1519584af1695794e5f9f68c8` | то же на русском («Перенос билда»)                       |
 
 ### Book Creator · sample pages (EN / RU)
 
@@ -143,9 +155,9 @@ Upstream: Google Fonts (`google/fonts`), Geologica v5, JetBrains Mono v24. Fallb
 
 Новых файлов нет: страницы используют только записи этого реестра через `pickMedia(group, locale)`.
 
-- **TalentForge** (`/talentforge/`, `/ru/talentforge/`): `tf-editor` языка страницы (первый экран, `loading="eager"`), `tf-class-picker`, `tf-build-library`, девять иллюстраций классов с названиями (`alt=""`) и одна иллюстрация воина в пояснении «Class artwork». На ≤600 px `tf-class-picker` обрезан снизу только CSS до 1206:1390: девять плиток классов заканчиваются на строке 1326 из 2622, ниже — пустой фон приложения (WEB-M0.5B). `tf-build-library` показан целиком: кнопки «New build» / «Import build» внизу экрана — часть интерфейса. Игровые иконки талантов показаны только как **CSS-фрагмент** `tf-editor` (`object-fit`/`object-position`, пиксели не меняются) с подписью «Fragment of the talent editor · app screenshot, iPhone» / «Фрагмент редактора талантов · …».
+- **TalentForge** (`/talentforge/`, `/ru/talentforge/`): `tf-editor` языка страницы (первый экран, `loading="eager"`), `tf-class-picker`, `tf-build-library`, девять иллюстраций классов с названиями (`alt=""`) и одна иллюстрация воина в пояснении «Class artwork». На ≤600 px `tf-class-picker` обрезан снизу только CSS до 1206:1390: девять плиток классов заканчиваются на строке 1326 из 2622, ниже — пустой фон приложения (WEB-M0.5B). `tf-build-library` показан целиком: кнопки «New build» / «Import build» внизу экрана — часть интерфейса. Игровые иконки талантов показаны только как **CSS-фрагмент** `tf-editor` (`object-fit`/`object-position`, пиксели не меняются) с подписью «Fragment of the talent editor · app screenshot, iPhone» / «Фрагмент редактора талантов · …». Секция переноса билдов 1.2 (`tf-build-migration`) добавлена в W1.06 и рендерится только после открытия флага `RELEASE.talentforge.upcoming.buildMigration.released` (см. раздел выше).
 - Блок «The real trees» — **без изображения**: горизонтального снимка нет (B2), а рендер из макета (стр. 26) отклонён. Фраза макета «All three specialization trees on one screen when you turn the phone» не используется: по `TalentForge/docs/mobile-architecture.md` (M5.UX.2b.1) в горизонтальном режиме дерево остаётся одно, а описание таланта открывается боковой панелью 300 dp — это и написано на странице.
-- Пункт макета «Data updates over the air» не используется: удалённая доставка данных реализована, но выключена во всех сборках (`TalentForge/docs/ota/README.md`, M5.OTA.PROD.1). Вместо него — «Builds keep their data» (сохранённый билд открывается на своей версии данных, M5.DATA).
+- Обновление данных (W1.06): пункт «Data updates over the air» из макета больше не отбрасывается целиком — production-сборки магазинов собираются с OTA ON (`TalentForge/docs/ota/android-production-enablement.md`, M5.OTA.PROD.3; журнал версий: код 2 загружен в Google Play с OTA ON, production-путь 1.1.0 требует OTA-preflight). Страница формулирует это честно: обновление данных описано только для «OTA-enabled builds», без обещания для каждой сборки и без слов о синхронизации; сохранённый билд по-прежнему открывается на своей версии данных.
 - **Forever Journey** (`/forever-journey/`, `/ru/forever-journey/`): placeholder «In-game addon screenshot» (B1) на первом экране; в разделе Book Creator — EN-образец `bc-sample-cover/chapter` на обеих локалях, на RU с подписью «… пример на английском» (B4). Скриншоты интерфейса Book Creator (`bc-app-*`) не показаны: EN-снимка нет (B3), а RU-снимок не подменяет EN.
 - Путь «журнал → книга» описан по `ForeverJourneyWeb/src/i18n.ts` и `README.md`: код `FJBOOK1` (`/fj` → Export Book) или файл `ForeverJourney.lua` из SavedVariables; книга собирается в браузере, на сервер ничего не загружается. Архив персонажа подписан как исторический снимок.
 
