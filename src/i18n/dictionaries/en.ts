@@ -430,7 +430,7 @@ export const en = {
       notShown: "Not shown in the screenshots on this page.",
     },
     upcoming: {
-      label: "Coming in TalentForge 1.2",
+      label: "New in TalentForge 1.2",
       heading: "Keep your builds across game updates",
       text: "Create a copy of your build using newer talent data. TalentForge checks which ranks can be transferred and keeps your original build unchanged.",
     },
@@ -450,12 +450,12 @@ export const en = {
         internet: {
           question: "Does it need an internet connection?",
           answer:
-            "No. Planning works fully offline: the trees, talent descriptions and your builds are stored on the phone. Only OTA-enabled builds use the internet, to download talent data updates.",
+            "No. Planning works offline on the talent data already available on your phone. An internet connection may be needed to download updates or historical talent data that is not on your device yet.",
         },
         storage: {
           question: "Where are my builds stored?",
           answer:
-            "On your phone only. There is no account and no server storage; nothing is sent anywhere.",
+            "Builds are stored locally on your device. TalentForge requires no account and does not store your builds on its own servers.",
         },
         share: {
           question: "Can I share a build?",
@@ -634,8 +634,9 @@ export const en = {
         caption: "Saved builds · app screenshot, iPhone",
       },
       "tf-build-migration": {
-        alt: "TalentForge build transfer screen: an original Holy Paladin build on talent data 1.60.1 (70959), newer talent data 1.60.1 (71037) available, and a preview saying all 51 of 51 ranks will be transferred",
-        caption: "Transfer preview · capture of the app's shared UI",
+        alt: "TalentForge build library with the Copy build to a newer patch dialog open: patch 1.60.1.70374 → 1.60.1.70450, all allocated points can be transferred, copy name Warrior PvP — 70450, and the Create copy button",
+        caption:
+          "Copy build to a newer patch · screenshot of the app's shared interface",
       },
       "bc-sample-cover": {
         alt: "Sample book cover: My Journey, Aelirien, Night Elf Druid, level 80",

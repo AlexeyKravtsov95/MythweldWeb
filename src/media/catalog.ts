@@ -168,8 +168,10 @@ function iphoneShot(
 }
 
 /**
- * W1.04 (TalentForge 1.2, unreleased): capture of the app's shared Compose
- * UI rendered by the desktop screenshot task at 390 × 844 dp, scale 2.
+ * W1.04 (TalentForge 1.2, unreleased): the "Copy build to a newer patch"
+ * dialog over the build library, from the app's shared Compose UI rendered
+ * by the desktop screenshot task at 390 × 844 dp, scale 2. The icons at the
+ * build rows are TalentForge's own class artwork, not game talent icons.
  * Shown on the page only after `RELEASE.talentforge.upcoming` opens.
  */
 function migrationShot(
@@ -191,7 +193,7 @@ function migrationShot(
       commit: TF_W104_COMMIT,
       path: `docs/screenshots/w1-04-build-migration/${name}.png`,
     },
-    containsGameTalentIcons: true,
+    containsGameTalentIcons: false,
   };
 }
 

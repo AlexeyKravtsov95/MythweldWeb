@@ -3,7 +3,7 @@
  * (run `npm run build` first): routes, metadata, headings, localized media,
  * links, honest release states and the Book Creator flow.
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { parse, type HTMLElement } from "node-html-parser";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -397,6 +397,8 @@ describe.each(LOCALES)("TalentForge page for %s", (locale) => {
   });
 
   it("offers the install action inside the intro, before the screenshot", () => {
+    // Active because the platform is publicly available, not merely linked.
+    expect(RELEASE.talentforge.android).toBe("available");
     const hero = main.querySelector("section[aria-labelledby='page-title']");
     const install = hero?.querySelector(".install a");
     expect(install?.getAttribute("href")).toBe(RELEASE.talentforge.googlePlay);
@@ -453,6 +455,16 @@ describe.each(LOCALES)("TalentForge page for %s", (locale) => {
     expect(body).not.toContain(copy.upcoming.text);
     const alts = main.querySelectorAll("img").map((i) => i.getAttribute("alt"));
     expect(alts).not.toContain(t.media.images["tf-build-migration"].alt);
+    // The eager media glob emits every catalogued original as an asset, so
+    // the capture files exist in `dist/_astro/`. What must not exist while
+    // the feature is unreleased is any page that shows them.
+    const pages = readdirSync(dist, { recursive: true, encoding: "utf8" })
+      .filter((file) => file.endsWith(".html"))
+      .map((file) => readFileSync(`${dist}${file}`, "utf8"));
+    expect(pages.length).toBeGreaterThan(0);
+    for (const html of pages) {
+      expect(html).not.toMatch(/full-preview/);
+    }
   });
 
   it("keeps one release row per store, not per platform", () => {

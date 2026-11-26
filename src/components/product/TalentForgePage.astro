@@ -27,15 +27,17 @@ import CommunityStrip from "./CommunityStrip.astro";
 import ProductNext from "./ProductNext.astro";
 import SectionHeading from "./SectionHeading.astro";
 import { getDictionary, type Locale } from "../../i18n";
-import { RELEASE } from "../../config/release";
+import { RELEASE, type Release } from "../../config/release";
 import { CLASS_ARTWORK, pickMedia } from "../../media/catalog";
 import { imageFor } from "../../media/images";
 
 interface Props {
   locale: Locale;
+  /** Release facts; defaults to the config. Overridden only in tests. */
+  talentforge?: Release["talentforge"];
 }
 
-const { locale } = Astro.props;
+const { locale, talentforge = RELEASE.talentforge } = Astro.props;
 const t = getDictionary(locale);
 const copy = t.talentforgePage;
 const name = t.home.products.talentforge.name;
@@ -65,8 +67,23 @@ const featureItems = [
   { ...features.items.dataUpdates, notShown: false },
 ];
 const faqItems = Object.values(copy.faq.items);
-const tf = RELEASE.talentforge;
+const tf = talentforge;
 const migrationLive = tf.upcoming.buildMigration.released;
+
+/**
+ * The install action opens the store only once the platform is publicly
+ * available: a listing URL alone may lead to a closed test track. Until
+ * then the action stays disabled and names the reason — the platform's
+ * release state, or the missing link once the platform is released.
+ */
+const installHref =
+  tf.android === "available" && tf.googlePlay !== null ? tf.googlePlay : null;
+const installReason =
+  tf.android === "available"
+    ? t.actions.linkPending
+    : tf.android === "prep"
+      ? t.actions.inPreparation
+      : t.release.states[tf.android];
 ---
 
 <BaseLayout
@@ -90,9 +107,9 @@ const migrationLive = tf.upcoming.buildMigration.released;
           <ProductAction
             variant="talentforge"
             label={copy.install.googlePlay}
-            href={tf.googlePlay}
+            href={installHref}
             locale={locale}
-            pendingReason={t.actions.linkPending}
+            pendingReason={installReason}
           />
         </div>
       </div>
@@ -107,7 +124,11 @@ const migrationLive = tf.upcoming.buildMigration.released;
         </div>
       )}
       <div class="release">
-        <ReleaseStatus locale={locale} id="release-status" />
+        <ReleaseStatus
+          locale={locale}
+          id="release-status"
+          talentforge={talentforge}
+        />
         <p class="note">{copy.dataVersionNote}</p>
       </div>
     </section>

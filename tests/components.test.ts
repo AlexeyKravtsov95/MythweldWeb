@@ -14,7 +14,8 @@ import ProductAction from "../src/components/ui/ProductAction.astro";
 import ProductPlate from "../src/components/ui/ProductPlate.astro";
 import ReleaseStatus from "../src/components/ui/ReleaseStatus.astro";
 import StatusTag from "../src/components/ui/StatusTag.astro";
-import { RELEASE } from "../src/config/release";
+import TalentForgePage from "../src/components/product/TalentForgePage.astro";
+import { RELEASE, type Release } from "../src/config/release";
 import { LOCALES, getDictionary } from "../src/i18n";
 import { CLASS_IDS, MEDIA } from "../src/media/catalog";
 
@@ -213,6 +214,113 @@ describe.each(LOCALES)("ReleaseStatus (%s)", (locale) => {
     expect(row?.querySelector(".status-tag")?.getAttribute("data-state")).toBe(
       "available",
     );
+  });
+});
+
+describe.each(LOCALES)("TalentForgePage (%s)", (locale) => {
+  const t = getDictionary(locale);
+  const copy = t.talentforgePage;
+  const text = (el: HTMLElement | null | undefined) =>
+    (el?.textContent ?? "").replace(/\s+/g, " ").trim();
+
+  /** The page with some release facts replaced. */
+  const renderPage = (patch: Partial<Release["talentforge"]> = {}) =>
+    render(TalentForgePage, {
+      locale,
+      talentforge: { ...RELEASE.talentforge, ...patch },
+    });
+
+  it("opens the store from the hero once the platform is publicly available", async () => {
+    const doc = await renderPage({ android: "available" });
+    const action = doc.querySelector(".install a");
+    expect(action?.getAttribute("href")).toBe(RELEASE.talentforge.googlePlay);
+    expect(action?.getAttribute("target")).toBe("_blank");
+    expect(text(action)).toContain(copy.install.googlePlay);
+  });
+
+  it("keeps the hero action disabled on a closed test track, link or not", async () => {
+    const doc = await renderPage({
+      android: "testing",
+      googlePlay: "https://play.google.com/store/apps/details?id=example",
+    });
+    expect(doc.querySelector(".install a")).toBeNull();
+    const action = doc.querySelector(".install [aria-disabled='true']");
+    expect(text(action)).toContain(copy.install.googlePlay);
+    expect(text(action)).toContain(t.release.states.testing);
+    expect(text(action)).not.toContain(t.actions.linkPending);
+  });
+
+  it("names the preparation state while the platform is not released", async () => {
+    const doc = await renderPage({ android: "prep" });
+    expect(doc.querySelector(".install a")).toBeNull();
+    const action = doc.querySelector(".install [aria-disabled='true']");
+    expect(text(action)).toContain(t.actions.inPreparation);
+  });
+
+  it("names the missing link once the platform is released", async () => {
+    const doc = await renderPage({ android: "available", googlePlay: null });
+    expect(doc.querySelector(".install a")).toBeNull();
+    const action = doc.querySelector(".install [aria-disabled='true']");
+    expect(text(action)).toContain(t.actions.linkPending);
+  });
+
+  it("keeps the 1.2 section and its captures off the page while the flag is off", async () => {
+    const doc = await renderPage({
+      upcoming: { buildMigration: { version: "1.2", released: false } },
+    });
+    expect(text(doc.querySelector("h1"))).toBe(
+      t.home.products.talentforge.name,
+    );
+    expect(doc.querySelector("section[aria-labelledby='upcoming']")).toBeNull();
+    const body = text(doc.querySelector("main"));
+    expect(body).not.toContain(copy.upcoming.heading);
+    expect(body).not.toContain(copy.upcoming.text);
+    const alts = doc
+      .querySelectorAll("img")
+      .map((img) => img.getAttribute("alt"));
+    expect(alts).not.toContain(t.media.images["tf-build-migration"].alt);
+  });
+
+  it("renders the 1.2 section with the capture of its locale once the flag is on", async () => {
+    const doc = await renderPage({
+      upcoming: { buildMigration: { version: "1.2", released: true } },
+    });
+    const section = doc.querySelector("section[aria-labelledby='upcoming']");
+    expect(section).not.toBeNull();
+    expect(text(section?.querySelector("h2"))).toBe(copy.upcoming.heading);
+    expect(text(section)).toContain(copy.upcoming.label);
+    expect(text(section)).toContain(copy.upcoming.text);
+    const shot = t.media.images["tf-build-migration"];
+    const img = section?.querySelector("img");
+    expect(img?.getAttribute("alt")).toBe(shot.alt);
+    expect(text(section?.querySelector("figcaption"))).toBe(shot.caption);
+    for (const other of LOCALES.filter((l) => l !== locale)) {
+      expect(img?.getAttribute("alt")).not.toBe(
+        getDictionary(other).media.images["tf-build-migration"].alt,
+      );
+    }
+    // A second-level heading between sections 03 and 04: no skipped level.
+    const levels = doc
+      .querySelectorAll("main h1, main h2, main h3")
+      .map((h) => Number(h.tagName.slice(1)));
+    levels.slice(1).forEach((level, i) => {
+      expect(level - (levels[i] ?? 1)).toBeLessThanOrEqual(1);
+    });
+  });
+});
+
+describe("TalentForge 1.2 section copy", () => {
+  it("announces the feature as released: the section only renders after the release", () => {
+    const labels = LOCALES.map(
+      (locale) => getDictionary(locale).talentforgePage.upcoming.label,
+    );
+    expect(getDictionary("en").talentforgePage.upcoming.label).toBe(
+      "New in TalentForge 1.2",
+    );
+    for (const label of labels) {
+      expect(label).toContain("1.2");
+      expect(label).not.toMatch(/coming|скоро|ожидает/i);
+    }
   });
 });
 
