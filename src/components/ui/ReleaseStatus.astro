@@ -2,9 +2,11 @@
 /**
  * TalentForge release panel (v3.2 TalentForge page): store statuses, store
  * buttons and talent data version, all read from `src/config/release.ts`.
- * A store without a link shows the "link pending" chip and a disabled button.
- * A link alone never means "available": it may lead to a closed test track,
- * so the store row always shows the platform's own release state.
+ * One row per store — the store row carries the platform's release state, so
+ * Android/iOS rows are not duplicated next to it. A store without a link
+ * shows the "link pending" chip on its button. A link alone never means
+ * "available": it may lead to a closed test track, so the row always shows
+ * the platform's own release state.
  */
 import { RELEASE, type Release } from "../../config/release";
 import { getDictionary, type Locale } from "../../i18n";
@@ -55,39 +57,15 @@ const stores = [
     </p>
   </div>
   <dl class="rows">
-    <div>
-      <dt>{t.release.channels.android}</dt>
-      <dd>
-        <StatusTag
-          state={tf.android}
-          label={t.release.states[tf.android]}
-          framed={false}
-        />
-      </dd>
-    </div>
-    <div>
-      <dt>{t.release.channels.ios}</dt>
-      <dd>
-        <StatusTag
-          state={tf.ios}
-          label={t.release.states[tf.ios]}
-          framed={false}
-        />
-      </dd>
-    </div>
     {stores.map((store) => (
       <div>
         <dt>{store.name}</dt>
         <dd>
-          {store.href === null ? (
-            <StatusTag state="pending" label={t.actions.linkPending} />
-          ) : (
-            <StatusTag
-              state={store.state}
-              label={t.release.states[store.state]}
-              framed={false}
-            />
-          )}
+          <StatusTag
+            state={store.state}
+            label={t.release.states[store.state]}
+            framed={false}
+          />
         </dd>
       </div>
     ))}

@@ -1,18 +1,19 @@
 ---
 /**
  * TalentForge product page (v3.2, pages 25–27), shared by `/talentforge/`
- * and `/ru/talentforge/`: hero with the release panel and the real editor
- * screenshot, 01 Nine classes, 02 The real trees, 03 What it does and the
- * strip to Forever Journey.
+ * and `/ru/talentforge/`: hero with the install action and the real editor
+ * screenshot, 01 Nine classes, 02 The real trees, 03 What it does, the
+ * FAQ and the strip to Forever Journey.
  *
  * Deviations from the PDF, on purpose:
  * - 02 has no landscape image: the board used a Compose Desktop test render
  *   with "Tree 1/2/3" stubs (blocker B2), and its line "All three trees on
  *   one screen" is not what the app does. The text follows the TalentForge
  *   sources: tabs per tree, a side panel for details in landscape.
- * - "Data updates over the air" is left out: remote data delivery is built
- *   but disabled in every app build. Builds keeping their data version is
- *   shown instead.
+ * - Data updates are described as limited to OTA-enabled builds: store builds
+ *   ship with OTA on, but the page never claims every build downloads data.
+ * - The 1.2 "keep your builds across game updates" section and its captures
+ *   render only after `RELEASE.talentforge.upcoming.buildMigration` opens.
  * - On phones the class picker is cropped to its UI (CSS only): below the
  *   nine class tiles the capture is empty app background.
  */
@@ -20,26 +21,36 @@ import { Image, Picture } from "astro:assets";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import ClassArtworkGrid from "../ui/ClassArtworkGrid.astro";
 import FigureWithCaption from "../ui/FigureWithCaption.astro";
+import ProductAction from "../ui/ProductAction.astro";
 import ReleaseStatus from "../ui/ReleaseStatus.astro";
 import CommunityStrip from "./CommunityStrip.astro";
 import ProductNext from "./ProductNext.astro";
 import SectionHeading from "./SectionHeading.astro";
 import { getDictionary, type Locale } from "../../i18n";
+import { RELEASE, type Release } from "../../config/release";
 import { CLASS_ARTWORK, pickMedia } from "../../media/catalog";
 import { imageFor } from "../../media/images";
 
 interface Props {
   locale: Locale;
+  /** Release facts; defaults to the config. Overridden only in tests. */
+  talentforge?: Release["talentforge"];
 }
 
-const { locale } = Astro.props;
+const { locale, talentforge = RELEASE.talentforge } = Astro.props;
 const t = getDictionary(locale);
 const copy = t.talentforgePage;
 const name = t.home.products.talentforge.name;
 const editor = pickMedia("tf-editor", locale);
 const picker = pickMedia("tf-class-picker", locale);
 const library = pickMedia("tf-build-library", locale);
+const migration = pickMedia("tf-build-migration", locale);
 const { classes, trees, features } = copy;
+const heroFacts = [
+  copy.install.facts.free,
+  copy.install.facts.classes,
+  copy.install.facts.offline,
+];
 const treePoints = [
   trees.points.tabs,
   trees.points.rules,
@@ -48,11 +59,31 @@ const treePoints = [
 ];
 const featureItems = [
   { ...features.items.autosave, notShown: false },
+  { ...features.items.library, notShown: false },
+  { ...features.items.organize, notShown: true },
   { ...features.items.offline, notShown: false },
   { ...features.items.languages, notShown: false },
   { ...features.items.share, notShown: true },
-  { ...features.items.dataVersions, notShown: false },
+  { ...features.items.dataUpdates, notShown: false },
 ];
+const faqItems = Object.values(copy.faq.items);
+const tf = talentforge;
+const migrationLive = tf.upcoming.buildMigration.released;
+
+/**
+ * The install action opens the store only once the platform is publicly
+ * available: a listing URL alone may lead to a closed test track. Until
+ * then the action stays disabled and names the reason — the platform's
+ * release state, or the missing link once the platform is released.
+ */
+const installHref =
+  tf.android === "available" && tf.googlePlay !== null ? tf.googlePlay : null;
+const installReason =
+  tf.android === "available"
+    ? t.actions.linkPending
+    : tf.android === "prep"
+      ? t.actions.inPreparation
+      : t.release.states[tf.android];
 ---
 
 <BaseLayout
@@ -67,6 +98,20 @@ const featureItems = [
         <p class="kind">{copy.kind}</p>
         <h1 id="page-title">{name}</h1>
         <p class="lead">{copy.lead}</p>
+        <ul class="facts">
+          {heroFacts.map((fact) => (
+            <li>{fact}</li>
+          ))}
+        </ul>
+        <div class="install">
+          <ProductAction
+            variant="talentforge"
+            label={copy.install.googlePlay}
+            href={installHref}
+            locale={locale}
+            pendingReason={installReason}
+          />
+        </div>
       </div>
       {editor && (
         <div class="hero-shot">
@@ -79,7 +124,11 @@ const featureItems = [
         </div>
       )}
       <div class="release">
-        <ReleaseStatus locale={locale} id="release-status" />
+        <ReleaseStatus
+          locale={locale}
+          id="release-status"
+          talentforge={talentforge}
+        />
         <p class="note">{copy.dataVersionNote}</p>
       </div>
     </section>
@@ -186,6 +235,39 @@ const featureItems = [
       </div>
     </section>
 
+    {migrationLive && (
+      <section class="section" aria-labelledby="upcoming">
+        <div class="upcoming-body">
+          <div class="upcoming-copy">
+            <p class="eyebrow">{copy.upcoming.label}</p>
+            <h2 id="upcoming">{copy.upcoming.heading}</h2>
+            <p class="upcoming-text">{copy.upcoming.text}</p>
+          </div>
+          {migration && (
+            <div class="migration-shot">
+              <FigureWithCaption
+                asset={migration}
+                {...t.media.images["tf-build-migration"]}
+                sizes="(max-width: 600px) 18rem, 15rem"
+              />
+            </div>
+          )}
+        </div>
+      </section>
+    )}
+
+    <section class="section" aria-labelledby="faq">
+      <SectionHeading number="04" id="faq" title={copy.faq.heading} />
+      <ul class="faq">
+        {faqItems.map((item) => (
+          <li>
+            <h3>{item.question}</h3>
+            <p>{item.answer}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
     <CommunityStrip locale={locale} target="talentforge" />
     <ProductNext locale={locale} target="forever-journey" copy={copy.next} />
   </div>
@@ -229,6 +311,43 @@ const featureItems = [
     color: var(--color-text-muted);
     font-size: var(--font-size-lead);
     line-height: 1.45;
+  }
+
+  /* Quick facts and the install action sit inside .intro, so on phones
+     they come before the screenshot in the reading order. */
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--color-text);
+    font-size: 0.9375rem;
+  }
+
+  .facts li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+  }
+
+  .facts li::before {
+    content: "";
+    flex: 0 0 auto;
+    width: var(--space-2);
+    height: var(--space-2);
+    background: var(--color-tf-accent);
+    transform: translateY(-0.1em);
+  }
+
+  .install {
+    display: flex;
+    margin-top: var(--space-2);
+  }
+
+  .install :global(.action) {
+    padding-inline: var(--space-7);
   }
 
   .hero-shot {
@@ -289,7 +408,8 @@ const featureItems = [
   }
 
   .note-card h3,
-  .card h3 {
+  .card h3,
+  .faq h3 {
     font-size: var(--font-size-label);
     font-weight: var(--font-weight-label);
     font-variation-settings: normal;
@@ -378,6 +498,58 @@ const featureItems = [
     gap: var(--space-7);
   }
 
+  /* 1.2 preview; rendered only after the release flag opens. */
+  .upcoming-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 15rem);
+    align-items: start;
+    gap: var(--space-7);
+  }
+
+  .eyebrow {
+    color: var(--color-text-subtle);
+    font-size: 0.9375rem;
+  }
+
+  .upcoming-body h2 {
+    margin-top: var(--space-3);
+    font-size: var(--font-size-h2);
+  }
+
+  .upcoming-text {
+    margin-top: var(--space-3);
+    max-width: 38rem;
+    color: var(--color-text-muted);
+  }
+
+  .migration-shot {
+    justify-self: end;
+    width: 100%;
+    max-width: 15rem;
+  }
+
+  /* 04: FAQ, one column, divider rows. */
+  .faq {
+    display: grid;
+    max-width: 46rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .faq li {
+    display: grid;
+    gap: var(--space-2);
+    padding-block: var(--space-4);
+    border-top: 1px solid var(--color-divider);
+  }
+
+  .faq p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.9375rem;
+  }
+
   @media (max-width: 1100px) {
     .classes-body {
       grid-template-columns: minmax(0, 1fr) minmax(0, 14rem);
@@ -423,11 +595,13 @@ const featureItems = [
       max-width: none;
     }
 
-    .features-body {
+    .features-body,
+    .upcoming-body {
       grid-template-columns: minmax(0, 1fr);
     }
 
-    .library {
+    .library,
+    .migration-shot {
       max-width: 18rem;
     }
   }

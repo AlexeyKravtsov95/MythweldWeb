@@ -3,7 +3,7 @@
  * (run `npm run build` first): routes, metadata, headings, localized media,
  * links, honest release states and the Book Creator flow.
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { parse, type HTMLElement } from "node-html-parser";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -377,8 +377,12 @@ describe.each(LOCALES)("TalentForge page for %s", (locale) => {
     // PDF p. 26: the app shows one tree at a time, with tabs.
     expect(body).not.toMatch(/on one screen|на одном экране/i);
     expect(body).toContain(copy.trees.points.landscape.text);
-    // Remote data delivery is built but disabled in every app build.
-    expect(body).not.toMatch(/over the air|по сети|OTA/i);
+    // Data updates are limited to OTA-enabled builds — the page never
+    // claims them for builds without OTA, and never says "sync".
+    expect(body).toContain(copy.features.items.dataUpdates.text);
+    expect(body).toContain(
+      locale === "ru" ? "с включённым OTA" : "OTA-enabled",
+    );
     expect(body).not.toMatch(/\bsync|синхрониз/i);
     // No landscape capture is published (blocker B2).
     const alts = main.querySelectorAll("img").map((i) => i.getAttribute("alt"));
@@ -390,6 +394,91 @@ describe.each(LOCALES)("TalentForge page for %s", (locale) => {
       .querySelectorAll("li.card")
       .find((li) => text(li).startsWith(copy.features.items.share.title));
     expect(text(share)).toContain(copy.features.notShown);
+  });
+
+  it("offers the install action inside the intro, before the screenshot", () => {
+    // Active because the platform is publicly available, not merely linked.
+    expect(RELEASE.talentforge.android).toBe("available");
+    const hero = main.querySelector("section[aria-labelledby='page-title']");
+    const install = hero?.querySelector(".install a");
+    expect(install?.getAttribute("href")).toBe(RELEASE.talentforge.googlePlay);
+    expect(install?.getAttribute("target")).toBe("_blank");
+    expect(text(install)).toContain(copy.install.googlePlay);
+    // The action lives inside .intro, so the phone single-column hero
+    // renders it ahead of the big screenshot.
+    expect(hero?.querySelector(".intro .install")).not.toBeNull();
+    const order = [...(hero?.children ?? [])].map((el) =>
+      el.getAttribute("class"),
+    );
+    expect(order.indexOf("intro")).toBeLessThan(order.indexOf("hero-shot"));
+  });
+
+  it("shows the hero quick facts at a glance", () => {
+    const facts = [...(main.querySelectorAll(".intro .facts li") ?? [])].map(
+      text,
+    );
+    expect(facts).toEqual([
+      copy.install.facts.free,
+      copy.install.facts.classes,
+      copy.install.facts.offline,
+    ]);
+  });
+
+  it("lists the released library features with honest not-shown marks", () => {
+    const features = main.querySelector("section[aria-labelledby='features']");
+    expect(text(features)).toContain(copy.features.items.library.title);
+    expect(text(features)).toContain(copy.features.items.organize.title);
+    const cards = [...(features?.querySelectorAll("li.card") ?? [])];
+    for (const item of [
+      copy.features.items.organize,
+      copy.features.items.share,
+    ]) {
+      const card = cards.find((li) => text(li).startsWith(item.title));
+      expect(text(card)).toContain(copy.features.notShown);
+    }
+  });
+
+  it("answers the seven real questions of the FAQ", () => {
+    const faq = main.querySelector("section[aria-labelledby='faq']");
+    for (const item of Object.values(copy.faq.items)) {
+      expect(text(faq)).toContain(item.question);
+      expect(text(faq)).toContain(item.answer);
+    }
+  });
+
+  it("keeps the unreleased 1.2 migration feature off the public page", () => {
+    expect(RELEASE.talentforge.upcoming.buildMigration.version).toBe("1.2");
+    expect(RELEASE.talentforge.upcoming.buildMigration.released).toBe(false);
+    const body = text(main);
+    expect(body).not.toContain(copy.upcoming.label);
+    expect(body).not.toContain(copy.upcoming.heading);
+    expect(body).not.toContain(copy.upcoming.text);
+    const alts = main.querySelectorAll("img").map((i) => i.getAttribute("alt"));
+    expect(alts).not.toContain(t.media.images["tf-build-migration"].alt);
+    // The eager media glob emits every catalogued original as an asset, so
+    // the capture files exist in `dist/_astro/`. What must not exist while
+    // the feature is unreleased is any page that shows them.
+    const pages = readdirSync(dist, { recursive: true, encoding: "utf8" })
+      .filter((file) => file.endsWith(".html"))
+      .map((file) => readFileSync(`${dist}${file}`, "utf8"));
+    expect(pages.length).toBeGreaterThan(0);
+    for (const html of pages) {
+      expect(html).not.toMatch(/full-preview/);
+    }
+  });
+
+  it("keeps one release row per store, not per platform", () => {
+    const panel = main.querySelector(
+      "section[aria-labelledby='release-status']",
+    );
+    const rows = [...(panel?.querySelectorAll(".rows > div") ?? [])].map(
+      (div) => text(div.querySelector("dt")),
+    );
+    expect(rows).toEqual([
+      t.release.channels.googlePlay,
+      t.release.channels.appStore,
+      t.release.channels.talentData,
+    ]);
   });
 });
 

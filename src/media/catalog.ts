@@ -21,7 +21,7 @@ export type MediaKind =
   /** Unedited capture of the Forever Journey addon in the game client. */
   | "addon-screenshot";
 
-export type MediaPlatform = "ios" | "web" | "pdf" | "game";
+export type MediaPlatform = "ios" | "web" | "pdf" | "game" | "compose";
 
 /** Canonical class order, as in the TalentForge class picker. */
 export const CLASS_IDS = [
@@ -48,6 +48,7 @@ export type MediaGroup =
   | "tf-editor"
   | "tf-class-picker"
   | "tf-build-library"
+  | "tf-build-migration"
   | "bc-sample-cover"
   | "bc-sample-chapter"
   | "bc-app-cover"
@@ -94,6 +95,8 @@ export interface MediaAsset {
 }
 
 const TF_COMMIT = "69e2dde5560eb12fd24066c5ed5f7ad29d4756a3";
+/** Merge commit of PR #162 (W1.04) the migration screenshots came from. */
+const TF_W104_COMMIT = "29d0429e5d8bab59f5f2a3770b14bd7c3fc0a330";
 const FJW_COMMIT = "ceea82d456d7f04aeee4164b3ef088947e743349";
 const TF_SHOTS = "docs/release/apple-appstore/submission/screenshots";
 
@@ -161,6 +164,36 @@ function iphoneShot(
       path: `${TF_SHOTS}/${locale === "en" ? "en-US" : "ru"}/iphone-6.3/${name}.png`,
     },
     containsGameTalentIcons,
+  };
+}
+
+/**
+ * W1.04 (TalentForge 1.2, unreleased): the "Copy build to a newer patch"
+ * dialog over the build library, from the app's shared Compose UI rendered
+ * by the desktop screenshot task at 390 × 844 dp, scale 2. The icons at the
+ * build rows are TalentForge's own class artwork, not game talent icons.
+ * Shown on the page only after `RELEASE.talentforge.upcoming` opens.
+ */
+function migrationShot(
+  locale: Locale,
+  name: string,
+  sha256: string,
+): MediaAsset {
+  return {
+    kind: "app-screenshot",
+    product: "talentforge",
+    locale,
+    platform: "compose",
+    file: `src/assets/media/talentforge/screenshots/${locale}/${name}.png`,
+    width: 780,
+    height: 1688,
+    sha256,
+    source: {
+      repo: "AlexeyKravtsov95/TalentForge",
+      commit: TF_W104_COMMIT,
+      path: `docs/screenshots/w1-04-build-migration/${name}.png`,
+    },
+    containsGameTalentIcons: false,
   };
 }
 
@@ -261,6 +294,19 @@ export const MEDIA: Record<MediaGroup, Partial<Record<Locale, MediaAsset>>> = {
       "04-build-library",
       "3920d270ce90b7a02d50342c5e9892b1659b6782c58f10259998de53ce9b11a7",
       false,
+    ),
+  },
+  // TalentForge 1.2 (W1.04), not public yet; rendered behind the release flag.
+  "tf-build-migration": {
+    en: migrationShot(
+      "en",
+      "en-03-full-preview",
+      "4d8db4fd07e2787d176b3d99a2a56c766bf333dedbdaea6382769ab3cc543ad1",
+    ),
+    ru: migrationShot(
+      "ru",
+      "ru-03-full-preview",
+      "59cf6d8a8859a693443f97bddf923e70fd2f7af1519584af1695794e5f9f68c8",
     ),
   },
   "bc-sample-cover": {

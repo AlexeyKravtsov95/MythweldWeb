@@ -226,6 +226,15 @@ describe("owner-confirmed release facts (2026-11-10)", () => {
     expect(RELEASE.talentforge.dataVersion).toBe("1.60.1");
     expect(RELEASE.foreverJourney.curseforge).toBe("available");
   });
+
+  it("keeps the TalentForge 1.2 migration feature unreleased", () => {
+    // W1.04 lives in the app repository (PR #162) but has no public store
+    // rollout yet; the page section stays hidden until the owner flips it.
+    expect(RELEASE.talentforge.upcoming.buildMigration).toEqual({
+      version: "1.2",
+      released: false,
+    });
+  });
 });
 
 describe("legal configuration", () => {

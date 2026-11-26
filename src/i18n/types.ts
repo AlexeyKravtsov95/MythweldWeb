@@ -185,14 +185,21 @@ export interface NextProductCopy {
 
 /**
  * TalentForge page (v3.2, pages 25–27). Only facts confirmed by the
- * TalentForge sources: no device sync, no game client or API, no OTA claim
- * while remote data delivery is disabled in the app.
+ * TalentForge sources: no device sync, no game client or API; remote data
+ * updates are described as limited to OTA-enabled app builds.
  */
 export interface TalentForgePageCopy {
   meta: PageMeta;
   /** "Mobile app · Android and iOS". */
   kind: string;
   lead: string;
+  /** Install action and quick facts of the hero, before the screenshot. */
+  install: {
+    /** Primary store button; leads to the confirmed listing. */
+    googlePlay: string;
+    /** Free / nine classes / offline, at a glance. */
+    facts: Record<"free" | "classes" | "offline", string>;
+  };
   /** Says that the talent data version is not the app version. */
   dataVersionNote: string;
   classes: {
@@ -212,13 +219,47 @@ export interface TalentForgePageCopy {
   features: {
     heading: string;
     items: Record<
-      "autosave" | "offline" | "languages" | "share" | "dataVersions",
+      | "autosave"
+      | "library"
+      | "organize"
+      | "offline"
+      | "languages"
+      | "share"
+      | "dataUpdates",
       InfoItem
     >;
     /** Marks a feature that no screenshot on the page shows. */
     notShown: string;
   };
+  /**
+   * TalentForge 1.2 (W1.04: safe build migration). Rendered only after the
+   * owner opens `RELEASE.talentforge.upcoming.buildMigration`.
+   */
+  upcoming: {
+    /** Eyebrow naming the version the feature ships in. */
+    label: string;
+    heading: string;
+    text: string;
+  };
+  faq: {
+    heading: string;
+    items: Record<
+      | "what"
+      | "foreverOrRetail"
+      | "internet"
+      | "storage"
+      | "share"
+      | "russian"
+      | "account",
+      FaqItem
+    >;
+  };
   next: NextProductCopy;
+}
+
+export interface FaqItem {
+  question: string;
+  answer: string;
 }
 
 /**
